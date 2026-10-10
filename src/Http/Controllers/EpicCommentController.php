@@ -1,0 +1,48 @@
+<?php
+
+namespace Projects13\Http\Controllers;
+
+use Projects13\Models\Epic;
+use Illuminate\Http\JsonResponse;
+use Projects13\Models\EpicComment;
+use Illuminate\Http\RedirectResponse;
+use Basics13\Http\Controllers\Controller;
+use Projects13\Queries\Epics\EpicListQuery;
+use Projects13\Http\Requests\EpicCommentRequest;
+
+class EpicCommentController extends Controller
+{
+    public function show(Epic $epic): JsonResponse
+    {
+        $comments = $epic->comments()
+            ->with('user:id,name')
+            ->latest()
+            ->latest('id')
+            ->limit(EpicListQuery::RECENT_COMMENTS_LIMIT)
+            ->get()
+            ->map(function (EpicComment $comment): array {
+                $author = $comment->user;
+
+                return [
+                    'id' => $comment->id,
+                    'author' => $author === null ? __('Deleted user') : $author->name,
+                    'dateTime' => $comment->created_at?->toIso8601String(),
+                    'body' => $comment->body,
+                ];
+            })
+            ->values();
+
+        return response()->json(['comments' => $comments]);
+    }
+
+    public function store(EpicCommentRequest $request, Epic $epic): RedirectResponse
+    {
+        $comment = $epic->comments()->make($request->validated());
+        $comment->user()->associate($request->user());
+        $comment->save();
+
+        return back(fallback: route('epics.index'))
+            ->with('status', __('Comment added successfully.'))
+            ->with('commented_epic_id', $epic->id);
+    }
+}
