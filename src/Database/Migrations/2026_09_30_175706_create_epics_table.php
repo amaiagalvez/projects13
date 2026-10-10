@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('epics', function (Blueprint $table) {
+        Schema::create('PRO_epics', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->date('start_date')->nullable();
@@ -22,7 +22,7 @@ return new class extends Migration
             addAuditColumns($table);
         });
 
-        addUniqueActiveNameIndex('epics', ['project_id']);
+        addUniqueActiveNameIndex('PRO_epics', ['project_id']);
     }
 
     /**
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('epics');
+        Schema::dropIfExists('PRO_epics');
     }
 };

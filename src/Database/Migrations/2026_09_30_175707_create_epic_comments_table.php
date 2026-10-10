@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('epic_comments', function (Blueprint $table) {
+        Schema::create('PRO_epic_comments', function (Blueprint $table) {
             $table->id();
             $table->longText('body');
             $table->foreignId('user_id')->constrained();
-            $table->foreignId('epic_id')->constrained();
+            $table->foreignId('epic_id')->constrained('PRO_epics');
 
             addCommonColumns($table);
             addAuditColumns($table);
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('epic_comments');
+        Schema::dropIfExists('PRO_epic_comments');
     }
 };
