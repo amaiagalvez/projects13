@@ -71,7 +71,7 @@
             "dist": {
                 "type": "path",
                 "url": "../packages/customers13",
-                "reference": "5bceedfff4027f1f76bbf41902706cb3976f6111"
+                "reference": "6883d170f56da7e4d52645c108fd406479463ceb"
             },
             "require": {
                 "amaia/basics13": "^1.0",

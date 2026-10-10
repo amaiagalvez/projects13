@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->foreignId('project_id')->constrained();
+            $table->foreignId('project_id')->constrained('PRO_projects');
 
             addCommonColumns($table);
             addAuditColumns($table);

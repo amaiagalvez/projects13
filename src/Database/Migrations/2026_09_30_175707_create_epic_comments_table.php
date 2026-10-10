@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('PRO_epic_comments', function (Blueprint $table) {
             $table->id();
             $table->longText('body');
-            $table->foreignId('user_id')->constrained();
+            $table->foreignId('user_id')->constrained('users');
             $table->foreignId('epic_id')->constrained('PRO_epics');
 
             addCommonColumns($table);
