@@ -5,19 +5,19 @@ namespace Projects13\Queries\Planning;
 use Carbon\CarbonImmutable;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
-use Customers13\Models\Customer;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Database\Eloquent\Builder;
+use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * The planning screen: the active projects, ordered by the day they are due and grouped by the
  * quarter they finish in, ready to be drawn either as a roadmap or on a timeline.
  *
- * Projects are the rows: their epics are the count on the row, and a customer carries no dates, so
- * it is the trail under a row rather than a row of its own. A row with no end date has no bar and
- * no quarter, and lands last.
+ * Projects are the rows: their epics are the count on the row, and anything that hangs from a
+ * project without carrying dates is the trail under a row rather than a row of its own. A row with
+ * no end date has no bar and no quarter, and lands last.
  *
  * The ordering needs both tables at once, so the page is picked from a cheap id-only read of the two
  * and only the records that page names are then loaded whole. That keeps both the rows the database
@@ -54,9 +54,11 @@ final class PlanningQuery extends ListQueryBase
      */
     private const MAX_MONTHS = 24;
 
+    public function __construct(private readonly ProjectIntegration $integration) {}
+
     /**
      * @return array{
-     *     counts: array{customers: int, projects: int, epics: int, overdue: int},
+     *     counts: array{projects: int, epics: int, overdue: int},
      *     groups: list<Group>,
      *     timeline: Window,
      *     paginator: LengthAwarePaginator<int, Row>
@@ -88,7 +90,7 @@ final class PlanningQuery extends ListQueryBase
      * so the totals describe the whole active slice and do not shrink when a search term narrows
      * the list below them.
      *
-     * @return array{customers: int, projects: int, epics: int, overdue: int}
+     * @return array{projects: int, epics: int, overdue: int}
      */
     private function counts(CarbonImmutable $today): array
     {
@@ -99,7 +101,6 @@ final class PlanningQuery extends ListQueryBase
             ->where('end_date', '<', $today->toDateString());
 
         return [
-            'customers' => Customer::query()->where('active', true)->count(),
             'projects' => Project::query()->where('active', true)->count(),
             'epics' => Epic::query()->where('active', true)->count(),
             'overdue' => $late(Project::query())->count() + $late(Epic::query())->count(),
@@ -107,27 +108,40 @@ final class PlanningQuery extends ListQueryBase
     }
 
     /**
-     * Active projects whatever the state of their customer: deactivation does not cascade, so a
-     * project of an archived customer is still active work, and its customer is who says whose.
-     * Ids come back in id order, which is what fixes the order the pages are cut in.
+     * Active projects, whatever hangs from them: deactivation does not cascade, so the project of an
+     * archived record is still active work. Ids come back in id order, which is what fixes the order
+     * the pages are cut in.
      *
      * @return list<int>
      */
     private function projectIds(string $search): array
     {
+        $query = Project::query()->where('PRO_projects.active', true);
+
+        $this->integration->scope($query, 'planning', 'planning_customers');
+
         /** @var list<int|string> $ids */
-        $ids = $this->whereMatches(
-            Project::query()
-                ->join((new Customer)->getTable().' as planning_customers', 'planning_customers.id', '=', 'PRO_projects.customer_id')
-                ->where('PRO_projects.active', true),
-            $search,
-            ['PRO_projects.name', 'planning_customers.name'],
-        )
+        $ids = $this->whereMatches($query, $search, $this->searchColumns(['PRO_projects.name']))
             ->orderBy('PRO_projects.id')
             ->pluck('PRO_projects.id')
             ->all();
 
         return array_map(static fn (int|string $id): int => (int) $id, $ids);
+    }
+
+    /**
+     * Base search columns, with whatever the integration contributes appended. The base list comes
+     * first so the search order does not move when an integration is installed.
+     *
+     * @param  non-empty-list<literal-string>  $columns
+     * @return non-empty-list<literal-string>
+     */
+    private function searchColumns(array $columns): array
+    {
+        /** @var non-empty-list<literal-string> $columns An integration appends to the base columns; it never replaces them. */
+        $columns = $this->integration->searchColumns('planning', $columns);
+
+        return $columns;
     }
 
     /**
@@ -146,7 +160,6 @@ final class PlanningQuery extends ListQueryBase
 
         $projects = Project::query()
             ->whereIn('PRO_projects.id', $pageIds)
-            ->with('customer')
             ->withCount(['epics' => fn (Builder $epics): Builder => $epics->where('PRO_epics.active', true)])
             ->get()
             ->keyBy('id');
@@ -208,6 +221,10 @@ final class PlanningQuery extends ListQueryBase
     }
 
     /**
+     * The trail is what tells the reader who a row belongs to, and nothing here knows that: without
+     * an integration the row stands on its own. An integration that does know contributes it as a
+     * `trail` row field, the same key it would use in a list.
+     *
      * @return Row
      */
     private function projectRow(Project $project, CarbonImmutable $today): array
@@ -217,7 +234,7 @@ final class PlanningQuery extends ListQueryBase
         return [
             'test' => 'planning-project-'.$project->id,
             'name' => $project->name,
-            'trail' => [$project->customer->name],
+            'trail' => $this->integration->row($project)['trail'] ?? [],
             'url' => route('projects.index', ['search' => $project->name]),
             'start' => $project->start_date,
             'end' => $project->end_date,

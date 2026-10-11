@@ -6,7 +6,6 @@ use PDOException;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
-use Customers13\Models\Customer;
 use Illuminate\Database\QueryException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -45,7 +44,6 @@ class ConcurrentNameWriteTest extends TestCase
         $payload = match (true) {
             $record instanceof Project => [
                 'name' => 'Concurrent project',
-                'customer_id' => $record->customer_id,
                 'start_date' => '2026-01-01',
             ],
             default => ['name' => 'Concurrent epic', 'project_id' => $record->project_id],
@@ -80,6 +78,5 @@ class ConcurrentNameWriteTest extends TestCase
         }
 
         $this->assertDatabaseCount($record->getTable(), 1);
-        $this->assertDatabaseCount((new Customer)->getTable(), 1);
     }
 }

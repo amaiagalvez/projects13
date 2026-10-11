@@ -5,10 +5,10 @@ namespace Projects13\Queries\Timeline;
 use Carbon\CarbonImmutable;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
-use Customers13\Models\Customer;
 use Illuminate\Support\Collection;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Builder;
+use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -18,11 +18,11 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * each one carrying the active epics drawn underneath it, all of it ready to be painted on one
  * shared month axis.
  *
- * A project belongs on the board when a search term matches its own name, its customer's name, or
- * any of its epics. Matching the project brings every one of its epics along, because the row
- * stands for the whole project; matching only an epic leaves the project as the context that
- * holds it and keeps its other epics off the board, which is how narrow a search stays on the
- * flat planning screen.
+ * A project belongs on the board when a search term matches its own name, the name of anything that
+ * hangs from it, or any of its epics. Matching the project brings every one of its epics along,
+ * because the row stands for the whole project; matching only an epic leaves the project as the
+ * context that holds it and keeps its other epics off the board, which is how narrow a search
+ * stays on the flat planning screen.
  *
  * The board is a page of projects rather than a page of rows, so the ordering that picks that
  * page spans two tables: the ids are read first and only the records the page names are then
@@ -63,6 +63,8 @@ final class TimelineQuery extends ListQueryBase
      * spans five years would otherwise squeeze every month into a couple of unreadable pixels.
      */
     private const MAX_MONTHS = 24;
+
+    public function __construct(private readonly ProjectIntegration $integration) {}
 
     /**
      * @return array{
@@ -140,6 +142,21 @@ final class TimelineQuery extends ListQueryBase
     }
 
     /**
+     * Base search columns, with whatever the integration contributes appended. The base list comes
+     * first so the search order does not move when an integration is installed.
+     *
+     * @param  non-empty-list<literal-string>  $columns
+     * @return non-empty-list<literal-string>
+     */
+    private function searchColumns(array $columns): array
+    {
+        /** @var non-empty-list<literal-string> $columns An integration appends to the base columns; it never replaces them. */
+        $columns = $this->integration->searchColumns('timeline', $columns);
+
+        return $columns;
+    }
+
+    /**
      * The active projects a search term puts on the board. A term that matches nothing leaves the
      * query untouched, so an empty search is every active project.
      *
@@ -147,35 +164,39 @@ final class TimelineQuery extends ListQueryBase
      */
     private function matchingProjects(string $search): Builder
     {
-        return Project::query()
-            ->join((new Customer)->getTable().' as timeline_customers', 'timeline_customers.id', '=', 'PRO_projects.customer_id')
-            ->where('PRO_projects.active', true)
-            ->where(function (Builder $query) use ($search): void {
-                $this->whereMatches($query, $search, ['PRO_projects.name', 'timeline_customers.name']);
+        $query = Project::query()->where('PRO_projects.active', true);
 
-                if ($search !== '') {
-                    $query->orWhereHas('epics', function (Builder $epics) use ($search): void {
-                        $epics->where('PRO_epics.active', true);
-                        $this->whereMatches($epics, $search, ['PRO_epics.name']);
-                    });
-                }
-            });
+        $this->integration->scope($query, 'timeline', 'timeline_customers');
+
+        $nameColumns = $this->searchColumns(['PRO_projects.name']);
+
+        return $query->where(function (Builder $query) use ($search, $nameColumns): void {
+            $this->whereMatches($query, $search, $nameColumns);
+
+            if ($search !== '') {
+                $query->orWhereHas('epics', function (Builder $epics) use ($search): void {
+                    $epics->where('PRO_epics.active', true);
+                    $this->whereMatches($epics, $search, ['PRO_epics.name']);
+                });
+            }
+        });
     }
 
     /**
-     * The projects that matched by their own name or customer name (NOT by epic name).
-     * These projects bring ALL their epics along.
+     * The projects that matched by their own name or by the name of whatever hangs from them (NOT
+     * by epic name). These projects bring ALL their epics along.
      *
      * @return Builder<Project>
      */
     private function projectsMatchingByNameOrCustomer(string $search): Builder
     {
-        return Project::query()
-            ->join((new Customer)->getTable().' as timeline_customers', 'timeline_customers.id', '=', 'PRO_projects.customer_id')
-            ->where('PRO_projects.active', true)
-            ->where(function (Builder $query) use ($search): void {
-                $this->whereMatches($query, $search, ['PRO_projects.name', 'timeline_customers.name']);
-            });
+        $query = Project::query()->where('PRO_projects.active', true);
+
+        $this->integration->scope($query, 'timeline', 'timeline_customers');
+
+        return $query->where(function (Builder $query) use ($search): void {
+            $this->whereMatches($query, $search, $this->searchColumns(['PRO_projects.name']));
+        });
     }
 
     /**
@@ -191,7 +212,6 @@ final class TimelineQuery extends ListQueryBase
         $projects = Project::query()
             ->whereIn('PRO_projects.id', $pageIds)
             ->with([
-                'customer',
                 'epics' => static function (HasMany $epics): HasMany {
                     return $epics->where('PRO_epics.active', true);
                 },
@@ -296,6 +316,10 @@ final class TimelineQuery extends ListQueryBase
     }
 
     /**
+     * The trail is what tells the reader who a row belongs to, and nothing here knows that: without
+     * an integration the row stands on its own. An integration that does know contributes it as a
+     * `trail` row field, the same key it would use in a list.
+     *
      * @return Row
      */
     private function projectRow(Project $project, CarbonImmutable $today): array
@@ -304,7 +328,7 @@ final class TimelineQuery extends ListQueryBase
             'id' => $project->id,
             'test' => 'timeline-project-'.$project->id,
             'name' => $project->name,
-            'trail' => [$project->customer->name],
+            'trail' => $this->integration->row($project)['trail'] ?? [],
             'url' => route('projects.index', ['search' => $project->name]),
             'start' => $project->start_date,
             'end' => $project->end_date,

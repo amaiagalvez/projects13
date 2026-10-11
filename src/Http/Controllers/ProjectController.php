@@ -4,12 +4,12 @@ namespace Projects13\Http\Controllers;
 
 use Illuminate\View\View;
 use Projects13\Models\Project;
-use Customers13\Models\Customer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Database\QueryException;
 use Basics13\Http\Controllers\Controller;
+use Projects13\Contracts\ProjectIntegration;
 use Projects13\Http\Requests\ProjectRequest;
 use Projects13\Http\Requests\ProjectListRequest;
 use Projects13\Queries\Projects\ProjectListQuery;
@@ -27,15 +27,9 @@ class ProjectController extends Controller
     ): View|string {
         $search = $request->search();
         $projects = $query->active($search);
-        $customerId = old('customer_id');
-        $selectedCustomer = is_numeric($customerId)
-            ? Customer::query()->find((int) $customerId, ['id', 'name'])
-            : null;
 
         return $this->listView($request, 'projects13::projects.list', [
             'projects' => $projects,
-            'hasCustomers' => Customer::query()->where('active', true)->exists(),
-            'selectedCustomer' => $selectedCustomer,
             'list' => $transformer->active(
                 $projects,
                 $search,
@@ -53,8 +47,11 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function store(ProjectRequest $request, ProjectListQuery $query): RedirectResponse|JsonResponse
-    {
+    public function store(
+        ProjectRequest $request,
+        ProjectListQuery $query,
+        ProjectIntegration $integration,
+    ): RedirectResponse|JsonResponse {
         $name = $request->string('name')->toString();
         $deletedProject = $query->findTrashedByName($name);
 
@@ -63,9 +60,12 @@ class ProjectController extends Controller
         }
 
         try {
-            DB::transaction(static function () use ($request): void {
-                Customer::query()->lockForUpdate()->findOrFail($request->integer('customer_id'));
-                Project::create($request->validated());
+            DB::transaction(static function () use ($request, $integration): void {
+                // The integration contributes attributes that are not part of the base model, so
+                // they are force-filled instead of mass-assigned and only after it validated them.
+                $project = new Project($request->validated());
+                $project->forceFill($integration->saving($request, null));
+                $project->save();
             });
         } catch (QueryException $exception) {
             UniqueConstraintViolation::rethrowAsValidationError($exception);
@@ -74,12 +74,16 @@ class ProjectController extends Controller
         return to_route('projects.index')->with('status', __('basics13::messages.created'));
     }
 
-    public function update(ProjectRequest $request, Project $project): RedirectResponse
-    {
+    public function update(
+        ProjectRequest $request,
+        Project $project,
+        ProjectIntegration $integration,
+    ): RedirectResponse {
         try {
-            DB::transaction(static function () use ($request, $project): void {
-                Customer::query()->lockForUpdate()->findOrFail($request->integer('customer_id'));
-                $project->update($request->validated());
+            DB::transaction(static function () use ($request, $project, $integration): void {
+                $project->fill($request->validated());
+                $project->forceFill($integration->saving($request, $project));
+                $project->save();
             });
         } catch (QueryException $exception) {
             UniqueConstraintViolation::rethrowAsValidationError($exception);

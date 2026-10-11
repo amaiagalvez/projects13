@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('name');
             $table->date('start_date');
             $table->date('end_date')->nullable();
-            $table->foreignId('customer_id')->constrained('CUM_customers');
 
             addCommonColumns($table);
             addAuditColumns($table);

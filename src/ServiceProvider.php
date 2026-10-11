@@ -5,6 +5,8 @@ namespace Projects13;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Illuminate\Support\Facades\DB;
+use Projects13\Contracts\ProjectIntegration;
+use Projects13\Contracts\NullProjectIntegration;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
@@ -18,12 +20,24 @@ class ServiceProvider extends BaseServiceProvider
         $this->loadJsonTranslationsFrom(__DIR__.'/../resources/lang');
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
+        $this->publishes([
+            __DIR__.'/../config/projects13.php' => config_path('projects13.php'),
+        ], 'projects13-config');
+
+        $this->publishes([
+            __DIR__.'/../resources/views' => resource_path('views/vendor/projects13'),
+        ], 'projects13-views');
+
         $this->blockDeletionWithChildren();
     }
 
     public function register(): void
     {
-        //
+        $this->mergeConfigFrom(__DIR__.'/../config/projects13.php', 'projects13');
+
+        // Bound only if nobody else has: an integration package registers after this one and
+        // replaces it, and doing so does not depend on Composer's provider order being right.
+        $this->app->singletonIf(ProjectIntegration::class, NullProjectIntegration::class);
     }
 
     protected function blockDeletionWithChildren(): void

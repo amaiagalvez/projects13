@@ -5,11 +5,11 @@ namespace Projects13\Tests\Feature;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
-use Customers13\Models\Customer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Events\QueryExecuted;
 use Projects13\Queries\Timeline\TimelineQuery;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Projects13\Contracts\NullProjectIntegration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class TimelineQueryTest extends TestCase
@@ -18,9 +18,8 @@ class TimelineQueryTest extends TestCase
 
     public function test_project_deleted_between_id_selection_and_hydration_is_skipped(): void
     {
-        $customer = Customer::factory()->create();
-        $deleted = Project::factory()->for($customer)->create(['name' => 'Disappearing project']);
-        $remaining = Project::factory()->for($customer)->create(['name' => 'Remaining project']);
+        $deleted = Project::factory()->create(['name' => 'Disappearing project']);
+        $remaining = Project::factory()->create(['name' => 'Remaining project']);
         $deletedAfterSelection = false;
         DB::listen(static function (QueryExecuted $query) use ($deleted, &$deletedAfterSelection): void {
             if ($deletedAfterSelection || ! str_starts_with($query->sql, 'select "PRO_projects"."id" from')) {
@@ -31,7 +30,7 @@ class TimelineQueryTest extends TestCase
             $deleted->delete();
         });
 
-        $overview = (new TimelineQuery)->overview('');
+        $overview = (new TimelineQuery(new NullProjectIntegration))->overview('');
 
         $this->assertTrue($deletedAfterSelection);
         $this->assertSoftDeleted($deleted);
@@ -43,17 +42,16 @@ class TimelineQueryTest extends TestCase
     public function test_project_rows_control_active_epics_in_date_order(): void
     {
         $this->travelTo(now()->setDate(2026, 10, 11)->startOfDay());
-        $customer = Customer::factory()->archived()->create();
-        $project = Project::factory()->for($customer)->create(['start_date' => '2026-10-01', 'end_date' => '2026-10-31']);
+        $project = Project::factory()->create(['start_date' => '2026-10-01', 'end_date' => '2026-10-31']);
         $undated = Epic::factory()->for($project)->withoutDates()->create(['name' => 'Undated']);
         $later = Epic::factory()->for($project)->create(['name' => 'Later', 'start_date' => '2026-10-12', 'end_date' => '2026-10-20']);
         $earlier = Epic::factory()->for($project)->create(['name' => 'Earlier', 'start_date' => '2026-10-01', 'end_date' => '2026-10-10']);
         Epic::factory()->for($project)->archived()->create();
         Epic::factory()->for($project)->trashed()->create();
-        Project::factory()->for($customer)->archived()->create();
-        Project::factory()->for($customer)->trashed()->create();
+        Project::factory()->archived()->create();
+        Project::factory()->trashed()->create();
 
-        $overview = (new TimelineQuery)->overview('');
+        $overview = (new TimelineQuery(new NullProjectIntegration))->overview('');
         $entries = $overview['entries']->all();
 
         $this->assertSame(['project', 'epic', 'epic', 'epic'], array_column($entries, 'kind'));
@@ -68,20 +66,18 @@ class TimelineQueryTest extends TestCase
 
     public function test_epic_only_search_narrows_children_but_parent_search_keeps_them(): void
     {
-        $customer = Customer::factory()->create(['name' => 'North %_! customer']);
-        $project = Project::factory()->for($customer)->create(['name' => 'Website renewal']);
+        $project = Project::factory()->create(['name' => 'Website %_! renewal']);
         $matching = Epic::factory()->for($project)->withoutDates()->create(['name' => 'Special delivery']);
         Epic::factory()->for($project)->withoutDates()->create(['name' => 'Unrelated delivery']);
         Epic::factory()->for($project)->archived()->create(['name' => 'Archived special']);
-        $otherCustomer = Customer::factory()->create(['name' => 'South customer']);
-        Project::factory()->for($otherCustomer)->create();
-        $query = new TimelineQuery;
+        Project::factory()->create();
+        $query = new TimelineQuery(new NullProjectIntegration);
 
         $overview = $query->overview('Special delivery');
 
         $this->assertSame([$project->id, $matching->id], array_column($overview['entries']->pluck('row')->all(), 'id'));
         $this->assertStringContainsString('search=Special%20delivery', $overview['paginator']->url(2));
-        $this->assertCount(3, $query->overview('Website renewal')['entries']);
+        $this->assertCount(3, $query->overview('Website %_! renewal')['entries']);
         $this->assertCount(3, $query->overview('%_!')['entries']);
         $this->assertCount(0, $query->overview('Archived special')['entries']);
         $this->assertCount(0, $query->overview('No match')['entries']);
@@ -89,15 +85,14 @@ class TimelineQueryTest extends TestCase
 
     public function test_pagination_counts_projects_not_nested_rows(): void
     {
-        $customer = Customer::factory()->create();
-        Project::factory()->for($customer)->count(25)->sequence(
+        Project::factory()->count(25)->sequence(
             fn ($sequence): array => ['name' => 'Project '.str_pad((string) $sequence->index, 2, '0', STR_PAD_LEFT)],
         )->create(['start_date' => '2026-01-01', 'end_date' => '2026-12-31']);
-        $last = Project::factory()->for($customer)->create(['name' => 'Last project', 'start_date' => '2026-02-01', 'end_date' => '2026-12-31']);
+        $last = Project::factory()->create(['name' => 'Last project', 'start_date' => '2026-02-01', 'end_date' => '2026-12-31']);
         Epic::factory()->for($last)->withoutDates()->create();
         LengthAwarePaginator::currentPageResolver(static fn (): int => 2);
 
-        $overview = (new TimelineQuery)->overview('');
+        $overview = (new TimelineQuery(new NullProjectIntegration))->overview('');
 
         $this->assertSame(26, $overview['paginator']->total());
         $this->assertSame(2, $overview['paginator']->currentPage());
@@ -112,7 +107,7 @@ class TimelineQueryTest extends TestCase
         Epic::factory()->for($project)->create(['name' => 'End milestone', 'start_date' => null, 'end_date' => '2026-10-11']);
         Epic::factory()->for($project)->create(['name' => 'Start milestone', 'start_date' => '2026-10-11', 'end_date' => null]);
 
-        $overview = (new TimelineQuery)->overview('');
+        $overview = (new TimelineQuery(new NullProjectIntegration))->overview('');
         $entries = $overview['entries']->all();
 
         $this->assertSame('2024-10-01', $overview['timeline']['from']->toDateString());

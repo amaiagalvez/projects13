@@ -3,7 +3,6 @@
 namespace Projects13\Database\Factories;
 
 use Projects13\Models\Project;
-use Customers13\Models\Customer;
 use Basics13\Database\Factories\HasStates;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -25,7 +24,6 @@ class ProjectFactory extends Factory
 
         return [
             'name' => fake()->company(),
-            'customer_id' => static::getRecord(Customer::class),
             'start_date' => $dates['start_date'],
             'end_date' => $dates['end_date'],
         ];

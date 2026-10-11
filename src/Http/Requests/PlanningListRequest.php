@@ -2,8 +2,8 @@
 
 namespace Projects13\Http\Requests;
 
+use Projects13\Models\Project;
 use Illuminate\Validation\Rule;
-use Customers13\Models\Customer;
 use Basics13\Support\Validation\MaxLength;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -20,7 +20,7 @@ class PlanningListRequest extends FormRequest
 
     public function authorize(): bool
     {
-        return $this->user()?->can('viewAny', Customer::class) ?? false;
+        return $this->user()?->can('viewAny', Project::class) ?? false;
     }
 
     /**

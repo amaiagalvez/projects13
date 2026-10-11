@@ -217,7 +217,7 @@
                     <flux:table.columns>
                         <flux:table.column scope="col">{{ __('Name') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Project') }}</flux:table.column>
-                        <flux:table.column scope="col">{{ __('Customer') }}</flux:table.column>
+                        @includeIf(config('projects13.views.epic_list.columns'))
                         <flux:table.column scope="col">{{ __('Start date') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('End date') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Comments') }}</flux:table.column>
@@ -244,10 +244,7 @@
                                     :title="$row['project']">
                                     {{ $row['project'] }}
                                 </flux:table.cell>
-                                <flux:table.cell class="max-w-[16rem] truncate"
-                                    :title="$row['customer']">
-                                    {{ $row['customer'] }}
-                                </flux:table.cell>
+                                @includeIf(config('projects13.views.epic_list.cells'))
                                 <flux:table.cell>
                                     <x-basics13::list.local-time :datetime="$row['startDate']" format="date" />
                                 </flux:table.cell>
@@ -266,7 +263,7 @@
                                 </flux:table.cell>
                             </flux:table.row>
                         @empty
-                            <x-basics13::list.empty-state :colspan="7" :message="$list['emptyMessage']" />
+                            <x-basics13::list.empty-state :colspan="6 + (int) config('projects13.views.epic_list.count', 0)" :message="$list['emptyMessage']" />
                         @endforelse
                     </flux:table.rows>
                 </x-basics13::list.table>

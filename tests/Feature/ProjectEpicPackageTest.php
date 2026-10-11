@@ -5,7 +5,6 @@ namespace Projects13\Tests\Feature;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
-use Customers13\Models\Customer;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Testing\PendingCommand;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,11 +15,9 @@ class ProjectEpicPackageTest extends TestCase
 
     public function test_package_migrations_and_factories_create_the_resource_hierarchy(): void
     {
-        $customer = Customer::factory()->create();
-        $project = Project::factory()->for($customer)->create();
+        $project = Project::factory()->create();
         $epic = Epic::factory()->for($project)->create();
 
-        $this->assertSame($customer->id, $project->customer_id);
         $this->assertSame($project->id, $epic->project_id);
         $this->assertDatabaseHas('PRO_projects', ['id' => $project->id]);
         $this->assertDatabaseHas('PRO_epics', ['id' => $epic->id]);

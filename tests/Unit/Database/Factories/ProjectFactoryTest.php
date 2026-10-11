@@ -6,7 +6,6 @@ use Mockery;
 use Faker\Generator;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
-use Customers13\Models\Customer;
 use Projects13\Database\Factories\ProjectFactory;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
@@ -22,7 +21,6 @@ class ProjectFactoryTest extends TestCase
         $this->assertNotEmpty($project->name);
         $this->assertNotEmpty($project->start_date);
         $this->assertNotEmpty($project->end_date);
-        $this->assertGreaterThan(0, $project->customer_id);
         $this->assertTrue($project->active);
         $this->assertDatabaseHas('PRO_projects', ['id' => $project->id]);
     }
@@ -84,22 +82,5 @@ class ProjectFactoryTest extends TestCase
         $dates = $factory->callGetDateRange(true);
 
         $this->assertSame(['start_date' => null, 'end_date' => null], $dates);
-    }
-
-    public function test_project_factory_get_record_returns_existing_customer_when_available(): void
-    {
-        $existing = Customer::factory()->create();
-
-        $customer = ProjectFactory::getRecord(Customer::class);
-
-        $this->assertSame($existing->id, $customer->id);
-    }
-
-    public function test_project_factory_get_record_creates_new_when_none_exists(): void
-    {
-        $customer = ProjectFactory::getRecord(Customer::class);
-
-        $this->assertInstanceOf(Customer::class, $customer);
-        $this->assertDatabaseHas('CUM_customers', ['id' => $customer->id]);
     }
 }

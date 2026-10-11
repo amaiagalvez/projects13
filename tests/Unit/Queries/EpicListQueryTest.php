@@ -2,8 +2,15 @@
 
 namespace Projects13\Tests\Unit\Queries;
 
+use Projects13\Models\Epic;
+use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Projects13\Queries\Epics\EpicListQuery;
+use Projects13\Contracts\ProjectIntegration;
+use Projects13\Http\Requests\ProjectRequest;
+use Projects13\Contracts\NullProjectIntegration;
 
 class EpicListQueryTest extends TestCase
 {
@@ -12,25 +19,12 @@ class EpicListQueryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->query = new EpicListQuery;
+        $this->query = new EpicListQuery(new NullProjectIntegration);
     }
 
     public function test_recent_comments_limit_constant_is_20(): void
     {
         $this->assertSame(20, EpicListQuery::RECENT_COMMENTS_LIMIT);
-    }
-
-    public function test_search_columns_constant_exists(): void
-    {
-        $reflection = new \ReflectionClass($this->query);
-        $this->assertTrue($reflection->hasConstant('SEARCH_COLUMNS'));
-        $columns = $reflection->getConstant('SEARCH_COLUMNS');
-        $this->assertIsArray($columns);
-        $this->assertContains('PRO_epics.name', $columns);
-        $this->assertContains('epic_projects.name', $columns);
-        $this->assertContains('epic_customers.name', $columns);
-        $this->assertContains('PRO_epics.start_date', $columns);
-        $this->assertContains('PRO_epics.end_date', $columns);
     }
 
     public function test_active_method_exists(): void
@@ -82,10 +76,130 @@ class EpicListQueryTest extends TestCase
         $this->assertSame('projectId', $params[1]->getName());
     }
 
-    public function test_with_project_and_customer_method_exists(): void
+    public function test_with_project_method_exists(): void
     {
         $reflection = new \ReflectionClass($this->query);
-        $this->assertTrue($reflection->hasMethod('withProjectAndCustomer'));
-        $this->assertTrue($reflection->getMethod('withProjectAndCustomer')->isPrivate());
+        $this->assertTrue($reflection->hasMethod('withProject'));
+        $this->assertTrue($reflection->getMethod('withProject')->isPrivate());
+    }
+
+    /**
+     * The base lists search the epic's own columns and its project's name, and nothing else: any
+     * other column only reaches a search because an integration contributed its join and then asked
+     * for the column. The scope and the alias are what tell an integration which query is asking.
+     */
+    /**
+     * The base lists search their own columns and nothing else: any other column only reaches a
+     * search because an integration contributed its join and then asked for the column. The scope
+     * and the alias are what tell an integration which query is asking.
+     *
+     * The helpers are called directly rather than through `active()` so the assertion is about the
+     * seam and does not need a database.
+     */
+    public function test_the_integration_is_asked_for_the_epic_scope_and_the_epic_alias(): void
+    {
+        $integration = new RecordingProjectIntegration;
+        $query = new EpicListQuery($integration);
+
+        (new \ReflectionMethod($query, 'scoped'))->invoke($query, $this->queryWithoutRunningIt());
+
+        $this->assertSame(['epic'], $integration->scopes);
+        $this->assertSame(['epic_customers'], $integration->aliases);
+    }
+
+    public function test_the_epic_search_asks_the_integration_after_its_own_columns(): void
+    {
+        $integration = new RecordingProjectIntegration;
+        $query = new EpicListQuery($integration);
+        $base = ['PRO_epics.name'];
+
+        $columns = (new \ReflectionMethod($query, 'searchColumns'))->invoke($query, $base);
+
+        $this->assertSame(['epic'], $integration->searchScopes);
+        $this->assertSame($base, $columns);
+    }
+
+    /**
+     * Loading the customer of every project on the page was the other half of what made this query
+     * know about customers; nothing in the base can use it any more.
+     */
+    public function test_the_customer_join_is_gone_from_the_base_query(): void
+    {
+        $reflection = new \ReflectionClass($this->query);
+
+        $this->assertFalse($reflection->hasMethod('withProjectAndCustomer'));
+    }
+
+    /**
+     * A builder the query never runs: these tests assert on what the query asked for, not on the
+     * rows it would have returned.
+     *
+     * @return Builder<Epic>
+     */
+    private function queryWithoutRunningIt(): Builder
+    {
+        return Epic::query();
+    }
+}
+
+/**
+ * Records what the query asked of it instead of changing anything, so the test can assert on the
+ * seam rather than on the SQL that ends up behind it.
+ */
+final class RecordingProjectIntegration implements ProjectIntegration
+{
+    /** @var list<string> */
+    public array $scopes = [];
+
+    /** @var list<string> */
+    public array $aliases = [];
+
+    /** @var list<string> */
+    public array $searchScopes = [];
+
+    public function scope(Builder $query, string $scope, string $alias): void
+    {
+        $this->scopes[] = $scope;
+        $this->aliases[] = $alias;
+    }
+
+    /**
+     * @param  list<string>  $columns
+     * @return list<string>
+     */
+    public function searchColumns(string $scope, array $columns): array
+    {
+        $this->searchScopes[] = $scope;
+
+        return $columns;
+    }
+
+    /** @return array<string, array<int, mixed>> */
+    public function rules(ProjectRequest $request): array
+    {
+        return [];
+    }
+
+    /** @return array<string, string> */
+    public function attributes(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, mixed> */
+    public function saving(ProjectRequest $request, ?Project $project): array
+    {
+        return [];
+    }
+
+    public function label(Project $project): string
+    {
+        return $project->name;
+    }
+
+    /** @return array<string, mixed> */
+    public function row(Model $record): array
+    {
+        return [];
     }
 }

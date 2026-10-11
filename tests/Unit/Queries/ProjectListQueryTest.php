@@ -2,7 +2,13 @@
 
 namespace Projects13\Tests\Unit\Queries;
 
+use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Projects13\Contracts\ProjectIntegration;
+use Projects13\Http\Requests\ProjectRequest;
+use Projects13\Contracts\NullProjectIntegration;
 use Projects13\Queries\Projects\ProjectListQuery;
 
 class ProjectListQueryTest extends TestCase
@@ -12,19 +18,7 @@ class ProjectListQueryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->query = new ProjectListQuery;
-    }
-
-    public function test_search_columns_constant_exists(): void
-    {
-        $reflection = new \ReflectionClass($this->query);
-        $this->assertTrue($reflection->hasConstant('SEARCH_COLUMNS'));
-        $columns = $reflection->getConstant('SEARCH_COLUMNS');
-        $this->assertIsArray($columns);
-        $this->assertContains('PRO_projects.name', $columns);
-        $this->assertContains('project_customers.name', $columns);
-        $this->assertContains('PRO_projects.start_date', $columns);
-        $this->assertContains('PRO_projects.end_date', $columns);
+        $this->query = new ProjectListQuery(new NullProjectIntegration);
     }
 
     public function test_active_method_exists(): void
@@ -74,10 +68,123 @@ class ProjectListQueryTest extends TestCase
         $this->assertTrue($reflection->getMethod('withActiveCounts')->isPrivate());
     }
 
-    public function test_with_customer_method_exists(): void
+    /**
+     * The base lists search the project's own columns and nothing else: any other column only
+     * reaches a search because an integration contributed its join and then asked for the column.
+     * The scope and the alias are what tell an integration which query is asking.
+     */
+    /**
+     * The base lists search their own columns and nothing else: any other column only reaches a
+     * search because an integration contributed its join and then asked for the column. The scope
+     * and the alias are what tell an integration which query is asking.
+     *
+     * The helpers are called directly rather than through `active()` so the assertion is about the
+     * seam and does not need a database.
+     */
+    public function test_the_integration_is_asked_for_the_project_scope_and_the_project_alias(): void
+    {
+        $integration = new RecordingProjectListIntegration;
+        $query = new ProjectListQuery($integration);
+
+        (new \ReflectionMethod($query, 'scoped'))->invoke($query, $this->queryWithoutRunningIt());
+
+        $this->assertSame(['project'], $integration->scopes);
+        $this->assertSame(['project_customers'], $integration->aliases);
+    }
+
+    public function test_the_project_search_asks_the_integration_after_its_own_columns(): void
+    {
+        $integration = new RecordingProjectListIntegration;
+        $query = new ProjectListQuery($integration);
+        $base = ['PRO_projects.name'];
+
+        $columns = (new \ReflectionMethod($query, 'searchColumns'))->invoke($query, $base);
+
+        $this->assertSame(['project'], $integration->searchScopes);
+        $this->assertSame($base, $columns);
+    }
+
+    /**
+     * The join that used to live here was the only reason this query knew a customer, and nothing
+     * in the base can use it any more.
+     */
+    public function test_the_customer_join_is_gone_from_the_base_query(): void
     {
         $reflection = new \ReflectionClass($this->query);
-        $this->assertTrue($reflection->hasMethod('withCustomer'));
-        $this->assertTrue($reflection->getMethod('withCustomer')->isPrivate());
+
+        $this->assertFalse($reflection->hasMethod('withCustomer'));
+    }
+
+    /**
+     * A builder the query never runs: these tests assert on what the query asked for, not on the
+     * rows it would have returned.
+     *
+     * @return Builder<Project>
+     */
+    private function queryWithoutRunningIt(): Builder
+    {
+        return Project::query();
+    }
+}
+
+/**
+ * Records what the query asked of it instead of changing anything, so the test can assert on the
+ * seam rather than on the SQL that ends up behind it.
+ */
+final class RecordingProjectListIntegration implements ProjectIntegration
+{
+    /** @var list<string> */
+    public array $scopes = [];
+
+    /** @var list<string> */
+    public array $aliases = [];
+
+    /** @var list<string> */
+    public array $searchScopes = [];
+
+    public function scope(Builder $query, string $scope, string $alias): void
+    {
+        $this->scopes[] = $scope;
+        $this->aliases[] = $alias;
+    }
+
+    /**
+     * @param  list<string>  $columns
+     * @return list<string>
+     */
+    public function searchColumns(string $scope, array $columns): array
+    {
+        $this->searchScopes[] = $scope;
+
+        return $columns;
+    }
+
+    /** @return array<string, array<int, mixed>> */
+    public function rules(ProjectRequest $request): array
+    {
+        return [];
+    }
+
+    /** @return array<string, string> */
+    public function attributes(): array
+    {
+        return [];
+    }
+
+    /** @return array<string, mixed> */
+    public function saving(ProjectRequest $request, ?Project $project): array
+    {
+        return [];
+    }
+
+    public function label(Project $project): string
+    {
+        return $project->name;
+    }
+
+    /** @return array<string, mixed> */
+    public function row(Model $record): array
+    {
+        return [];
     }
 }

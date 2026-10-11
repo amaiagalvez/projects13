@@ -3,9 +3,9 @@
 namespace Projects13\Queries\Epics;
 
 use Projects13\Models\Epic;
-use Customers13\Models\Customer;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Builder;
+use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -18,13 +18,7 @@ final class EpicListQuery extends ListQueryBase
      */
     public const RECENT_COMMENTS_LIMIT = 20;
 
-    private const SEARCH_COLUMNS = [
-        'PRO_epics.name',
-        'epic_projects.name',
-        'epic_customers.name',
-        'PRO_epics.start_date',
-        'PRO_epics.end_date',
-    ];
+    public function __construct(private readonly ProjectIntegration $integration) {}
 
     /**
      * Epics without dates are listed after dated ones.
@@ -34,17 +28,21 @@ final class EpicListQuery extends ListQueryBase
     public function active(string $search): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->withProjectAndCustomer(Epic::query()->where('PRO_epics.active', true))
+            $this->scoped($this->withProject(Epic::query()->where('PRO_epics.active', true)))
                 ->orderByRaw('PRO_epics.start_date IS NULL')
                 ->orderBy('PRO_epics.start_date')
                 ->orderByRaw('PRO_epics.end_date IS NULL')
                 ->orderBy('PRO_epics.end_date')
                 ->orderBy('epic_projects.name')
-                ->orderBy('epic_customers.name')
                 ->orderBy('PRO_epics.name')
                 ->orderBy('PRO_epics.id'),
             $search,
-            searchColumns: self::SEARCH_COLUMNS,
+            searchColumns: $this->searchColumns([
+                'PRO_epics.name',
+                'epic_projects.name',
+                'PRO_epics.start_date',
+                'PRO_epics.end_date',
+            ]),
         );
     }
 
@@ -54,17 +52,22 @@ final class EpicListQuery extends ListQueryBase
     public function archived(string $search): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->withProjectAndCustomer(Epic::query()->where('PRO_epics.active', false))
+            $this->scoped($this->withProject(Epic::query()->where('PRO_epics.active', false)))
                 ->orderByRaw('PRO_epics.start_date IS NULL')
                 ->orderBy('PRO_epics.start_date')
                 ->orderByRaw('PRO_epics.end_date IS NULL')
                 ->orderBy('PRO_epics.end_date')
                 ->orderBy('epic_projects.name')
-                ->orderBy('epic_customers.name')
                 ->orderBy('PRO_epics.name')
                 ->orderBy('PRO_epics.id'),
             $search,
-            searchColumns: [...self::SEARCH_COLUMNS, 'PRO_epics.updated_at'],
+            searchColumns: $this->searchColumns([
+                'PRO_epics.name',
+                'epic_projects.name',
+                'PRO_epics.start_date',
+                'PRO_epics.end_date',
+                'PRO_epics.updated_at',
+            ]),
         );
     }
 
@@ -74,11 +77,17 @@ final class EpicListQuery extends ListQueryBase
     public function trashed(string $search): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->withProjectAndCustomer(Epic::onlyTrashed())
+            $this->scoped($this->withProject(Epic::onlyTrashed()))
                 ->latest('PRO_epics.deleted_at')
                 ->orderBy('PRO_epics.id'),
             $search,
-            searchColumns: [...self::SEARCH_COLUMNS, 'PRO_epics.deleted_at'],
+            searchColumns: $this->searchColumns([
+                'PRO_epics.name',
+                'epic_projects.name',
+                'PRO_epics.start_date',
+                'PRO_epics.end_date',
+                'PRO_epics.deleted_at',
+            ]),
         );
     }
 
@@ -103,19 +112,50 @@ final class EpicListQuery extends ListQueryBase
     }
 
     /**
-     * A row only renders the project name and the name of its customer, so both eager loads are
-     * limited to those columns plus the keys needed to match the relations.
+     * Hand the query to the integration once the base join is in place, so the columns it
+     * contributes to the search and to the ordering are already there.
+     *
+     * Epic names are unique per project and project names are unique among non-deleted records,
+     * so project name plus epic name plus id already order this list completely: an integration
+     * does not have to contribute an ordering to keep the rows grouped under their project.
      *
      * @param  Builder<Epic>  $query
      * @return Builder<Epic>
      */
-    private function withProjectAndCustomer(Builder $query): Builder
+    private function scoped(Builder $query): Builder
+    {
+        $this->integration->scope($query, 'epic', 'epic_customers');
+
+        return $query;
+    }
+
+    /**
+     * A row renders the name of the project it belongs to, so that is the only relation loaded
+     * here, limited to the columns a name needs plus the keys to match it.
+     *
+     * @param  Builder<Epic>  $query
+     * @return Builder<Epic>
+     */
+    private function withProject(Builder $query): Builder
     {
         return $query
-            ->with(['project:id,name,customer_id', 'project.customer:id,name'])
+            ->with('project:id,name')
             ->join('PRO_projects as epic_projects', 'epic_projects.id', '=', 'PRO_epics.project_id')
-            ->join((new Customer)->getTable().' as epic_customers', 'epic_customers.id', '=', 'epic_projects.customer_id')
             ->select('PRO_epics.*')
             ->withCount('comments');
+    }
+
+    /**
+     * Base search columns for this list, with whatever the integration contributes appended.
+     *
+     * @param  non-empty-list<literal-string>  $columns
+     * @return non-empty-list<literal-string>
+     */
+    private function searchColumns(array $columns): array
+    {
+        /** @var non-empty-list<literal-string> $columns An integration appends to the base columns; it never replaces them. */
+        $columns = $this->integration->searchColumns('epic', $columns);
+
+        return $columns;
     }
 }

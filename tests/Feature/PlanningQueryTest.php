@@ -5,11 +5,11 @@ namespace Projects13\Tests\Feature;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
-use Customers13\Models\Customer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Events\QueryExecuted;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Projects13\Queries\Planning\PlanningQuery;
+use Projects13\Contracts\NullProjectIntegration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class PlanningQueryTest extends TestCase
@@ -18,9 +18,8 @@ class PlanningQueryTest extends TestCase
 
     public function test_project_deleted_between_id_selection_and_hydration_is_skipped(): void
     {
-        $customer = Customer::factory()->create();
-        $deleted = Project::factory()->for($customer)->create(['name' => 'Disappearing project']);
-        $remaining = Project::factory()->for($customer)->create(['name' => 'Remaining project']);
+        $deleted = Project::factory()->create(['name' => 'Disappearing project']);
+        $remaining = Project::factory()->create(['name' => 'Remaining project']);
         $deletedAfterSelection = false;
         DB::listen(static function (QueryExecuted $query) use ($deleted, &$deletedAfterSelection): void {
             if ($deletedAfterSelection || ! str_starts_with($query->sql, 'select "PRO_projects"."id" from')) {
@@ -31,7 +30,7 @@ class PlanningQueryTest extends TestCase
             $deleted->delete();
         });
 
-        $overview = (new PlanningQuery)->overview('');
+        $overview = (new PlanningQuery(new NullProjectIntegration))->overview('');
 
         $this->assertTrue($deletedAfterSelection);
         $this->assertSoftDeleted($deleted);
@@ -44,24 +43,23 @@ class PlanningQueryTest extends TestCase
     public function test_groups_sort_deadlines_and_count_only_active_work(): void
     {
         $this->travelTo(now()->setDate(2026, 10, 11)->startOfDay());
-        $customer = Customer::factory()->archived()->create(['name' => 'Archived customer']);
-        $later = Project::factory()->for($customer)->create(['name' => 'Later project', 'start_date' => '2026-10-01', 'end_date' => '2027-01-31']);
-        $undated = Project::factory()->for($customer)->create(['name' => 'No deadline', 'start_date' => '2026-10-01', 'end_date' => null]);
-        $overdue = Project::factory()->for($customer)->create(['name' => 'Overdue project', 'start_date' => '2026-01-01', 'end_date' => '2026-09-30']);
-        $today = Project::factory()->for($customer)->create(['name' => 'Due today', 'start_date' => '2026-10-01', 'end_date' => '2026-10-11']);
-        Project::factory()->for($customer)->archived()->create();
-        Project::factory()->for($customer)->trashed()->create();
+        $later = Project::factory()->create(['name' => 'Later project', 'start_date' => '2026-10-01', 'end_date' => '2027-01-31']);
+        $undated = Project::factory()->create(['name' => 'No deadline', 'start_date' => '2026-10-01', 'end_date' => null]);
+        $overdue = Project::factory()->create(['name' => 'Overdue project', 'start_date' => '2026-01-01', 'end_date' => '2026-09-30']);
+        $today = Project::factory()->create(['name' => 'Due today', 'start_date' => '2026-10-01', 'end_date' => '2026-10-11']);
+        Project::factory()->archived()->create();
+        Project::factory()->trashed()->create();
         Epic::factory()->for($overdue)->create(['start_date' => '2026-02-01', 'end_date' => '2026-09-01']);
         Epic::factory()->for($overdue)->archived()->create();
 
-        $overview = (new PlanningQuery)->overview('');
+        $overview = (new PlanningQuery(new NullProjectIntegration))->overview('');
 
-        $this->assertSame(['customers' => 0, 'projects' => 4, 'epics' => 1, 'overdue' => 2], $overview['counts']);
+        $this->assertSame(['projects' => 4, 'epics' => 1, 'overdue' => 2], $overview['counts']);
         $this->assertSame(['2026-3', '2026-4', '2027-1', 'no-date'], array_column($overview['groups'], 'key'));
         $rows = $overview['paginator']->items();
         $this->assertSame([$overdue->name, $today->name, $later->name, $undated->name], array_column($rows, 'name'));
         $this->assertSame(['overdue', 'ontrack', 'ontrack', 'unscheduled'], array_column($rows, 'status'));
-        $this->assertSame(['Archived customer'], $rows[0]['trail']);
+        $this->assertSame([], $rows[0]['trail']);
         $this->assertSame(1, $rows[0]['count']['value']);
         $this->assertSame(route('epics.index', ['search' => $overdue->name]), $rows[0]['count']['url']);
         $this->assertNull($rows[1]['count']['url']);
@@ -70,13 +68,13 @@ class PlanningQueryTest extends TestCase
 
     public function test_search_filters_projects_not_epic_names_and_keeps_global_counts(): void
     {
-        $customer = Customer::factory()->create(['name' => 'North %_! customer']);
-        $project = Project::factory()->for($customer)->create(['name' => 'Website renewal']);
+        $project = Project::factory()->create(['name' => 'Website %_! renewal']);
         Epic::factory()->for($project)->create(['name' => 'Only epic matches']);
-        $other = Customer::factory()->create(['name' => 'South customer']);
-        Project::factory()->for($other)->create();
-        $query = new PlanningQuery;
+        Project::factory()->create(['name' => 'South project']);
+        $query = new PlanningQuery(new NullProjectIntegration);
 
+        // The escaped term reaches the project's own name; matching an epic name never puts the
+        // project on the board.
         $overview = $query->overview('%_!');
 
         $this->assertSame([$project->name], array_column($overview['paginator']->items(), 'name'));
@@ -86,13 +84,12 @@ class PlanningQueryTest extends TestCase
 
     public function test_page_is_cut_before_hydration_and_deadline_ordering(): void
     {
-        $customer = Customer::factory()->create();
-        Project::factory()->for($customer)->count(25)->sequence(
+        Project::factory()->count(25)->sequence(
             fn ($sequence): array => ['name' => 'Project '.str_pad((string) $sequence->index, 2, '0', STR_PAD_LEFT)],
         )->create(['start_date' => '2026-01-01', 'end_date' => '2026-12-31']);
-        $last = Project::factory()->for($customer)->create(['name' => 'Last project', 'start_date' => '2026-01-01', 'end_date' => '2026-02-01']);
+        $last = Project::factory()->create(['name' => 'Last project', 'start_date' => '2026-01-01', 'end_date' => '2026-02-01']);
 
-        $overview = (new PlanningQuery)->overview('', 2);
+        $overview = (new PlanningQuery(new NullProjectIntegration))->overview('', 2);
 
         $this->assertSame(26, $overview['paginator']->total());
         $this->assertSame(2, $overview['paginator']->currentPage());
@@ -119,7 +116,7 @@ class PlanningQueryTest extends TestCase
         $this->travel(10)->days();
         Project::factory()->create(['start_date' => $start, 'end_date' => $end]);
 
-        $overview = (new PlanningQuery)->overview('');
+        $overview = (new PlanningQuery(new NullProjectIntegration))->overview('');
 
         $this->assertSame($start, $overview['timeline']['from']->toDateString());
         $this->assertSame($days, $overview['timeline']['days']);
@@ -133,7 +130,7 @@ class PlanningQueryTest extends TestCase
         $this->travelTo(now()->setDate(2026, 10, 11)->startOfDay());
         Project::factory()->create(['start_date' => '2020-01-01', 'end_date' => '2026-10-31']);
 
-        $overview = (new PlanningQuery)->overview('');
+        $overview = (new PlanningQuery(new NullProjectIntegration))->overview('');
 
         $this->assertSame('2024-10-01', $overview['timeline']['from']->toDateString());
         $this->assertSame('2026-10-31', $overview['timeline']['to']->toDateString());

@@ -4,26 +4,12 @@ namespace Projects13\Tests\Unit\Validation;
 
 use Illuminate\Routing\Route;
 use Projects13\Tests\TestCase;
-use Illuminate\Validation\Rules\Exists;
 use Illuminate\Validation\Rules\Unique;
-use Illuminate\Support\Facades\Validator;
 use Basics13\Support\Validation\MaxLength;
 use Projects13\Http\Requests\ProjectRequest;
 
 class ProjectRequestTest extends TestCase
 {
-    public function test_customer_attribute_is_translated_by_the_resource_request(): void
-    {
-        app()->setLocale('eu');
-        $request = new ProjectRequest;
-        $validator = Validator::make([], ['customer_id' => ['required']], [], $request->attributes());
-
-        $this->assertSame(
-            __('validation.required', ['attribute' => __('Customer')]),
-            $validator->errors()->first('customer_id'),
-        );
-    }
-
     public function test_name_is_required(): void
     {
         $request = ProjectRequest::create('/', 'POST', ['name' => '']);
@@ -83,18 +69,6 @@ class ProjectRequestTest extends TestCase
         $this->assertRequestValidationFails($request, static fn (): array => $request->rules(), 'end_date');
     }
 
-    public function test_customer_id_is_required(): void
-    {
-        $request = ProjectRequest::create('/', 'POST', ['customer_id' => '']);
-        $this->assertRequestValidationFails($request, static fn (): array => $request->rules(), 'customer_id');
-    }
-
-    public function test_customer_id_must_be_integer(): void
-    {
-        $request = ProjectRequest::create('/', 'POST', ['customer_id' => 'not-an-integer']);
-        $this->assertRequestValidationFails($request, static fn (): array => $request->rules(), 'customer_id');
-    }
-
     public function test_notes_is_nullable_string_with_max_length(): void
     {
         $request = ProjectRequest::create('/', 'POST', ['notes' => 123]);
@@ -152,10 +126,9 @@ class ProjectRequestTest extends TestCase
         $this->assertArrayHasKey('name', $rules);
         $this->assertArrayHasKey('start_date', $rules);
         $this->assertArrayHasKey('end_date', $rules);
-        $this->assertArrayHasKey('customer_id', $rules);
         $this->assertArrayHasKey('notes', $rules);
         $this->assertArrayHasKey('reuse_deleted_name', $rules);
-        $this->assertCount(6, $rules);
+        $this->assertCount(5, $rules);
     }
 
     public function test_name_rule_contains_required_string_min_max_unique(): void
@@ -189,15 +162,6 @@ class ProjectRequestTest extends TestCase
         $this->assertContains('after_or_equal:start_date', $rules['end_date']);
     }
 
-    public function test_customer_id_rule_contains_required_integer_exists(): void
-    {
-        $request = new ProjectRequest;
-        $rules = $request->rules();
-
-        $this->assertContains('required', $rules['customer_id']);
-        $this->assertContains('integer', $rules['customer_id']);
-    }
-
     public function test_name_rule_contains_unique_scoped_to_active(): void
     {
         $request = new ProjectRequest;
@@ -206,20 +170,6 @@ class ProjectRequestTest extends TestCase
         $nameRules = $rules['name'];
         $uniqueRules = array_filter($nameRules, static fn (mixed $rule): bool => $rule instanceof Unique);
         $this->assertNotEmpty($uniqueRules, 'name rule must contain unique rule');
-    }
-
-    public function test_customer_id_rule_contains_exists_with_active_condition(): void
-    {
-        $request = new ProjectRequest;
-        $rules = $request->rules();
-
-        $customerIdRules = $rules['customer_id'];
-        $existsRules = array_filter($customerIdRules, static fn (mixed $rule): bool => $rule instanceof Exists);
-        $this->assertNotEmpty($existsRules, 'customer_id rule must contain exists rule');
-
-        $existsRule = reset($existsRules);
-        $this->assertInstanceOf(Exists::class, $existsRule);
-        $this->assertStringContainsString('CUM_customers', (string) $existsRule);
     }
 
     public function test_authorize_returns_false_when_user_cannot_create(): void

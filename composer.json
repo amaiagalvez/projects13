@@ -9,7 +9,6 @@
     },
     "require-dev": {
         "amaia/basics13": "^1.0",
-        "amaia/customers13": "^1.0",
         "larastan/larastan": "^3.9",
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
@@ -46,13 +45,6 @@
         {
             "type": "path",
             "url": "../packages/basics13",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path",
-            "url": "../packages/customers13",
             "options": {
                 "symlink": true
             }

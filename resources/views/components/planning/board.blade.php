@@ -75,17 +75,19 @@
                                 <th scope="row" class="max-w-0 lg:min-w-[16rem] px-3 py-2.5 text-start font-normal">
                                     <span class="block truncate font-medium text-zinc-900 dark:text-zinc-100"
                                         title="{{ $row['name'] }}">{{ $row['name'] }}</span>
-                                    <span class="block truncate text-xs text-zinc-500 dark:text-zinc-400"
-                                        title="{{ implode(' › ', $row['trail']) }}">
-                                        @foreach ($row['trail'] as $index => $ancestor)
-                                            @if ($index > 0)
-                                                <span aria-hidden="true">›</span>
-                                            @endif
-                                            {{ $ancestor }}@if (! $loop->last)
-                                                &nbsp;
-                                            @endif
-                                        @endforeach
-                                    </span>
+                                    @if ($row['trail'] !== [])
+                                        <span class="block truncate text-xs text-zinc-500 dark:text-zinc-400"
+                                            title="{{ implode(' › ', $row['trail']) }}">
+                                            @foreach ($row['trail'] as $index => $ancestor)
+                                                @if ($index > 0)
+                                                    <span aria-hidden="true">›</span>
+                                                @endif
+                                                {{ $ancestor }}@if (! $loop->last)
+                                                    &nbsp;
+                                                @endif
+                                            @endforeach
+                                        </span>
+                                    @endif
 
                                     @if ($row['bar'])
                                         {{-- The bar where there is no column to carry it: every width of the

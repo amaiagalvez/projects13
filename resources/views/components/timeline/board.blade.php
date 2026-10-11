@@ -98,8 +98,13 @@
                                             class="block min-w-0 truncate rounded text-start font-medium text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 dark:text-zinc-100 dark:focus-visible:ring-brand-400">{{ $row['name'] }}</a>
                                     </span>
 
-                                    <span class="mt-0.5 block truncate text-xs text-zinc-500 dark:text-zinc-400"
-                                        title="{{ $row['trail'][0] }}">{{ $row['trail'][0] }}</span>
+                                    {{-- Nothing above the row name says who it belongs to unless an
+                                         integration contributed a trail, so the label only appears
+                                         when there is one. --}}
+                                    @if (($row['trail'][0] ?? null) !== null)
+                                        <span class="mt-0.5 block truncate text-xs text-zinc-500 dark:text-zinc-400"
+                                            title="{{ $row['trail'][0] }}">{{ $row['trail'][0] }}</span>
+                                    @endif
                                 @else
                                     {{-- The epic is indented under its project rather than carrying a
                                          visible trail, so the project still reaches whoever is
@@ -108,7 +113,7 @@
                                         {{-- Vertical connector line to project --}}
                                         <span class="absolute left-2 top-0 bottom-0 w-px bg-zinc-200 dark:bg-zinc-700"
                                             aria-hidden="true"></span>
-                                        <span class="sr-only">{{ $row['trail'][0] }}: </span>
+                                        <span class="sr-only">{{ $row['trail'][0] ?? $row['name'] }}: </span>
                                         <a href="{{ $row['url'] }}" wire:navigate title="{{ $row['name'] }}"
                                             class="block min-w-0 truncate rounded text-start font-medium text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 dark:text-zinc-100 dark:focus-visible:ring-brand-400 relative z-10">{{ $row['name'] }}</a>
                                     </span>

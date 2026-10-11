@@ -12,6 +12,7 @@ use Illuminate\Database\QueryException;
 use Basics13\Http\Controllers\Controller;
 use Projects13\Http\Requests\EpicRequest;
 use Projects13\Queries\Epics\EpicListQuery;
+use Projects13\Contracts\ProjectIntegration;
 use Projects13\Http\Requests\EpicListRequest;
 use Projects13\Transformers\EpicListTransformer;
 use Basics13\Support\Database\UniqueConstraintViolation;
@@ -22,14 +23,13 @@ class EpicController extends Controller
         EpicListRequest $request,
         EpicListQuery $query,
         EpicListTransformer $transformer,
+        ProjectIntegration $integration,
     ): View|string {
         $search = $request->search();
         $epics = $query->active($search);
         $projectId = old('project_id');
         $selectedProject = is_numeric($projectId)
-            ? Project::query()
-                ->with('customer:id,name')
-                ->find((int) $projectId, ['id', 'name', 'customer_id'])
+            ? Project::query()->find((int) $projectId, ['id', 'name'])
             : null;
 
         return $this->listView($request, 'projects13::epics.list', [
@@ -37,7 +37,7 @@ class EpicController extends Controller
             'hasProjects' => Project::query()->where('active', true)->exists(),
             'selectedProjectOption' => $selectedProject === null ? null : [
                 'id' => $selectedProject->id,
-                'text' => $selectedProject->fullName(),
+                'text' => $integration->label($selectedProject),
             ],
             'drawerEpic' => $this->drawerEpic($request, $transformer),
             'list' => $transformer->active(
@@ -53,7 +53,7 @@ class EpicController extends Controller
      * whose edit failed. It is resolved by id instead of being looked up among the current page, so
      * a comment saved on a later page still reopens the right drawer.
      *
-     * @return array{id: int, name: string, start_date: string, end_date: string, project_id: int, project_label: string, commentAction: string, commentsUrl: string, commentsCount: int}|null
+     * @return array<string, mixed>|null
      */
     private function drawerEpic(EpicListRequest $request, EpicListTransformer $transformer): ?array
     {
@@ -64,7 +64,7 @@ class EpicController extends Controller
             return null;
         }
 
-        $epic = Epic::query()->with('project.customer')->withCount('comments')->find((int) $id);
+        $epic = Epic::query()->with('project')->withCount('comments')->find((int) $id);
 
         return $epic === null ? null : $transformer->payloadFor($epic);
     }

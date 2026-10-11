@@ -5,6 +5,7 @@ namespace Projects13\Transformers;
 use Projects13\Models\Epic;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Transformers\ListTransformer;
+use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -12,6 +13,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 class EpicListTransformer extends ListTransformer
 {
+    public function __construct(private readonly ProjectIntegration $integration) {}
+
     /**
      * @param  LengthAwarePaginator<int, Epic>  $epics
      * @param  array{active: int, archived: int, trashed: int}|null  $counts
@@ -21,16 +24,20 @@ class EpicListTransformer extends ListTransformer
     {
         return [
             ...$this->envelope('active', $search, $counts),
-            'rows' => collect($epics->items())->map(fn (Epic $epic): array => [
-                ...$this->columns($epic),
-                'extraDate' => $epic->created_at?->toIso8601String(),
-                'actions' => [
-                    $this->editAction($epic),
-                    $epic->comments_count > 0
-                        ? $this->archiveAction($epic, __('basics13::messages.archive_instead_of_delete'))
-                        : $this->deleteAction($epic),
-                ],
-            ])->all(),
+            'rows' => collect($epics->items())->map(function (Epic $epic): array {
+                $extra = $this->integration->row($epic);
+
+                return [
+                    ...$this->columns($epic, $extra),
+                    'extraDate' => $epic->created_at?->toIso8601String(),
+                    'actions' => [
+                        $this->editAction($epic),
+                        $epic->comments_count > 0
+                            ? $this->archiveAction($epic, __('basics13::messages.archive_instead_of_delete'))
+                            : $this->deleteAction($epic),
+                    ],
+                ];
+            })->all(),
         ];
     }
 
@@ -44,7 +51,7 @@ class EpicListTransformer extends ListTransformer
         return [
             ...$this->envelope('archived', $search, $counts),
             'rows' => collect($epics->items())->map(fn (Epic $epic): array => [
-                ...$this->columns($epic),
+                ...$this->columns($epic, $this->integration->row($epic)),
                 'extraDate' => $epic->updated_at?->toIso8601String(),
                 'actions' => [$this->activateAction($epic)],
             ])->all(),
@@ -61,7 +68,7 @@ class EpicListTransformer extends ListTransformer
         return [
             ...$this->envelope('trash', $search, $counts),
             'rows' => collect($epics->items())->map(fn (Epic $epic): array => [
-                ...$this->columns($epic),
+                ...$this->columns($epic, $this->integration->row($epic)),
                 'extraDate' => $epic->deleted_at?->toIso8601String(),
                 'actions' => [
                     $this->restoreAction($epic, $epic->active),
@@ -79,21 +86,23 @@ class EpicListTransformer extends ListTransformer
     }
 
     /**
-     * @return array{id: int, name: string, project: string, customer: string, startDate: string, endDate: string, commentsCount: int, editPayload: array{id: int, name: string, notes: string|null, start_date: string, end_date: string, project_id: int, project_label: string, commentAction: string, commentsUrl: string, commentsCount: int}}
+     * The integration's fields are merged last so it can override anything the base put here,
+     * which is the only way a row can carry a column the base knows nothing about.
+     *
+     * @param  array<string, mixed>  $extra
+     * @return array<string, mixed>
      */
-    private function columns(Epic $epic): array
+    private function columns(Epic $epic, array $extra): array
     {
-        $project = $epic->project;
-
         return [
             'id' => $epic->id,
             'name' => $epic->name,
-            'project' => $project->name,
-            'customer' => $project->customer->name,
+            'project' => $epic->project->name,
             'startDate' => $epic->start_date?->format('Y-m-d') ?? '',
             'endDate' => $epic->end_date?->format('Y-m-d') ?? '',
             'commentsCount' => (int) $epic->comments_count,
-            'editPayload' => $this->editPayload($epic),
+            'editPayload' => [...$this->editPayload($epic), ...$extra],
+            ...$extra,
         ];
     }
 
@@ -105,13 +114,13 @@ class EpicListTransformer extends ListTransformer
      * The payload itself is `editPayload()`: a drawer reopened from here and a drawer opened from a
      * row carry the very same fields, so they are built in one place.
      *
-     * @return array{id: int, name: string, notes: string|null, start_date: string, end_date: string, project_id: int, project_label: string, commentAction: string, commentsUrl: string, commentsCount: int}
+     * @return array<string, mixed>
      */
     public function payloadFor(Epic $epic): array
     {
-        $epic->loadMissing('project.customer');
+        $epic->loadMissing('project');
 
-        return $this->editPayload($epic);
+        return [...$this->editPayload($epic), ...$this->integration->row($epic)];
     }
 
     /**
@@ -127,16 +136,11 @@ class EpicListTransformer extends ListTransformer
             'start_date' => $record->start_date?->toDateString() ?? '',
             'end_date' => $record->end_date?->toDateString() ?? '',
             'project_id' => $record->project_id,
-            'project_label' => $this->projectLabel($record),
+            'project_label' => $this->integration->label($record->project),
             'commentAction' => route('epics.comments.store', $record),
             'commentsUrl' => route('epics.comments.index', $record),
             'commentsCount' => (int) $record->comments_count,
         ];
-    }
-
-    private function projectLabel(Epic $epic): string
-    {
-        return $epic->project->fullName();
     }
 
     protected function resourceLabel(): string

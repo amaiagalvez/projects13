@@ -5,7 +5,6 @@ namespace Projects13\Tests\Unit\Database\Factories;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
-use Customers13\Models\Customer;
 use Projects13\Database\Factories\EpicFactory;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
@@ -52,12 +51,10 @@ class EpicFactoryTest extends TestCase
 
     public function test_epic_factory_dates_are_within_project_dates(): void
     {
-        $customer = Customer::factory()->create();
         $project = Project::factory()->create([
             'name' => 'Test Project '.uniqid(),
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
-            'customer_id' => $customer->id,
         ]);
 
         $project->refresh();
@@ -78,12 +75,10 @@ class EpicFactoryTest extends TestCase
 
     public function test_epic_factory_handles_project_without_end_date(): void
     {
-        $customer = Customer::factory()->create();
         $project = Project::factory()->create([
             'name' => 'Test Project '.uniqid(),
             'start_date' => '2026-01-01',
             'end_date' => null,
-            'customer_id' => $customer->id,
         ]);
 
         $project->refresh();
@@ -103,7 +98,6 @@ class EpicFactoryTest extends TestCase
             'name' => 'Test Project',
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
-            'customer_id' => Customer::factory()->create()->id,
         ]);
 
         $factory = new class extends EpicFactory

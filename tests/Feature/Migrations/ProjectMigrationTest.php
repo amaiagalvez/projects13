@@ -5,7 +5,6 @@ namespace Projects13\Tests\Feature\Migrations;
 use Projects13\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 
 class ProjectMigrationTest extends TestCase
 {
@@ -29,12 +28,6 @@ class ProjectMigrationTest extends TestCase
         DB::purge($connectionName);
 
         try {
-            // Create customers table first (foreign key dependency)
-            Schema::create('CUM_customers', function (Blueprint $table): void {
-                $table->id();
-                $table->string('name');
-                $table->softDeletes();
-            });
 
             $migration = require dirname(__DIR__, 3).'/src/Database/Migrations/2026_09_28_173607_create_projects_table.php';
             $migration->up();
@@ -46,7 +39,6 @@ class ProjectMigrationTest extends TestCase
             $this->assertContains('name', $columns);
             $this->assertContains('start_date', $columns);
             $this->assertContains('end_date', $columns);
-            $this->assertContains('customer_id', $columns);
             $this->assertContains('notes', $columns);
             $this->assertContains('active', $columns);
             $this->assertContains('created_at', $columns);
@@ -88,12 +80,6 @@ class ProjectMigrationTest extends TestCase
         DB::purge($connectionName);
 
         try {
-            // Create customers table first (foreign key dependency)
-            Schema::create('CUM_customers', function (Blueprint $table): void {
-                $table->id();
-                $table->string('name');
-                $table->softDeletes();
-            });
 
             $migration = require dirname(__DIR__, 3).'/src/Database/Migrations/2026_09_28_173607_create_projects_table.php';
             $migration->up();

@@ -1,5 +1,15 @@
+@php
+    // The base conditions plus whatever an integration needs the submit button to wait for, e.g.
+    // while it creates a record on the user's behalf.
+    $submitDisabled = collect([
+        'isSubmitting',
+        '!isDirty',
+        config('projects13.views.project_form.submit_guard'),
+    ])->filter()->implode(' || ');
+@endphp
+
 <x-basics13::forms.tracked-resource prefix="project" context-field="_project_form" id-field="_project_id"
-    submit-disabled="isSubmitting || !isDirty || form.customerCreating">
+    submit-disabled="{{ $submitDisabled }}">
     <flux:field>
         <x-basics13::forms.field-label :request="\Projects13\Http\Requests\ProjectRequest::class" field="name"
             test="project-name-info" for="project-name">
@@ -28,42 +38,8 @@
             x-bind:min="form.start_date" id="project-end-date" data-test="project-end-date" />
         <flux:error name="end_date" />
     </flux:field>
-    <flux:field>
-        <x-basics13::forms.field-label :request="\Projects13\Http\Requests\ProjectRequest::class" field="customer_id"
-            test="project-customer-info" for="project-customer-id"
-            :notices="[__('Choose a customer from the list or create a new one.')]">
-            {{ __('Customer') }}
-        </x-basics13::forms.field-label>
-        <select id="project-customer-id" name="customer_id" x-model="form.customer_id"
-            x-effect="
-                const customerId = String(form.customer_id || '');
-                if (customerId && form.customer_name) {
-                    let option = Array.from($el.options).find((item) => item.value === customerId);
-                    if (!option) {
-                        option = new Option(form.customer_name, customerId, true, true);
-                        $el.add(option);
-                    }
-                    option.selected = true;
-                }
-                window.jQuery($el).val(customerId || null).trigger('change.select2')
-            "
-            required data-test="project-customer" data-project-customer-select
-            data-customer-store-url="{{ route('customers.store', [], false) }}"
-            data-customer-search-url="{{ route('customers.options', [], false) }}"
-            data-create-label="{{ __('Create customer') }}"
-            data-create-error="{{ __('Unable to create customer.') }}"
-            data-search-error="{{ __('Unable to load customers.') }}"
-            data-no-results-label="{{ __('No customers found.') }}"
-            data-placeholder="{{ __('Select a customer') }}">
-            <option></option>
-            @if ($selectedCustomer)
-                <option value="{{ $selectedCustomer->id }}">{{ $selectedCustomer->name }}</option>
-            @endif
-        </select>
-        <flux:error name="customer_id" />
-        <p role="alert" x-show="form.customerCreateError" x-text="form.customerCreateError"
-            class="text-sm text-red-600" data-test="project-customer-error"></p>
-    </flux:field>
+    {{-- Where an integration that owns a field of this form puts it. Null by default. --}}
+    @includeIf(config('projects13.views.project_form.fields'))
     <flux:field>
         <x-basics13::forms.field-label :request="\Projects13\Http\Requests\ProjectRequest::class" field="notes"
             test="project-notes-info" for="project-notes">

@@ -5,7 +5,6 @@ namespace Projects13\Tests\Feature;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
-use Customers13\Models\Customer;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -34,11 +33,9 @@ class ProjectCrudTest extends TestCase
     public function test_create_trims_name_and_persists_only_validated_fields(): void
     {
         $user = $this->signIn();
-        $customer = Customer::factory()->create();
 
         $this->post(route('projects.store'), [
             'name' => '  Website renewal  ',
-            'customer_id' => $customer->id,
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
             'notes' => 'Project notes',
@@ -48,49 +45,9 @@ class ProjectCrudTest extends TestCase
 
         $this->assertDatabaseHas('PRO_projects', [
             'name' => 'Website renewal',
-            'customer_id' => $customer->id,
             'notes' => 'Project notes',
             'active' => true,
             'created_by' => $user->id,
-        ]);
-    }
-
-    public function test_invalid_input_and_archived_customer_are_rejected(): void
-    {
-        $this->signIn();
-        $customer = Customer::factory()->create(['active' => false]);
-
-        $this->post(route('projects.store'), [
-            'name' => 'abc',
-            'customer_id' => $customer->id,
-            'start_date' => '2026-06-01',
-            'end_date' => '2026-05-01',
-        ])->assertSessionHasErrors(['name', 'customer_id', 'end_date']);
-
-        $this->assertDatabaseCount('PRO_projects', 0);
-    }
-
-    public function test_update_keeps_current_archived_customer_and_ignores_own_name(): void
-    {
-        $this->signIn();
-        $customer = Customer::factory()->create(['active' => false]);
-        $project = Project::factory()->for($customer)->create(['name' => 'Website renewal']);
-
-        $this->put(route('projects.update', $project), [
-            'name' => $project->name,
-            'customer_id' => $customer->id,
-            'start_date' => '2026-02-01',
-            'end_date' => null,
-            'notes' => 'Updated notes',
-        ])->assertRedirect(route('projects.index'))
-            ->assertSessionHas('status', __('basics13::messages.updated'));
-
-        $this->assertDatabaseHas('PRO_projects', [
-            'id' => $project->id,
-            'customer_id' => $customer->id,
-            'start_date' => '2026-02-01 00:00:00',
-            'end_date' => null,
-            'notes' => 'Updated notes',
         ]);
     }
 
@@ -101,7 +58,6 @@ class ProjectCrudTest extends TestCase
 
         $this->post(route('projects.store'), [
             'name' => $project->name,
-            'customer_id' => $project->customer_id,
             'start_date' => '2026-01-01',
         ])->assertSessionHasErrors('name');
 
@@ -115,7 +71,6 @@ class ProjectCrudTest extends TestCase
         $project->delete();
         $data = [
             'name' => $project->name,
-            'customer_id' => $project->customer_id,
             'start_date' => '2026-01-01',
         ];
 
@@ -140,7 +95,6 @@ class ProjectCrudTest extends TestCase
 
         $this->postJson(route('projects.store'), [
             'name' => $project->name,
-            'customer_id' => $project->customer_id,
             'start_date' => '2026-01-01',
         ])->assertConflict()->assertExactJson([
             'message' => $message,

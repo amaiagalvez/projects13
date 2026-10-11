@@ -3,9 +3,9 @@
 namespace Projects13\Queries\Projects;
 
 use Projects13\Models\Project;
-use Customers13\Models\Customer;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Builder;
+use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -14,12 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
  */
 final class ProjectListQuery extends ListQueryBase
 {
-    private const SEARCH_COLUMNS = [
-        'PRO_projects.name',
-        'project_customers.name',
-        'PRO_projects.start_date',
-        'PRO_projects.end_date',
-    ];
+    public function __construct(private readonly ProjectIntegration $integration) {}
 
     /**
      * @return LengthAwarePaginator<int, Project>
@@ -27,15 +22,16 @@ final class ProjectListQuery extends ListQueryBase
     public function active(string $search): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->withActiveCounts($this->withCustomer(Project::query()->where('PRO_projects.active', true)))
-                ->withExists(['epics' => fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)])
+            $this->withActiveCounts(
+                $this->scoped(Project::query()->where('PRO_projects.active', true))
+                    ->withExists(['epics' => fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)])
+            )
                 ->orderBy('PRO_projects.start_date')
                 ->orderBy('PRO_projects.end_date')
-                ->orderBy('project_customers.name')
                 ->orderBy('PRO_projects.name')
                 ->orderBy('PRO_projects.id'),
             $search,
-            searchColumns: self::SEARCH_COLUMNS,
+            searchColumns: $this->searchColumns(['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date']),
         );
     }
 
@@ -45,14 +41,18 @@ final class ProjectListQuery extends ListQueryBase
     public function archived(string $search): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->withActiveCounts($this->withCustomer(Project::query()->where('PRO_projects.active', false)))
+            $this->withActiveCounts($this->scoped(Project::query()->where('PRO_projects.active', false)))
                 ->orderBy('PRO_projects.start_date')
                 ->orderBy('PRO_projects.end_date')
-                ->orderBy('project_customers.name')
                 ->orderBy('PRO_projects.name')
                 ->orderBy('PRO_projects.id'),
             $search,
-            searchColumns: [...self::SEARCH_COLUMNS, 'PRO_projects.updated_at'],
+            searchColumns: $this->searchColumns([
+                'PRO_projects.name',
+                'PRO_projects.start_date',
+                'PRO_projects.end_date',
+                'PRO_projects.updated_at',
+            ]),
         );
     }
 
@@ -62,11 +62,16 @@ final class ProjectListQuery extends ListQueryBase
     public function trashed(string $search): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->withActiveCounts($this->withCustomer(Project::onlyTrashed()))
+            $this->withActiveCounts($this->scoped(Project::onlyTrashed()))
                 ->latest('PRO_projects.deleted_at')
                 ->orderBy('PRO_projects.id'),
             $search,
-            searchColumns: [...self::SEARCH_COLUMNS, 'PRO_projects.deleted_at'],
+            searchColumns: $this->searchColumns([
+                'PRO_projects.name',
+                'PRO_projects.start_date',
+                'PRO_projects.end_date',
+                'PRO_projects.deleted_at',
+            ]),
         );
     }
 
@@ -89,6 +94,24 @@ final class ProjectListQuery extends ListQueryBase
     }
 
     /**
+     * Hand the query to the integration before anything searches or orders it, so the columns it
+     * contributes to the search and to the ordering are already there.
+     *
+     * Project names are unique among non-deleted records, so name plus id already order this list
+     * completely: there is no tie left for any further column to break, and an integration does
+     * not have to contribute an ordering to keep the rows grouped the way they were.
+     *
+     * @param  Builder<Project>  $query
+     * @return Builder<Project>
+     */
+    private function scoped(Builder $query): Builder
+    {
+        $this->integration->scope($query, 'project', 'project_customers');
+
+        return $query;
+    }
+
+    /**
      * Only active epics and the comments written on them are counted; deleted ones are excluded by
      * the relations.
      *
@@ -104,14 +127,16 @@ final class ProjectListQuery extends ListQueryBase
     }
 
     /**
-     * @param  Builder<Project>  $query
-     * @return Builder<Project>
+     * Base search columns for this list, with whatever the integration contributes appended.
+     *
+     * @param  non-empty-list<literal-string>  $columns
+     * @return non-empty-list<literal-string>
      */
-    private function withCustomer(Builder $query): Builder
+    private function searchColumns(array $columns): array
     {
-        return $query
-            ->with('customer:id,name')
-            ->join((new Customer)->getTable().' as project_customers', 'project_customers.id', '=', 'PRO_projects.customer_id')
-            ->select('PRO_projects.*');
+        /** @var non-empty-list<literal-string> $columns An integration appends to the base columns; it never replaces them. */
+        $columns = $this->integration->searchColumns('project', $columns);
+
+        return $columns;
     }
 }

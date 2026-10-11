@@ -7,11 +7,11 @@ use Projects13\Models\Epic;
 use Illuminate\Session\Store;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
-use Customers13\Models\Customer;
 use Projects13\Models\EpicComment;
 use Projects13\Queries\Epics\EpicListQuery;
 use Projects13\Http\Requests\EpicListRequest;
 use Projects13\Http\Controllers\EpicController;
+use Projects13\Contracts\NullProjectIntegration;
 use Projects13\Http\Requests\ProjectListRequest;
 use Projects13\Transformers\EpicListTransformer;
 use Projects13\Queries\Projects\ProjectListQuery;
@@ -30,27 +30,23 @@ class ResourceListTest extends TestCase
     public function test_project_lists_partition_states_and_offer_correct_actions(): void
     {
         $user = $this->signIn();
-        $customer = Customer::factory()->create(['name' => 'North customer']);
-        $project = Project::factory()->for($customer)->create(['name' => 'North delivery']);
-        $empty = Project::factory()->for($customer)->create(['name' => 'Empty delivery', 'end_date' => null]);
-        $archived = Project::factory()->for($customer)->archived()->create();
-        $trashed = Project::factory()->for($customer)->trashed()->create();
+        $project = Project::factory()->create(['name' => 'North delivery']);
+        $empty = Project::factory()->create(['name' => 'Empty delivery', 'end_date' => null]);
+        $archived = Project::factory()->archived()->create();
+        $trashed = Project::factory()->trashed()->create();
         $epic = Epic::factory()->for($project)->create();
         EpicComment::factory()->for($epic)->for($user)->create();
-        $query = new ProjectListQuery;
-        $transformer = new ProjectListTransformer;
+        $query = new ProjectListQuery(new NullProjectIntegration);
+        $transformer = new ProjectListTransformer(new NullProjectIntegration);
         $request = ProjectListRequest::create('/projects', 'GET');
 
         $view = (new ProjectController)->index($request, $query, $transformer);
 
         $this->assertInstanceOf(View::class, $view);
         $this->assertSame('projects13::projects.list', $view->name());
-        $this->assertTrue($view->getData()['hasCustomers']);
-        $this->assertNull($view->getData()['selectedCustomer']);
         $rows = array_column($view->getData()['list']['rows'], null, 'id');
         $this->assertSame(1, $rows[$project->id]['epicsCount']);
         $this->assertSame(1, $rows[$project->id]['commentsCount']);
-        $this->assertSame('North customer', $rows[$project->id]['customer']);
         $this->assertSame(route('epics.index', ['search' => $project->name]), $rows[$project->id]['epicsUrl']);
         $this->assertSame('project-archive-'.$project->id, $rows[$project->id]['actions'][1]['test']);
         $this->assertSame('project-delete-'.$empty->id, $rows[$empty->id]['actions'][1]['test']);
@@ -67,25 +63,26 @@ class ResourceListTest extends TestCase
         $this->assertSame('project-restore-'.$trashed->id, $trashView->getData()['list']['rows'][0]['actions'][0]['test']);
     }
 
-    public function test_project_search_uses_customer_and_recovers_old_selection(): void
+    /**
+     * A row carries no customer here, so this asserts the same thing the customer search did
+     * before: the escaping of the wildcard characters reaches every column of the base search.
+     */
+    public function test_project_search_escapes_wildcards(): void
     {
         $this->signIn();
-        $customer = Customer::factory()->create(['name' => 'North %_! customer']);
-        $project = Project::factory()->for($customer)->create();
-        $otherCustomer = Customer::factory()->create(['name' => 'South customer']);
-        Project::factory()->for($otherCustomer)->create();
-        $session = app(Store::class);
-        $session->flashInput(['customer_id' => $customer->id]);
-        request()->setLaravelSession($session);
+        $project = Project::factory()->create(['name' => 'North %_! delivery']);
+        Project::factory()->create(['name' => 'South delivery']);
         $request = ProjectListRequest::create('/projects', 'GET', ['search' => '%_!']);
 
-        $view = (new ProjectController)->index($request, new ProjectListQuery, new ProjectListTransformer);
+        $view = (new ProjectController)->index($request, new ProjectListQuery(new NullProjectIntegration), new ProjectListTransformer(new NullProjectIntegration));
 
-        $this->assertInstanceOf(View::class, $view);
-        $this->assertSame($customer->id, $view->getData()['selectedCustomer']->id);
-        $this->assertSame([$project->id], array_column($view->getData()['list']['rows'], 'id'));
-        $this->assertSame([2, 0, 0], array_column($view->getData()['list']['tabs'], 'count'));
-        $this->assertSame(__('No projects match your search.'), $view->getData()['list']['emptyMessage']);
+        $this->assertSame([$project->id], array_column($this->page($view)->getData()['list']['rows'], 'id'));
+
+        $request = ProjectListRequest::create('/projects', 'GET', ['search' => 'nothing matches this']);
+
+        $view = (new ProjectController)->index($request, new ProjectListQuery(new NullProjectIntegration), new ProjectListTransformer(new NullProjectIntegration));
+
+        $this->assertSame(__('No projects match your search.'), $this->page($view)->getData()['list']['emptyMessage']);
     }
 
     public function test_epic_lists_partition_states_and_block_deletion_with_comments(): void
@@ -97,12 +94,12 @@ class ResourceListTest extends TestCase
         $archived = Epic::factory()->for($project)->archived()->create();
         $trashed = Epic::factory()->for($project)->trashed()->create();
         EpicComment::factory()->for($epic)->for($user)->create();
-        $query = new EpicListQuery;
-        $transformer = new EpicListTransformer;
+        $query = new EpicListQuery(new NullProjectIntegration);
+        $transformer = new EpicListTransformer(new NullProjectIntegration);
         $request = EpicListRequest::create('/epics', 'GET');
         $request->setLaravelSession(app(Store::class));
 
-        $view = (new EpicController)->index($request, $query, $transformer);
+        $view = (new EpicController)->index($request, $query, $transformer, new NullProjectIntegration);
 
         $this->assertInstanceOf(View::class, $view);
         $this->assertNull($view->getData()['drawerEpic']);
@@ -111,7 +108,8 @@ class ResourceListTest extends TestCase
         $rows = $view->getData()['list']['rows'];
         $this->assertSame([$epic->id, $empty->id], array_column($rows, 'id'));
         $this->assertSame(1, $rows[0]['commentsCount']);
-        $this->assertSame($project->fullName(), $rows[0]['editPayload']['project_label']);
+        // Without an integration a project is named by its own name.
+        $this->assertSame($project->name, $rows[0]['editPayload']['project_label']);
         $this->assertSame('epic-archive-'.$epic->id, $rows[0]['actions'][1]['test']);
         $this->assertSame('epic-delete-'.$empty->id, $rows[1]['actions'][1]['test']);
         $this->assertSame('', $rows[1]['startDate']);
@@ -139,15 +137,18 @@ class ResourceListTest extends TestCase
         $request = EpicListRequest::create('/epics', 'GET', ['search' => 'No matching epic']);
         $request->setLaravelSession($session);
 
-        $view = (new EpicController)->index($request, new EpicListQuery, new EpicListTransformer);
+        $view = (new EpicController)->index($request, new EpicListQuery(new NullProjectIntegration), new EpicListTransformer(new NullProjectIntegration), new NullProjectIntegration);
 
         $this->assertInstanceOf(View::class, $view);
         $this->assertSame([], $view->getData()['list']['rows']);
         $this->assertSame($epic->id, $view->getData()['drawerEpic']['id']);
-        $this->assertSame(['id' => $epic->project_id, 'text' => $epic->project->fullName()], $view->getData()['selectedProjectOption']);
+        $this->assertSame(
+            ['id' => $epic->project_id, 'text' => $epic->project->name],
+            $view->getData()['selectedProjectOption'],
+        );
 
         $session->put('commented_epic_id', 999999);
-        $view = (new EpicController)->index($request, new EpicListQuery, new EpicListTransformer);
+        $view = (new EpicController)->index($request, new EpicListQuery(new NullProjectIntegration), new EpicListTransformer(new NullProjectIntegration), new NullProjectIntegration);
         $this->assertInstanceOf(View::class, $view);
         $this->assertNull($view->getData()['drawerEpic']);
     }
@@ -161,8 +162,8 @@ class ResourceListTest extends TestCase
 
         $view = (new EpicTrashController)->index(
             EpicListRequest::create('/epics/trash', 'GET'),
-            new EpicListQuery,
-            new EpicListTransformer,
+            new EpicListQuery(new NullProjectIntegration),
+            new EpicListTransformer(new NullProjectIntegration),
         );
 
         $this->assertInstanceOf(View::class, $view);
@@ -178,41 +179,48 @@ class ResourceListTest extends TestCase
         $request = EpicListRequest::create('/epics', 'GET');
         $request->setLaravelSession($session);
 
-        $view = (new EpicController)->index($request, new EpicListQuery, new EpicListTransformer);
+        $view = (new EpicController)->index($request, new EpicListQuery(new NullProjectIntegration), new EpicListTransformer(new NullProjectIntegration), new NullProjectIntegration);
 
         $this->assertInstanceOf(View::class, $view);
         $this->assertSame($epic->id, $view->getData()['drawerEpic']['id']);
         $this->assertSame(route('epics.comments.store', $epic), $view->getData()['drawerEpic']['commentAction']);
     }
 
+    /**
+     * The controllers answer with a view or with a fragment, and these tests are about the view.
+     */
+    private function page(View|string $view): View
+    {
+        $this->assertInstanceOf(View::class, $view);
+
+        return $view;
+    }
+
     public function test_project_options_are_sorted_and_limited(): void
     {
         $this->signIn();
-        $customer = Customer::factory()->create(['name' => 'North customer']);
-        Project::factory()->for($customer)->count(26)->sequence(
+        Project::factory()->count(26)->sequence(
             fn ($sequence): array => ['name' => 'Project '.str_pad((string) $sequence->index, 2, '0', STR_PAD_LEFT)],
         )->create();
 
         $this->getJson(route('projects.options'))
             ->assertOk()
             ->assertJsonCount(25, 'results')
-            ->assertJsonPath('results.0.text', 'Project 00 (North customer)')
-            ->assertJsonPath('results.24.text', 'Project 24 (North customer)');
+            ->assertJsonPath('results.0.text', 'Project 00')
+            ->assertJsonPath('results.24.text', 'Project 24');
     }
 
-    public function test_project_options_search_parent_and_escape_wildcards(): void
+    public function test_project_options_search_escape_wildcards_and_reject_invalid_terms(): void
     {
         $this->signIn();
-        $customer = Customer::factory()->create(['name' => 'North %_! customer']);
-        $project = Project::factory()->for($customer)->create(['name' => 'Website renewal']);
-        Project::factory()->for($customer)->archived()->create();
-        Project::factory()->for($customer)->trashed()->create();
-        $otherCustomer = Customer::factory()->create(['name' => 'South customer']);
-        Project::factory()->for($otherCustomer)->create();
+        $project = Project::factory()->create(['name' => 'Website %_! renewal']);
+        Project::factory()->archived()->create();
+        Project::factory()->trashed()->create();
+        Project::factory()->create(['name' => 'South project']);
 
         $this->getJson(route('projects.options', ['q' => '%_!']))
             ->assertOk()->assertExactJson(['results' => [
-                ['id' => $project->id, 'text' => 'Website renewal (North %_! customer)'],
+                ['id' => $project->id, 'text' => 'Website %_! renewal'],
             ]]);
         $this->getJson(route('projects.options'))->assertOk()->assertJsonCount(2, 'results');
         $this->getJson(route('projects.options', ['q' => ['invalid']]))->assertUnprocessable();

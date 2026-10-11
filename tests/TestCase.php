@@ -10,7 +10,6 @@ use Basics13\Support\Testing\ValidatesFormRequests;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 use Basics13\ServiceProvider as Basics13ServiceProvider;
 use Projects13\ServiceProvider as Projects13ServiceProvider;
-use Customers13\ServiceProvider as Customers13ServiceProvider;
 
 abstract class TestCase extends TestbenchTestCase
 {
@@ -36,7 +35,6 @@ abstract class TestCase extends TestbenchTestCase
     {
         return [
             Basics13ServiceProvider::class,
-            Customers13ServiceProvider::class,
             Projects13ServiceProvider::class,
         ];
     }

@@ -4,17 +4,36 @@ namespace Projects13\Http\Requests;
 
 use Projects13\Models\Project;
 use Illuminate\Validation\Rule;
-use Customers13\Models\Customer;
-use Illuminate\Validation\Rules\Exists;
 use Basics13\Support\Validation\MaxLength;
 use Illuminate\Foundation\Http\FormRequest;
+use Projects13\Contracts\ProjectIntegration;
 
 class ProjectRequest extends FormRequest
 {
-    /** @return array<string, string> */
+    /**
+     * Resolved from the container rather than injected: Laravel builds a form request itself and
+     * passes the incoming payload to the parent constructor, so this one takes no arguments of its
+     * own.
+     */
+    private function integration(): ProjectIntegration
+    {
+        return app(ProjectIntegration::class);
+    }
+
+    /**
+     * The base knows nothing about the fields an integration adds, so it asks it how to name them.
+     *
+     * @return array<string, string>
+     */
     public function attributes(): array
     {
-        return ['customer_id' => __('Customer')];
+        return [
+            'name' => __('Name'),
+            'start_date' => __('Start date'),
+            'end_date' => __('End date'),
+            'notes' => __('Notes'),
+            ...$this->integration()->attributes(),
+        ];
     }
 
     protected function prepareForValidation(): void
@@ -52,31 +71,9 @@ class ProjectRequest extends FormRequest
             ],
             'start_date' => ['required', 'date_format:Y-m-d'],
             'end_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start_date'],
-            'customer_id' => [
-                'required',
-                'integer',
-                $this->selectableCustomerRule(),
-            ],
             'notes' => ['nullable', 'string', 'max:'.MaxLength::longText()],
             'reuse_deleted_name' => ['sometimes', 'boolean'],
+            ...$this->integration()->rules($this),
         ];
-    }
-
-    /**
-     * A project may only hang from an active customer, which is what the selector offers. While
-     * editing, the customer the project already belongs to stays valid even after it has been
-     * deactivated, so a form that does not change it can still be saved.
-     */
-    protected function selectableCustomerRule(): Exists
-    {
-        $current = $this->route('project');
-
-        if ($current instanceof Project && $current->customer_id === $this->integer('customer_id')) {
-            return Rule::exists(Customer::class, 'id')->whereNull('deleted_at');
-        }
-
-        return Rule::exists(Customer::class, 'id')
-            ->whereNull('deleted_at')
-            ->where('active', true);
     }
 }

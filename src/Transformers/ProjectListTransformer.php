@@ -5,6 +5,7 @@ namespace Projects13\Transformers;
 use Projects13\Models\Project;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Transformers\ListTransformer;
+use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -12,6 +13,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 class ProjectListTransformer extends ListTransformer
 {
+    public function __construct(private readonly ProjectIntegration $integration) {}
+
     /**
      * @param  LengthAwarePaginator<int, Project>  $projects
      * @param  array{active: int, archived: int, trashed: int}|null  $counts
@@ -21,16 +24,20 @@ class ProjectListTransformer extends ListTransformer
     {
         return [
             ...$this->envelope('active', $search, $counts),
-            'rows' => collect($projects->items())->map(fn (Project $project): array => [
-                ...$this->columns($project),
-                'extraDate' => $project->created_at?->toIso8601String(),
-                'actions' => [
-                    $this->editAction($project),
-                    $project->epics_exists
-                        ? $this->archiveAction($project, __('basics13::messages.archive_instead_of_delete'))
-                        : $this->deleteAction($project),
-                ],
-            ])->all(),
+            'rows' => collect($projects->items())->map(function (Project $project): array {
+                $extra = $this->integration->row($project);
+
+                return [
+                    ...$this->columns($project, $extra),
+                    'extraDate' => $project->created_at?->toIso8601String(),
+                    'actions' => [
+                        $this->editAction($project),
+                        $project->epics_exists
+                            ? $this->archiveAction($project, __('basics13::messages.archive_instead_of_delete'))
+                            : $this->deleteAction($project),
+                    ],
+                ];
+            })->all(),
         ];
     }
 
@@ -44,7 +51,7 @@ class ProjectListTransformer extends ListTransformer
         return [
             ...$this->envelope('archived', $search, $counts),
             'rows' => collect($projects->items())->map(fn (Project $project): array => [
-                ...$this->columns($project),
+                ...$this->columns($project, $this->integration->row($project)),
                 'extraDate' => $project->updated_at?->toIso8601String(),
                 'actions' => [$this->activateAction($project)],
             ])->all(),
@@ -61,7 +68,7 @@ class ProjectListTransformer extends ListTransformer
         return [
             ...$this->envelope('trash', $search, $counts),
             'rows' => collect($projects->items())->map(fn (Project $project): array => [
-                ...$this->columns($project),
+                ...$this->columns($project, $this->integration->row($project)),
                 'extraDate' => $project->deleted_at?->toIso8601String(),
                 'actions' => [
                     $this->restoreAction($project, $project->active),
@@ -72,16 +79,19 @@ class ProjectListTransformer extends ListTransformer
     }
 
     /**
-     * @return array{id: int, name: string, customer: string, startDate: string, endDate: string, epicsCount: int, epicsUrl: string|null, commentsCount: int, editPayload: array{id: int, name: string, notes: string|null, start_date: string, end_date: string, customer_id: int, customer_name: string}}
+     * The integration's fields are merged last so it can override anything the base put here,
+     * which is the only way a row can carry a column the base knows nothing about.
+     *
+     * @param  array<string, mixed>  $extra
+     * @return array<string, mixed>
      */
-    private function columns(Project $project): array
+    private function columns(Project $project, array $extra): array
     {
         $epicsCount = (int) $project->epics_count;
 
         return [
             'id' => $project->id,
             'name' => $project->name,
-            'customer' => $project->customer->name,
             'startDate' => $project->start_date->format('Y-m-d'),
             'endDate' => $project->end_date?->format('Y-m-d') ?? '',
             'epicsCount' => $epicsCount,
@@ -90,13 +100,17 @@ class ProjectListTransformer extends ListTransformer
                 ? route('epics.index', ['search' => $project->name])
                 : null,
             'commentsCount' => (int) $project->comments_count,
-            'editPayload' => $this->editPayload($project),
+            'editPayload' => [...$this->editPayload($project), ...$extra],
+            ...$extra,
         ];
     }
 
     /**
+     * The same extra fields land in the drawer payload, so a row and a drawer reopened from it
+     * always carry the same keys.
+     *
      * @param  Project  $record
-     * @return array{id: int, name: string, notes: string|null, start_date: string, end_date: string, customer_id: int, customer_name: string}
+     * @return array{id: int, name: string, notes: string|null, start_date: string, end_date: string}
      */
     protected function editPayload(Model $record): array
     {
@@ -106,8 +120,6 @@ class ProjectListTransformer extends ListTransformer
             'notes' => $record->notes,
             'start_date' => $record->start_date->toDateString(),
             'end_date' => $record->end_date?->toDateString() ?? '',
-            'customer_id' => $record->customer_id,
-            'customer_name' => $record->customer->name,
         ];
     }
 

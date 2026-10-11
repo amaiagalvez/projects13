@@ -5,6 +5,7 @@ namespace Projects13\Tests\Feature\Http\Controllers;
 use Illuminate\View\View;
 use Projects13\Tests\TestCase;
 use Projects13\Queries\Planning\PlanningQuery;
+use Projects13\Contracts\NullProjectIntegration;
 use Projects13\Http\Requests\PlanningListRequest;
 use Projects13\Http\Controllers\PlanningController;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -18,7 +19,7 @@ class PlanningControllerTest extends TestCase
         $controller = new PlanningController;
         $request = PlanningListRequest::create('/planning', 'GET');
 
-        $result = $controller->index($request, new PlanningQuery);
+        $result = $controller->index($request, new PlanningQuery(new NullProjectIntegration));
 
         $this->assertInstanceOf(View::class, $result);
         $this->assertSame('projects13::planning.index', $result->name());

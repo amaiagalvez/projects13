@@ -1,6 +1,20 @@
 @php
     $editingProject = $list['create'] && str_starts_with(old('_project_form', ''), 'edit-');
     $deletedProjectConflict = session('deleted_project_conflict');
+
+    // The fields an integration owns, carried over from the previous submission so a form that
+    // failed validation comes back with what the user had already chosen. The base package does
+    // not know what those fields are: the integration declares them next to the view it fills in.
+    $integrationState = [];
+
+    foreach (config('projects13.views.project_form.state', []) as $integrationField) {
+        $integrationState[$integrationField] = old($integrationField, '');
+    }
+
+    // The same keys, blank, for a drawer opened fresh from the "new" button rather than from a
+    // failed submission.
+    $integrationFreshState = array_fill_keys(array_keys($integrationState), '');
+
     $initialForm = $list['create']
         ? [
             'id' => $editingProject ? old('_project_id') : null,
@@ -8,10 +22,6 @@
             'notes' => old('notes', ''),
             'start_date' => old('start_date', ''),
             'end_date' => old('end_date', ''),
-            'customer_id' => old('customer_id', ''),
-            'customer_name' => ($selectedCustomer ?? null)?->name ?? '',
-            'customerCreateError' => '',
-            'customerCreating' => false,
             'context' => $editingProject ? old('_project_form') : 'create',
             'method' => $editingProject ? 'PUT' : 'POST',
             'action' => $editingProject
@@ -19,6 +29,7 @@
                 : route('projects.store'),
             'title' => $editingProject ? __('Edit project') : __('New project'),
             'submitLabel' => $editingProject ? __('Update project') : __('Save project'),
+            ...$integrationState,
         ]
         : null;
 @endphp
@@ -35,10 +46,7 @@
                 notes: '',
                 start_date: '',
                 end_date: '',
-                customer_id: '',
-                customer_name: '',
-                customerCreateError: '',
-                customerCreating: false,
+                ...@js($integrationFreshState),
                 context: 'create',
                 method: 'POST',
                 action: this.storeUrl,
@@ -49,8 +57,6 @@
         editProject(project) {
             this.form = {
                 ...project,
-                customerCreateError: '',
-                customerCreating: false,
                 context: `edit-${project.id}`,
                 method: 'PUT',
                 action: this.updateUrl.replace('__PROJECT__', project.id),
@@ -74,19 +80,6 @@
             </x-slot:actions>
         </x-basics13::list.page-header>
 
-        @if ($list['create'] && ! ($hasCustomers ?? false))
-            <flux:callout icon="exclamation-triangle" variant="warning">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <span>{{ __('No active customers are available. Open the customer form to create one.') }}</span>
-                    <flux:button size="sm" variant="primary"
-                        :href="route('customers.index', ['create' => 1])"
-                        data-test="project-no-customer-form-button">
-                        {{ __('Open customer form') }}
-                    </flux:button>
-                </div>
-            </flux:callout>
-        @endif
-
         <x-basics13::list.flash prefix="project" />
 
         @fragment('list-results')
@@ -96,7 +89,7 @@
                 <x-basics13::list.table prefix="project" :paginator="$projects">
                     <flux:table.columns>
                         <flux:table.column scope="col">{{ __('Name') }}</flux:table.column>
-                        <flux:table.column scope="col">{{ __('Customer') }}</flux:table.column>
+                        @includeIf(config('projects13.views.project_list.columns'))
                         <flux:table.column scope="col">{{ __('Start date') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('End date') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Epics') }}</flux:table.column>
@@ -120,10 +113,7 @@
                                             data-test="project-name-{{ $row['id'] }}">{{ $row['name'] }}</button>
                                     </flux:modal.trigger>
                                 </flux:table.cell>
-                                <flux:table.cell class="max-w-[16rem] truncate"
-                                    :title="$row['customer']">
-                                    {{ $row['customer'] }}
-                                </flux:table.cell>
+                                @includeIf(config('projects13.views.project_list.cells'))
                                 <flux:table.cell>
                                     <x-basics13::list.local-time :datetime="$row['startDate']" format="date" />
                                 </flux:table.cell>
@@ -148,7 +138,7 @@
                                 </flux:table.cell>
                             </flux:table.row>
                         @empty
-                            <x-basics13::list.empty-state :colspan="7" :message="$list['emptyMessage']" />
+                            <x-basics13::list.empty-state :colspan="6 + (int) config('projects13.views.project_list.count', 0)" :message="$list['emptyMessage']" />
                         @endforelse
                     </flux:table.rows>
                 </x-basics13::list.table>
@@ -172,7 +162,6 @@
                         'name' => old('name', $deletedProjectConflict['name']),
                         'start_date' => old('start_date'),
                         'end_date' => old('end_date'),
-                        'customer_id' => old('customer_id'),
                     ]"
                     :create-label="__('Create a new project')" :restore-label="__('Restore the deleted record instead')" create-test="project-conflict-create-new"
                     restore-test="project-conflict-restore" />
