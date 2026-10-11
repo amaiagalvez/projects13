@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Basics13\Concerns\TracksAuditColumns;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 use Projects13\Database\Factories\EpicCommentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
@@ -24,7 +24,6 @@ use Illuminate\Database\Eloquent\Attributes\UseFactory;
  * @property int|null $created_by
  * @property int|null $updated_by
  * @property int|null $deleted_by
- * @property CarbonImmutable|null $deleted_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
@@ -35,7 +34,7 @@ class EpicComment extends Model
     protected $table = 'PRO_epic_comments';
 
     /** @use HasFactory<EpicCommentFactory> */
-    use HasFactory, SoftDeletes, TracksAuditColumns;
+    use HasFactory, TracksAuditColumns;
 
     /**
      * @return BelongsTo<Epic, $this>
