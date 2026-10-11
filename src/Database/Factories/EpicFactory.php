@@ -20,7 +20,13 @@ class EpicFactory extends Factory
      */
     public function definition(): array
     {
-        $project = static::getRecord(Project::class);
+        // If project_id is already set (e.g., via ->for($project)), use that project
+        // Otherwise get a random project
+        $projectId = $this->attributes['project_id'] ?? null;
+        /** @var Project $project */
+        $project = $projectId
+            ? Project::query()->findOrFail($projectId)
+            : static::getRecord(Project::class);
 
         // Epic dates must be within project dates
         $projectStart = CarbonImmutable::parse($project->start_date);
@@ -41,7 +47,14 @@ class EpicFactory extends Factory
 
         // Epic end must be after epic start and before project end
         $endFloor = CarbonImmutable::parse($startDate)->addDay();
-        $endDate = fake()->dateTimeBetween($endFloor, $projectEnd->max($endFloor))->format('Y-m-d');
+        $endCeiling = $projectEnd;
+
+        // Ensure end ceiling is not before end floor
+        if ($endCeiling->lessThan($endFloor)) {
+            $endCeiling = $endFloor;
+        }
+
+        $endDate = fake()->dateTimeBetween($endFloor, $endCeiling)->format('Y-m-d');
 
         return [
             'name' => fake()->unique()->sentence(3),

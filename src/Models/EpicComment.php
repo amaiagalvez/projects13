@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Basics13\Concerns\TracksAuditColumns;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
 use Projects13\Database\Factories\EpicCommentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;

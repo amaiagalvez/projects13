@@ -13,6 +13,7 @@ class ServiceProvider extends BaseServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'projects13');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'projects13');
         $this->loadJsonTranslationsFrom(__DIR__.'/../resources/lang');
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
