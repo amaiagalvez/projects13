@@ -64,10 +64,5 @@
     "Unsaved epic changes are discarded when adding a comment.": "Unsaved epic changes are discarded when adding a comment.",
     "Update epic": "Update epic",
     "Update project": "Update project",
-    "View :count epics": "View :count epics",
-    "validation": {
-        "attributes": {
-            "project_id": "Project ID"
-        }
-    }
+    "View :count epics": "View :count epics"
 }

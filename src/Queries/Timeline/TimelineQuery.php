@@ -136,7 +136,6 @@ final class TimelineQuery extends ListQueryBase
             ->all();
 
         /** @var list<int> */
-        // @phpstan-ignore-next-line
         return array_map('intval', $ids);
     }
 
@@ -217,7 +216,6 @@ final class TimelineQuery extends ListQueryBase
         $matchedProjectsByName = $this->projectsMatchingByNameOrCustomer($search)
             ->whereIn('PRO_projects.id', $pageIds)
             ->pluck('PRO_projects.id')
-            // @phpstan-ignore-next-line
             ->map('intval')
             ->all();
 
@@ -228,7 +226,6 @@ final class TimelineQuery extends ListQueryBase
             ['PRO_epics.name'],
         )
             ->pluck('PRO_epics.id')
-            // @phpstan-ignore-next-line
             ->map('intval')
             ->all();
 

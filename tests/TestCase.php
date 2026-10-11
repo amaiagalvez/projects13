@@ -6,7 +6,7 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Route;
-use Projects13\Tests\Concerns\ValidatesFormRequests;
+use Basics13\Support\Testing\ValidatesFormRequests;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 use Basics13\ServiceProvider as Basics13ServiceProvider;
 use Projects13\ServiceProvider as Projects13ServiceProvider;

@@ -64,10 +64,5 @@
     "Unsaved epic changes are discarded when adding a comment.": "Iruzkina bat gehitzean, epikaren gorde gabeko aldaketak baztertu egiten dira.",
     "Update epic": "Eguneratu epika",
     "Update project": "Eguneratu proiektua",
-    "View :count epics": "Ikusi :count epika",
-    "validation": {
-        "attributes": {
-            "project_id": "proiektuaren ID"
-        }
-    }
+    "View :count epics": "Ikusi :count epika"
 }

@@ -64,10 +64,5 @@
     "Unsaved epic changes are discarded when adding a comment.": "Les modifications non enregistr\u00e9es de l\u2019\u00e9pop\u00e9e sont perdues lors de l\u2019ajout d\u2019un commentaire.",
     "Update epic": "Mettre \u00e0 jour l\u2019\u00e9pop\u00e9e",
     "Update project": "Mettre \u00e0 jour le projet",
-    "View :count epics": "Voir :count \u00e9pop\u00e9es",
-    "validation": {
-        "attributes": {
-            "project_id": "ID du projet"
-        }
-    }
+    "View :count epics": "Voir :count \u00e9pop\u00e9es"
 }

@@ -64,10 +64,5 @@
     "Unsaved epic changes are discarded when adding a comment.": "Al añadir un comentario se descartan los cambios no guardados de la épica.",
     "Update epic": "Actualizar épica",
     "Update project": "Actualizar proyecto",
-    "View :count epics": "Ver :count épicas",
-    "validation": {
-        "attributes": {
-            "project_id": "ID del proyecto"
-        }
-    }
+    "View :count epics": "Ver :count épicas"
 }
