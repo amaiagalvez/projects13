@@ -2,7 +2,6 @@
 
 namespace Projects13\Tests\Unit\Epics;
 
-use Carbon\Carbon;
 use Projects13\Models\Epic;
 use Projects13\Tests\TestCase;
 
@@ -20,8 +19,8 @@ class EpicTest extends TestCase
         ]);
 
         $this->assertSame('Checkout flow', $epic->getAttributes()['name']);
-        $this->assertSame('2026-10-01', $epic->start_date->toDateString());
-        $this->assertSame('2026-10-31', $epic->end_date->toDateString());
+        $this->assertSame('2026-10-01', $epic->start_date?->toDateString());
+        $this->assertSame('2026-10-31', $epic->end_date?->toDateString());
         $this->assertSame(7, $epic->getAttributes()['project_id']);
     }
 
@@ -53,8 +52,8 @@ class EpicTest extends TestCase
             'end_date' => '2023-08-01',
         ]);
 
-        $this->assertEquals('2023-06-01', $epic->start_date->toDateString());
-        $this->assertEquals('2023-08-01', $epic->end_date->toDateString());
+        $this->assertEquals('2023-06-01', $epic->start_date?->toDateString());
+        $this->assertEquals('2023-08-01', $epic->end_date?->toDateString());
     }
 
     public function test_epic_is_active_by_default(): void
@@ -85,7 +84,7 @@ class EpicTest extends TestCase
             'end_date' => null,
         ]);
 
-        $this->assertEquals('2023-06-01', $epic->start_date->toDateString());
+        $this->assertEquals('2023-06-01', $epic->start_date?->toDateString());
         $this->assertNull($epic->end_date);
     }
 }

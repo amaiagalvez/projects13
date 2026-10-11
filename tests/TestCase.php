@@ -3,6 +3,8 @@
 namespace Projects13\Tests;
 
 use App\Models\User;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Route;
 use Projects13\Tests\Concerns\ValidatesFormRequests;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
@@ -13,6 +15,19 @@ use Customers13\ServiceProvider as Customers13ServiceProvider;
 abstract class TestCase extends TestbenchTestCase
 {
     use ValidatesFormRequests;
+
+    protected function signIn(): User
+    {
+        $user = User::query()->create([
+            'name' => 'Test author',
+            'email' => 'author@example.test',
+            'password' => 'password',
+        ]);
+
+        $this->actingAs($user);
+
+        return $user;
+    }
 
     /**
      * @return array<int, class-string>
@@ -28,6 +43,8 @@ abstract class TestCase extends TestbenchTestCase
 
     protected function getEnvironmentSetUp($app): void
     {
+        Date::use(CarbonImmutable::class);
+
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
         $app['config']->set('database.connections.sqlite.database', ':memory:');

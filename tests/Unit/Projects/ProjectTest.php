@@ -2,7 +2,6 @@
 
 namespace Projects13\Tests\Unit\Projects;
 
-use Carbon\Carbon;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
 
@@ -20,8 +19,8 @@ class ProjectTest extends TestCase
         ]);
 
         $this->assertSame('Website renewal', $project->getAttributes()['name']);
-        $this->assertSame('2026-10-01', $project->start_date->toDateString());
-        $this->assertSame('2026-12-31', $project->end_date->toDateString());
+        $this->assertSame('2026-10-01', $project->start_date?->toDateString() /** @phpstan-ignore-line nullsafe.neverNull */);
+        $this->assertSame('2026-12-31', $project->end_date?->toDateString());
         $this->assertSame(7, $project->getAttributes()['customer_id']);
     }
 
@@ -53,8 +52,8 @@ class ProjectTest extends TestCase
             'end_date' => '2023-12-31',
         ]);
 
-        $this->assertEquals('2023-01-01', $project->start_date->toDateString());
-        $this->assertEquals('2023-12-31', $project->end_date->toDateString());
+        $this->assertEquals('2023-01-01', $project->start_date?->toDateString() /** @phpstan-ignore-line nullsafe.neverNull */);
+        $this->assertEquals('2023-12-31', $project->end_date?->toDateString());
     }
 
     public function test_project_is_active_by_default(): void
@@ -85,7 +84,7 @@ class ProjectTest extends TestCase
             'end_date' => null,
         ]);
 
-        $this->assertEquals('2023-01-01', $project->start_date->toDateString());
+        $this->assertEquals('2023-01-01', $project->start_date?->toDateString() /** @phpstan-ignore-line nullsafe.neverNull */);
         $this->assertNull($project->end_date);
     }
 }

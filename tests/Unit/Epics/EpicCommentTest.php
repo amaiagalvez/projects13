@@ -2,9 +2,8 @@
 
 namespace Projects13\Tests\Unit\Epics;
 
-use Projects13\Models\EpicComment;
-use Projects13\Models\Epic;
 use Projects13\Tests\TestCase;
+use Projects13\Models\EpicComment;
 
 class EpicCommentTest extends TestCase
 {
@@ -23,7 +22,7 @@ class EpicCommentTest extends TestCase
 
     public function test_epic_comment_belongs_to_epic_relation_defined(): void
     {
-        $this->assertTrue(method_exists(EpicComment::class, 'epic'));
+        $this->assertTrue(method_exists(EpicComment::class, 'epic') /** @phpstan-ignore-line function.alreadyNarrowedType */);
     }
 
     public function test_epic_comment_has_required_fields(): void

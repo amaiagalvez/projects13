@@ -309,7 +309,7 @@ final class PlanningQuery extends ListQueryBase
             $from = $to->subMonthsNoOverflow(self::MAX_MONTHS)->startOfMonth();
         }
 
-        $days = $this->days($from, $to->addDay());
+        $days = $this->days($from, $to->startOfDay()->addDay());
         $months = [];
 
         for ($month = $from; $month->lessThan($to); $month = $month->addMonth()) {

@@ -7,6 +7,26 @@ use Projects13\Http\Requests\ProjectRestoreRequest;
 
 class ProjectRestoreRequestTest extends TestCase
 {
+    public function test_project_restore_request_does_not_validate_body_id(): void
+    {
+        $request = ProjectRestoreRequest::create('/', 'PATCH', ['id' => 1]);
+
+        $validator = $this->validatorForRequest($request, static fn (): array => $request->rules());
+
+        $this->assertTrue($validator->passes());
+        $this->assertSame([], $validator->validated());
+    }
+
+    public function test_project_restore_request_does_not_validate_body_name(): void
+    {
+        $request = ProjectRestoreRequest::create('/', 'PATCH', ['name' => 'Test Project']);
+
+        $validator = $this->validatorForRequest($request, static fn (): array => $request->rules());
+
+        $this->assertTrue($validator->passes());
+        $this->assertSame([], $validator->validated());
+    }
+
     public function test_rules_return_expected_structure(): void
     {
         $request = new ProjectRestoreRequest;
