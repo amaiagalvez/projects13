@@ -24,13 +24,10 @@ class EpicListTransformer extends ListTransformer
             'rows' => collect($epics->items())->map(fn (Epic $epic): array => [
                 ...$this->columns($epic),
                 'extraDate' => $epic->created_at?->toIso8601String(),
-                'actionHint' => $epic->comments_count > 0
-                    ? __('Cannot be deleted while it has related records.')
-                    : null,
                 'actions' => [
                     $this->editAction($epic),
                     $epic->comments_count > 0
-                        ? $this->archiveAction($epic)
+                        ? $this->archiveAction($epic, __('basics13::messages.archive_instead_of_delete'))
                         : $this->deleteAction($epic),
                 ],
             ])->all(),

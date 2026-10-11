@@ -12,6 +12,12 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class EpicRequest extends FormRequest
 {
+    /** @return array<string, string> */
+    public function attributes(): array
+    {
+        return ['project_id' => __('Project')];
+    }
+
     protected function prepareForValidation(): void
     {
         $name = $this->input('name');

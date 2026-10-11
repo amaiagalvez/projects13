@@ -24,13 +24,10 @@ class ProjectListTransformer extends ListTransformer
             'rows' => collect($projects->items())->map(fn (Project $project): array => [
                 ...$this->columns($project),
                 'extraDate' => $project->created_at?->toIso8601String(),
-                'actionHint' => $project->epics_exists
-                    ? __('Cannot be deleted while it has related records.')
-                    : null,
                 'actions' => [
                     $this->editAction($project),
                     $project->epics_exists
-                        ? $this->archiveAction($project)
+                        ? $this->archiveAction($project, __('basics13::messages.archive_instead_of_delete'))
                         : $this->deleteAction($project),
                 ],
             ])->all(),

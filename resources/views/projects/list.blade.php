@@ -144,8 +144,7 @@
                                 <flux:table.cell align="end" sticky
                                     class="bg-white dark:bg-zinc-900">
                                     <x-basics13::list.row-actions :actions="$row['actions']" prefix="project"
-                                        payload-key="project" edit-handler="editProject"
-                                        :blocked-hint="$row['actionHint'] ?? null" />
+                                        edit-handler="editProject" />
                                 </flux:table.cell>
                             </flux:table.row>
                         @empty

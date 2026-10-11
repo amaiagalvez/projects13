@@ -59,7 +59,7 @@ class ProjectController extends Controller
         $deletedProject = $query->findTrashedByName($name);
 
         if ($deletedProject && ! $request->boolean('reuse_deleted_name')) {
-            return $this->deletedNameConflict($request, $deletedProject);
+            return $this->deletedNameConflict($request, $deletedProject, 'projects.index', 'deleted_project_conflict');
         }
 
         try {

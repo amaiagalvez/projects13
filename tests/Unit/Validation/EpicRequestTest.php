@@ -6,11 +6,24 @@ use Illuminate\Routing\Route;
 use Projects13\Tests\TestCase;
 use Illuminate\Validation\Rules\Exists;
 use Illuminate\Validation\Rules\Unique;
+use Illuminate\Support\Facades\Validator;
 use Projects13\Http\Requests\EpicRequest;
 use Basics13\Support\Validation\MaxLength;
 
 class EpicRequestTest extends TestCase
 {
+    public function test_project_attribute_is_translated_by_the_resource_request(): void
+    {
+        app()->setLocale('eu');
+        $request = new EpicRequest;
+        $validator = Validator::make([], ['project_id' => ['required']], [], $request->attributes());
+
+        $this->assertSame(
+            __('validation.required', ['attribute' => __('Project')]),
+            $validator->errors()->first('project_id'),
+        );
+    }
+
     public function test_name_is_required(): void
     {
         $request = EpicRequest::create('/', 'POST', ['name' => '']);

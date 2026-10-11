@@ -11,6 +11,12 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ProjectRequest extends FormRequest
 {
+    /** @return array<string, string> */
+    public function attributes(): array
+    {
+        return ['customer_id' => __('Customer')];
+    }
+
     protected function prepareForValidation(): void
     {
         $name = $this->input('name');
