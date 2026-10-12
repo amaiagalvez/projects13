@@ -19,7 +19,11 @@ final class ProjectSelectOptionsQuery extends ListQueryBase
      */
     public function search(string $search): Collection
     {
-        $query = Project::query()->where('PRO_projects.active', true);
+        $query = Project::query()
+            ->where('PRO_projects.active', true)
+            // Selected before the integration is asked: it adds whatever columns it needs on top of
+            // these, and a select applied afterwards would throw them away.
+            ->select(['PRO_projects.id', 'PRO_projects.name']);
 
         $this->integration->scope($query, 'project', 'project_customers');
 
@@ -32,7 +36,7 @@ final class ProjectSelectOptionsQuery extends ListQueryBase
             ->orderBy('PRO_projects.name')
             ->orderBy('PRO_projects.id')
             ->limit(self::PER_PAGE)
-            ->get(['id', 'name'])
+            ->get()
             ->map(fn (Project $project): array => [
                 'id' => $project->id,
                 'text' => $this->integration->label($project),

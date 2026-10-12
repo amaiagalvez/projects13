@@ -74,6 +74,15 @@ interface ProjectIntegration
     public function label(Project $project): string;
 
     /**
+     * What sits under a project row on the planning and the timeline board: the breadcrumb that
+     * says who the row belongs to. Empty when nothing does, which is why a board row carries an
+     * empty trail rather than the project's own name.
+     *
+     * @return list<string>
+     */
+    public function trail(Project $project): array;
+
+    /**
      * Extra fields for a list row, merged over the base ones. The same fields are merged into the
      * edit drawer payload, so a row and a drawer reopened from it always carry the same keys.
      *

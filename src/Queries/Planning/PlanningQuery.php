@@ -116,7 +116,11 @@ final class PlanningQuery extends ListQueryBase
      */
     private function projectIds(string $search): array
     {
-        $query = Project::query()->where('PRO_projects.active', true);
+        $query = Project::query()
+            ->where('PRO_projects.active', true)
+            // Only ids are read on this side of the page, and selecting them explicitly keeps an
+            // integration's join from adding columns this pluck would then have to step over.
+            ->select('PRO_projects.id');
 
         $this->integration->scope($query, 'planning', 'planning_customers');
 
@@ -221,10 +225,6 @@ final class PlanningQuery extends ListQueryBase
     }
 
     /**
-     * The trail is what tells the reader who a row belongs to, and nothing here knows that: without
-     * an integration the row stands on its own. An integration that does know contributes it as a
-     * `trail` row field, the same key it would use in a list.
-     *
      * @return Row
      */
     private function projectRow(Project $project, CarbonImmutable $today): array
@@ -234,7 +234,7 @@ final class PlanningQuery extends ListQueryBase
         return [
             'test' => 'planning-project-'.$project->id,
             'name' => $project->name,
-            'trail' => $this->integration->row($project)['trail'] ?? [],
+            'trail' => $this->integration->trail($project),
             'url' => route('projects.index', ['search' => $project->name]),
             'start' => $project->start_date,
             'end' => $project->end_date,

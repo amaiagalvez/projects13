@@ -106,6 +106,10 @@ final class ProjectListQuery extends ListQueryBase
      */
     private function scoped(Builder $query): Builder
     {
+        // Selected explicitly: once an integration joins another table in, a bare select would let
+        // that table's columns overwrite this one's on hydration.
+        $query->select('PRO_projects.*');
+
         $this->integration->scope($query, 'project', 'project_customers');
 
         return $query;

@@ -197,6 +197,12 @@ final class RecordingProjectIntegration implements ProjectIntegration
         return $project->name;
     }
 
+    /** @return list<string> */
+    public function trail(Project $project): array
+    {
+        return [];
+    }
+
     /** @return array<string, mixed> */
     public function row(Model $record): array
     {

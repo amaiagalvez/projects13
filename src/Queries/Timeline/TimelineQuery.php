@@ -131,7 +131,12 @@ final class TimelineQuery extends ListQueryBase
      */
     private function projectIds(string $search): array
     {
-        $ids = $this->matchingProjects($search)
+        $query = $this->matchingProjects($search)
+            // Only ids are read on this side of the page, and selecting them explicitly keeps an
+            // integration's join from adding columns this pluck would then have to step over.
+            ->select('PRO_projects.id');
+
+        $ids = $query
             ->orderBy('PRO_projects.start_date')
             ->orderBy('PRO_projects.name')
             ->pluck('PRO_projects.id')
@@ -316,10 +321,6 @@ final class TimelineQuery extends ListQueryBase
     }
 
     /**
-     * The trail is what tells the reader who a row belongs to, and nothing here knows that: without
-     * an integration the row stands on its own. An integration that does know contributes it as a
-     * `trail` row field, the same key it would use in a list.
-     *
      * @return Row
      */
     private function projectRow(Project $project, CarbonImmutable $today): array
@@ -328,7 +329,7 @@ final class TimelineQuery extends ListQueryBase
             'id' => $project->id,
             'test' => 'timeline-project-'.$project->id,
             'name' => $project->name,
-            'trail' => $this->integration->row($project)['trail'] ?? [],
+            'trail' => $this->integration->trail($project),
             'url' => route('projects.index', ['search' => $project->name]),
             'start' => $project->start_date,
             'end' => $project->end_date,
