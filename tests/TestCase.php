@@ -6,6 +6,7 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Basics13\Support\Testing\ValidatesFormRequests;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 use Basics13\ServiceProvider as Basics13ServiceProvider;
@@ -13,7 +14,7 @@ use Projects13\ServiceProvider as Projects13ServiceProvider;
 
 abstract class TestCase extends TestbenchTestCase
 {
-    use ValidatesFormRequests;
+    use RefreshDatabase, ValidatesFormRequests;
 
     protected function signIn(): User
     {

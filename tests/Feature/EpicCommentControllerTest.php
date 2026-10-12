@@ -59,7 +59,7 @@ class EpicCommentControllerTest extends TestCase
         $other = Epic::factory()->create();
         EpicComment::factory()->for($other)->for($user)->create(['body' => 'Other epic']);
 
-        $response = $this->getJson(route('epics.comments.index', $epic));
+        $response = $this->get(route('epics.comments.index', $epic), ['Accept' => 'application/json']);
 
         $response->assertOk()->assertJsonCount(20, 'comments')
             ->assertJsonPath('comments.0.id', $latest->id)
