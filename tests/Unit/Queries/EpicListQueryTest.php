@@ -208,4 +208,22 @@ final class RecordingProjectIntegration implements ProjectIntegration
     {
         return [];
     }
+
+    public function hasActiveRelatedEntities(): bool
+    {
+        return false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function orderings(string $scope, string $alias): array
+    {
+        return [];
+    }
+
+    public function noRelatedEntitiesBanner(): ?array
+    {
+        return null;
+    }
 }

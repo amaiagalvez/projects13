@@ -90,4 +90,28 @@ interface ProjectIntegration
      * @return array<string, mixed>
      */
     public function row(Model $record): array;
+
+    /**
+     * Whether the integration has active related entities that can be selected for a new project.
+     * When false, the UI should offer to create one instead of showing an empty selector.
+     */
+    public function hasActiveRelatedEntities(): bool;
+
+    /**
+     * Orderings this integration contributes for a scope, appended to the base ones.
+     * Called after the base query adds its orderings, so integration orderings are last.
+     *
+     * @param  string  $scope  One of `project`, `epic`, `planning`, `timeline`.
+     * @param  string  $alias  The alias this scope is joined under.
+     * @return list<string> Columns to order by, e.g. ['alias.name']
+     */
+    public function orderings(string $scope, string $alias): array;
+
+    /**
+     * Banner to show when there are no active related entities and the user can create a new project.
+     * Returns null if no banner should be shown.
+     *
+     * @return array{message: string, action_label: string, action_url: string}|null
+     */
+    public function noRelatedEntitiesBanner(): ?array;
 }

@@ -199,6 +199,9 @@ final class TimelineQuery extends ListQueryBase
 
         $this->integration->scope($query, 'timeline', 'timeline_customers');
 
+        // Select only PRO_projects columns to avoid issues with pluck() after joins
+        $query->select('PRO_projects.*');
+
         return $query->where(function (Builder $query) use ($search): void {
             $this->whereMatches($query, $search, $this->searchColumns(['PRO_projects.name']));
         });

@@ -110,16 +110,19 @@ class ProjectListTransformer extends ListTransformer
      * always carry the same keys.
      *
      * @param  Project  $record
-     * @return array{id: int, name: string, notes: string|null, start_date: string, end_date: string}
+     * @return array<string, mixed>
      */
     protected function editPayload(Model $record): array
     {
+        $extra = $this->integration->row($record);
+
         return [
             'id' => $record->id,
             'name' => $record->name,
             'notes' => $record->notes,
             'start_date' => $record->start_date->toDateString(),
             'end_date' => $record->end_date?->toDateString() ?? '',
+            ...$extra,
         ];
     }
 

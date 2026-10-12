@@ -28,14 +28,16 @@ final class EpicListQuery extends ListQueryBase
     public function active(string $search): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->scoped($this->withProject(Epic::query()->where('PRO_epics.active', true)))
-                ->orderByRaw('PRO_epics.start_date IS NULL')
-                ->orderBy('PRO_epics.start_date')
-                ->orderByRaw('PRO_epics.end_date IS NULL')
-                ->orderBy('PRO_epics.end_date')
-                ->orderBy('epic_projects.name')
-                ->orderBy('PRO_epics.name')
-                ->orderBy('PRO_epics.id'),
+            $this->withIntegrationOrderings(
+                $this->scoped($this->withProject(Epic::query()->where('PRO_epics.active', true)))
+                    ->orderByRaw('PRO_epics.start_date IS NULL')
+                    ->orderBy('PRO_epics.start_date')
+                    ->orderByRaw('PRO_epics.end_date IS NULL')
+                    ->orderBy('PRO_epics.end_date')
+                    ->orderBy('epic_projects.name')
+                    ->orderBy('PRO_epics.name')
+                    ->orderBy('PRO_epics.id'),
+            ),
             $search,
             searchColumns: $this->searchColumns([
                 'PRO_epics.name',
@@ -52,14 +54,16 @@ final class EpicListQuery extends ListQueryBase
     public function archived(string $search): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->scoped($this->withProject(Epic::query()->where('PRO_epics.active', false)))
-                ->orderByRaw('PRO_epics.start_date IS NULL')
-                ->orderBy('PRO_epics.start_date')
-                ->orderByRaw('PRO_epics.end_date IS NULL')
-                ->orderBy('PRO_epics.end_date')
-                ->orderBy('epic_projects.name')
-                ->orderBy('PRO_epics.name')
-                ->orderBy('PRO_epics.id'),
+            $this->withIntegrationOrderings(
+                $this->scoped($this->withProject(Epic::query()->where('PRO_epics.active', false)))
+                    ->orderByRaw('PRO_epics.start_date IS NULL')
+                    ->orderBy('PRO_epics.start_date')
+                    ->orderByRaw('PRO_epics.end_date IS NULL')
+                    ->orderBy('PRO_epics.end_date')
+                    ->orderBy('epic_projects.name')
+                    ->orderBy('PRO_epics.name')
+                    ->orderBy('PRO_epics.id'),
+            ),
             $search,
             searchColumns: $this->searchColumns([
                 'PRO_epics.name',
@@ -157,5 +161,20 @@ final class EpicListQuery extends ListQueryBase
         $columns = $this->integration->searchColumns('epic', $columns);
 
         return $columns;
+    }
+
+    /**
+     * Apply integration-specific orderings to the query.
+     *
+     * @param  Builder<Epic>  $query
+     * @return Builder<Epic>
+     */
+    private function withIntegrationOrderings(Builder $query): Builder
+    {
+        foreach ($this->integration->orderings('epic', 'epic_customers') as $column) {
+            $query->orderBy($column);
+        }
+
+        return $query;
     }
 }

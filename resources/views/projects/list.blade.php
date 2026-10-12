@@ -80,6 +80,19 @@
             </x-slot:actions>
         </x-basics13::list.page-header>
 
+        @if ($list['create'] && $noRelatedEntitiesBanner)
+            <div class="p-4 text-center bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-900/20 dark:border-amber-800" data-test="project-no-customers-banner">
+                <p class="text-sm text-amber-800 dark:text-amber-200">
+                    {{ $noRelatedEntitiesBanner['message'] }}
+                </p>
+                <a href="{{ $noRelatedEntitiesBanner['action_url'] }}"
+                    class="inline-flex items-center gap-1.5 mt-2 text-sm font-medium text-amber-800 hover:underline dark:text-amber-200"
+                    data-test="project-no-customer-form-button">
+                    {{ $noRelatedEntitiesBanner['action_label'] }}
+                </a>
+            </div>
+        @endif
+
         <x-basics13::list.flash prefix="project" />
 
         @fragment('list-results')

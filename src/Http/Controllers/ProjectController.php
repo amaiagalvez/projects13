@@ -24,12 +24,15 @@ class ProjectController extends Controller
         ProjectListRequest $request,
         ProjectListQuery $query,
         ProjectListTransformer $transformer,
+        ProjectIntegration $integration,
     ): View|string {
         $search = $request->search();
         $projects = $query->active($search);
 
         return $this->listView($request, 'projects13::projects.list', [
             'projects' => $projects,
+            'hasCustomers' => $integration->hasActiveRelatedEntities(),
+            'noRelatedEntitiesBanner' => $integration->noRelatedEntitiesBanner(),
             'list' => $transformer->active(
                 $projects,
                 $search,

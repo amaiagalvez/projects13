@@ -21,15 +21,13 @@ final class ProjectListQuery extends ListQueryBase
      */
     public function active(string $search): LengthAwarePaginator
     {
+        $query = $this->scoped(Project::query()->where('PRO_projects.active', true))
+            ->withExists(['epics' => fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)]);
+
+        $this->applyOrderings($query);
+
         return $this->paginate(
-            $this->withActiveCounts(
-                $this->scoped(Project::query()->where('PRO_projects.active', true))
-                    ->withExists(['epics' => fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)])
-            )
-                ->orderBy('PRO_projects.start_date')
-                ->orderBy('PRO_projects.end_date')
-                ->orderBy('PRO_projects.name')
-                ->orderBy('PRO_projects.id'),
+            $this->withActiveCounts($query),
             $search,
             searchColumns: $this->searchColumns(['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date']),
         );
@@ -40,12 +38,12 @@ final class ProjectListQuery extends ListQueryBase
      */
     public function archived(string $search): LengthAwarePaginator
     {
+        $query = $this->scoped(Project::query()->where('PRO_projects.active', false));
+
+        $this->applyOrderings($query);
+
         return $this->paginate(
-            $this->withActiveCounts($this->scoped(Project::query()->where('PRO_projects.active', false)))
-                ->orderBy('PRO_projects.start_date')
-                ->orderBy('PRO_projects.end_date')
-                ->orderBy('PRO_projects.name')
-                ->orderBy('PRO_projects.id'),
+            $this->withActiveCounts($query),
             $search,
             searchColumns: $this->searchColumns([
                 'PRO_projects.name',
@@ -142,5 +140,23 @@ final class ProjectListQuery extends ListQueryBase
         $columns = $this->integration->searchColumns('project', $columns);
 
         return $columns;
+    }
+
+    /**
+     * Apply all orderings for the project list: base then integration.
+     *
+     * @param  Builder<Project>  $query
+     */
+    private function applyOrderings(Builder $query): void
+    {
+        $query->orderBy('PRO_projects.start_date')
+            ->orderBy('PRO_projects.end_date');
+
+        foreach ($this->integration->orderings('project', 'project_customers') as $column) {
+            $query->orderBy($column);
+        }
+
+        $query->orderBy('PRO_projects.name')
+            ->orderBy('PRO_projects.id');
     }
 }
