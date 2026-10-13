@@ -23,7 +23,7 @@ class ProjectFactory extends Factory
         $dates = $this->getDateRange();
 
         return [
-            'name' => fake()->company(),
+            'name' => fake()->unique()->company(),
             'start_date' => $dates['start_date'],
             'end_date' => $dates['end_date'],
         ];
