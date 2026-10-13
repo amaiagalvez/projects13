@@ -2,7 +2,6 @@
 
 namespace Projects13\Models;
 
-use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Concerns\TracksAuditColumns;
@@ -44,10 +43,16 @@ class EpicComment extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        $userModel = config()->string('auth.providers.users.model');
+
+        if (! is_subclass_of($userModel, Model::class)) {
+            throw new \InvalidArgumentException('The users authentication provider must use an Eloquent model.');
+        }
+
+        return $this->belongsTo($userModel, 'user_id');
     }
 }

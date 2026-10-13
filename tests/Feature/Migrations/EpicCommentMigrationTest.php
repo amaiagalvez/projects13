@@ -29,7 +29,6 @@ class EpicCommentMigrationTest extends TestCase
         DB::purge($connectionName);
 
         try {
-            // Create users, customers, projects, and epics tables first (foreign key dependencies)
             Schema::create('users', function (Blueprint $table): void {
                 $table->id();
                 $table->string('name');
@@ -37,18 +36,11 @@ class EpicCommentMigrationTest extends TestCase
                 $table->string('password');
             });
 
-            Schema::create('CUM_customers', function (Blueprint $table): void {
-                $table->id();
-                $table->string('name');
-                $table->softDeletes();
-            });
-
             Schema::create('PRO_projects', function (Blueprint $table): void {
                 $table->id();
                 $table->string('name');
                 $table->date('start_date');
                 $table->date('end_date')->nullable();
-                $table->foreignId('customer_id')->constrained('CUM_customers');
                 $table->softDeletes();
             });
 
@@ -112,7 +104,6 @@ class EpicCommentMigrationTest extends TestCase
         DB::purge($connectionName);
 
         try {
-            // Create users, customers, projects, and epics tables first (foreign key dependencies)
             Schema::create('users', function (Blueprint $table): void {
                 $table->id();
                 $table->string('name');
@@ -120,18 +111,11 @@ class EpicCommentMigrationTest extends TestCase
                 $table->string('password');
             });
 
-            Schema::create('CUM_customers', function (Blueprint $table): void {
-                $table->id();
-                $table->string('name');
-                $table->softDeletes();
-            });
-
             Schema::create('PRO_projects', function (Blueprint $table): void {
                 $table->id();
                 $table->string('name');
                 $table->date('start_date');
                 $table->date('end_date')->nullable();
-                $table->foreignId('customer_id')->constrained('CUM_customers');
                 $table->softDeletes();
             });
 

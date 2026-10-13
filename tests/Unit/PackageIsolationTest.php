@@ -29,6 +29,8 @@ class PackageIsolationTest extends TestCase
      * @var array<non-empty-string, string>
      */
     private const FORBIDDEN = [
+        'App\\' => 'App\\',
+        'CustomerProjects13' => 'CustomerProjects13',
         'Customers13' => 'Customers13',
         'CUM_customers' => 'CUM_customers',
         'customer_id' => 'customer_id',
@@ -68,6 +70,25 @@ class PackageIsolationTest extends TestCase
     {
         // A scan that silently stopped finding files would make the assertion above pass forever.
         $this->assertGreaterThan(20, iterator_count($this->productionFiles()));
+    }
+
+    public function test_the_package_tests_do_not_require_customers_or_the_bridge(): void
+    {
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(dirname(__DIR__).'/'),
+        );
+
+        foreach ($files as $file) {
+            if (! $file->isFile() || $file->getExtension() !== 'php' || $file->getPathname() === __FILE__) {
+                continue;
+            }
+
+            $source = file_get_contents($file->getPathname());
+            $this->assertIsString($source);
+            $this->assertStringNotContainsString('Customers13\\', $source, $file->getPathname());
+            $this->assertStringNotContainsString('CustomerProjects13\\', $source, $file->getPathname());
+            $this->assertStringNotContainsString('customer_id', $source, $file->getPathname());
+        }
     }
 
     /**

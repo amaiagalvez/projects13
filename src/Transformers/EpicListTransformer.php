@@ -101,7 +101,7 @@ class EpicListTransformer extends ListTransformer
             'startDate' => $epic->start_date?->format('Y-m-d') ?? '',
             'endDate' => $epic->end_date?->format('Y-m-d') ?? '',
             'commentsCount' => (int) $epic->comments_count,
-            'editPayload' => [...$this->editPayload($epic), ...$extra],
+            'editPayload' => $this->editPayload($epic),
             ...$extra,
         ];
     }
@@ -120,12 +120,12 @@ class EpicListTransformer extends ListTransformer
     {
         $epic->loadMissing('project');
 
-        return [...$this->editPayload($epic), ...$this->integration->row($epic)];
+        return $this->editPayload($epic);
     }
 
     /**
      * @param  Epic  $record
-     * @return array{id: int, name: string, notes: string|null, start_date: string, end_date: string, project_id: int, project_label: string, commentAction: string, commentsUrl: string, commentsCount: int}
+     * @return array<string, mixed>
      */
     protected function editPayload(Model $record): array
     {
@@ -140,6 +140,7 @@ class EpicListTransformer extends ListTransformer
             'commentAction' => route('epics.comments.store', $record),
             'commentsUrl' => route('epics.comments.index', $record),
             'commentsCount' => (int) $record->comments_count,
+            ...$this->integration->row($record),
         ];
     }
 

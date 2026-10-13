@@ -2,13 +2,13 @@
 
 namespace Projects13\Database\Seeders;
 
-use App\Models\User;
 use RuntimeException;
 use Carbon\CarbonImmutable;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Illuminate\Database\Seeder;
 use Projects13\Models\EpicComment;
+use Illuminate\Database\Eloquent\Model;
 use Projects13\Database\Factories\EpicFactory;
 use Projects13\Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -32,7 +32,13 @@ class DevelopProjectSeeder extends Seeder
             return;
         }
 
-        $authors = User::query()->orderBy('id')->limit(5)->get();
+        $userModel = config()->string('auth.providers.users.model');
+
+        if (! is_subclass_of($userModel, Model::class)) {
+            throw new \InvalidArgumentException('The users authentication provider must use an Eloquent model.');
+        }
+
+        $authors = $userModel::query()->orderBy('id')->limit(5)->get();
 
         if ($authors->isEmpty()) {
             throw new RuntimeException('Seed users before running DevelopProjectSeeder.');
@@ -66,7 +72,7 @@ class DevelopProjectSeeder extends Seeder
                     $commentNumber++;
                     EpicComment::factory()->createOne([
                         'epic_id' => $epic->id,
-                        'user_id' => $authors->random()->id,
+                        'user_id' => $authors->random()->getKey(),
                         'body' => sprintf('Perf comment %05d.', $commentNumber),
                     ]);
                 }

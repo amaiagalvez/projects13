@@ -25,7 +25,7 @@ class EpicCommentController extends Controller
 
                 return [
                     'id' => $comment->id,
-                    'author' => $author === null ? __('Deleted user') : $author->name,
+                    'author' => $author === null ? __('Deleted user') : $author->getAttribute('name'),
                     'dateTime' => $comment->created_at?->toIso8601String(),
                     'body' => $comment->body,
                 ];

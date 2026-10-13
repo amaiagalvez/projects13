@@ -2,8 +2,8 @@
 
 namespace Projects13\Policies;
 
-use App\Models\User;
 use Projects13\Models\Epic;
+use Illuminate\Contracts\Auth\Authenticatable as User;
 
 class EpicPolicy
 {

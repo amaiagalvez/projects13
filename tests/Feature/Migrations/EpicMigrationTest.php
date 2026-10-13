@@ -29,19 +29,11 @@ class EpicMigrationTest extends TestCase
         DB::purge($connectionName);
 
         try {
-            // Create customers and projects tables first (foreign key dependencies)
-            Schema::create('CUM_customers', function (Blueprint $table): void {
-                $table->id();
-                $table->string('name');
-                $table->softDeletes();
-            });
-
             Schema::create('PRO_projects', function (Blueprint $table): void {
                 $table->id();
                 $table->string('name');
                 $table->date('start_date');
                 $table->date('end_date')->nullable();
-                $table->foreignId('customer_id')->constrained('CUM_customers');
                 $table->softDeletes();
             });
 
@@ -97,19 +89,11 @@ class EpicMigrationTest extends TestCase
         DB::purge($connectionName);
 
         try {
-            // Create customers and projects tables first (foreign key dependencies)
-            Schema::create('CUM_customers', function (Blueprint $table): void {
-                $table->id();
-                $table->string('name');
-                $table->softDeletes();
-            });
-
             Schema::create('PRO_projects', function (Blueprint $table): void {
                 $table->id();
                 $table->string('name');
                 $table->date('start_date');
                 $table->date('end_date')->nullable();
-                $table->foreignId('customer_id')->constrained('CUM_customers');
                 $table->softDeletes();
             });
 
