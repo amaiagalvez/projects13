@@ -77,7 +77,6 @@ class EpicController extends Controller
         );
 
         if ($deletedEpic && ! $request->boolean('reuse_deleted_name')) {
-            /** @phpstan-ignore argument.type */
             return $this->deletedNameConflict($request, $deletedEpic, 'epics.index', 'deleted_epic_conflict');
         }
 
