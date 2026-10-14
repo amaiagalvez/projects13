@@ -5,8 +5,10 @@ namespace Projects13;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Illuminate\Support\Facades\DB;
-use Projects13\Contracts\ProjectIntegration;
 use Projects13\Contracts\NullProjectIntegration;
+use Projects13\Contracts\ProjectQueryIntegration;
+use Projects13\Contracts\ProjectDisplayIntegration;
+use Projects13\Contracts\ProjectValidationIntegration;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
@@ -37,7 +39,9 @@ class ServiceProvider extends BaseServiceProvider
 
         // Bound only if nobody else has: an integration package registers after this one and
         // replaces it, and doing so does not depend on Composer's provider order being right.
-        $this->app->singletonIf(ProjectIntegration::class, NullProjectIntegration::class);
+        $this->app->singletonIf(ProjectValidationIntegration::class, NullProjectIntegration::class);
+        $this->app->singletonIf(ProjectQueryIntegration::class, NullProjectIntegration::class);
+        $this->app->singletonIf(ProjectDisplayIntegration::class, NullProjectIntegration::class);
     }
 
     protected function blockDeletionWithChildren(): void

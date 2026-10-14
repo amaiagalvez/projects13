@@ -19,7 +19,7 @@ class PlanningControllerTest extends TestCase
         $controller = new PlanningController;
         $request = PlanningListRequest::create('/planning', 'GET');
 
-        $result = $controller->index($request, new PlanningQuery(new NullProjectIntegration));
+        $result = $controller->index($request, new PlanningQuery(new NullProjectIntegration, new NullProjectIntegration));
 
         $this->assertInstanceOf(View::class, $result);
         $this->assertSame('projects13::planning.index', $result->name());

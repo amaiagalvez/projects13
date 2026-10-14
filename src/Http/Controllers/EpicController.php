@@ -12,9 +12,9 @@ use Illuminate\Database\QueryException;
 use Basics13\Http\Controllers\Controller;
 use Projects13\Http\Requests\EpicRequest;
 use Projects13\Queries\Epics\EpicListQuery;
-use Projects13\Contracts\ProjectIntegration;
 use Projects13\Http\Requests\EpicListRequest;
 use Projects13\Transformers\EpicListTransformer;
+use Projects13\Contracts\ProjectDisplayIntegration;
 use Basics13\Support\Database\UniqueConstraintViolation;
 
 class EpicController extends Controller
@@ -23,7 +23,7 @@ class EpicController extends Controller
         EpicListRequest $request,
         EpicListQuery $query,
         EpicListTransformer $transformer,
-        ProjectIntegration $integration,
+        ProjectDisplayIntegration $integration,
     ): View|string {
         $search = $request->search();
         $epics = $query->active($search);
@@ -77,6 +77,7 @@ class EpicController extends Controller
         );
 
         if ($deletedEpic && ! $request->boolean('reuse_deleted_name')) {
+            /** @phpstan-ignore argument.type */
             return $this->deletedNameConflict($request, $deletedEpic, 'epics.index', 'deleted_epic_conflict');
         }
 

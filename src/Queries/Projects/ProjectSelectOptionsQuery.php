@@ -5,14 +5,18 @@ namespace Projects13\Queries\Projects;
 use Projects13\Models\Project;
 use Illuminate\Support\Collection;
 use Basics13\Queries\ListQueryBase;
-use Projects13\Contracts\ProjectIntegration;
+use Projects13\Contracts\ProjectQueryIntegration;
+use Projects13\Contracts\ProjectDisplayIntegration;
 
 /**
  * @extends ListQueryBase<Project>
  */
 final class ProjectSelectOptionsQuery extends ListQueryBase
 {
-    public function __construct(private readonly ProjectIntegration $integration) {}
+    public function __construct(
+        private readonly ProjectQueryIntegration $queryIntegration,
+        private readonly ProjectDisplayIntegration $displayIntegration,
+    ) {}
 
     /**
      * @return Collection<int, array{id: int, text: string}>
@@ -25,10 +29,10 @@ final class ProjectSelectOptionsQuery extends ListQueryBase
             // these, and a select applied afterwards would throw them away.
             ->select(['PRO_projects.id', 'PRO_projects.name']);
 
-        $this->integration->scope($query, 'project', 'project_customers');
+        $this->queryIntegration->scope($query, 'project', 'project_customers');
 
         /** @var non-empty-list<literal-string> $columns An integration appends to the base column; it never replaces it. */
-        $columns = $this->integration->searchColumns('project', ['PRO_projects.name']);
+        $columns = $this->queryIntegration->searchColumns('project', ['PRO_projects.name']);
 
         $this->whereMatches($query, $search, $columns);
 
@@ -39,7 +43,20 @@ final class ProjectSelectOptionsQuery extends ListQueryBase
             ->get()
             ->map(fn (Project $project): array => [
                 'id' => $project->id,
-                'text' => $this->integration->label($project),
+                'text' => $this->displayIntegration->label($project),
             ]);
+    }
+
+    /**
+     * @return class-string<Project>
+     */
+    protected function getModelClass(): string
+    {
+        return Project::class;
+    }
+
+    protected function integration(): ProjectQueryIntegration
+    {
+        return $this->queryIntegration;
     }
 }

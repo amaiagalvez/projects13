@@ -5,8 +5,8 @@ namespace Projects13\Queries\Epics;
 use Projects13\Models\Epic;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Builder;
-use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Projects13\Contracts\ProjectQueryIntegration;
 
 /**
  * @extends ListQueryBase<Epic>
@@ -18,7 +18,7 @@ final class EpicListQuery extends ListQueryBase
      */
     public const RECENT_COMMENTS_LIMIT = 20;
 
-    public function __construct(private readonly ProjectIntegration $integration) {}
+    public function __construct(private readonly ProjectQueryIntegration $integration) {}
 
     /**
      * Epics without dates are listed after dated ones.
@@ -39,7 +39,8 @@ final class EpicListQuery extends ListQueryBase
                     ->orderBy('PRO_epics.id'),
             ),
             $search,
-            searchColumns: $this->searchColumns([
+            /** @phpstan-ignore argument.type */
+            searchColumns: $this->searchColumns('epic', [
                 'PRO_epics.name',
                 'epic_projects.name',
                 'PRO_epics.start_date',
@@ -65,7 +66,8 @@ final class EpicListQuery extends ListQueryBase
                     ->orderBy('PRO_epics.id'),
             ),
             $search,
-            searchColumns: $this->searchColumns([
+            /** @phpstan-ignore argument.type */
+            searchColumns: $this->searchColumns('epic', [
                 'PRO_epics.name',
                 'epic_projects.name',
                 'PRO_epics.start_date',
@@ -85,7 +87,8 @@ final class EpicListQuery extends ListQueryBase
                 ->latest('PRO_epics.deleted_at')
                 ->orderBy('PRO_epics.id'),
             $search,
-            searchColumns: $this->searchColumns([
+            /** @phpstan-ignore argument.type */
+            searchColumns: $this->searchColumns('epic', [
                 'PRO_epics.name',
                 'epic_projects.name',
                 'PRO_epics.start_date',
@@ -95,24 +98,17 @@ final class EpicListQuery extends ListQueryBase
         );
     }
 
-    public function findTrashedByName(string $name, int $projectId): ?Epic
+    /**
+     * @return class-string<Epic>
+     */
+    protected function getModelClass(): string
     {
-        $query = Epic::onlyTrashed()->where('project_id', $projectId);
-
-        return $this->firstTrashedByName($query, $name);
+        return Epic::class;
     }
 
-    /**
-     * Number of records in each list state, shown as the badge of the state tabs.
-     *
-     * @return array{active: int, archived: int, trashed: int}
-     */
-    public function stateCounts(
-        ?int $activeTotal = null,
-        ?int $archivedTotal = null,
-        ?int $trashedTotal = null,
-    ): array {
-        return $this->countStates(Epic::class, $activeTotal, $archivedTotal, $trashedTotal);
+    protected function integration(): ProjectQueryIntegration
+    {
+        return $this->integration;
     }
 
     /**
@@ -147,20 +143,6 @@ final class EpicListQuery extends ListQueryBase
             ->join('PRO_projects as epic_projects', 'epic_projects.id', '=', 'PRO_epics.project_id')
             ->select('PRO_epics.*')
             ->withCount('comments');
-    }
-
-    /**
-     * Base search columns for this list, with whatever the integration contributes appended.
-     *
-     * @param  non-empty-list<literal-string>  $columns
-     * @return non-empty-list<literal-string>
-     */
-    private function searchColumns(array $columns): array
-    {
-        /** @var non-empty-list<literal-string> $columns An integration appends to the base columns; it never replaces them. */
-        $columns = $this->integration->searchColumns('epic', $columns);
-
-        return $columns;
     }
 
     /**

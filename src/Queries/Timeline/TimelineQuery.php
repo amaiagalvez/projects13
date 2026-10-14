@@ -8,9 +8,10 @@ use Projects13\Models\Project;
 use Illuminate\Support\Collection;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Builder;
-use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Projects13\Contracts\ProjectQueryIntegration;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Projects13\Contracts\ProjectDisplayIntegration;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 /**
@@ -25,7 +26,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * stays on the flat planning screen.
  *
  * The board is a page of projects rather than a page of rows, so the ordering that picks that
- * page spans two tables: the ids are read first and only the records the page names are then
+ * page spans two tables: the ids are read first and only the records that page names are then
  * loaded whole, with their epics.
  *
  * @extends ListQueryBase<Project>
@@ -64,7 +65,23 @@ final class TimelineQuery extends ListQueryBase
      */
     private const MAX_MONTHS = 24;
 
-    public function __construct(private readonly ProjectIntegration $integration) {}
+    public function __construct(
+        private readonly ProjectQueryIntegration $queryIntegration,
+        private readonly ProjectDisplayIntegration $displayIntegration,
+    ) {}
+
+    /**
+     * @return class-string<Project>
+     */
+    protected function getModelClass(): string
+    {
+        return Project::class;
+    }
+
+    protected function integration(): ProjectQueryIntegration
+    {
+        return $this->queryIntegration;
+    }
 
     /**
      * @return array{
@@ -147,21 +164,6 @@ final class TimelineQuery extends ListQueryBase
     }
 
     /**
-     * Base search columns, with whatever the integration contributes appended. The base list comes
-     * first so the search order does not move when an integration is installed.
-     *
-     * @param  non-empty-list<literal-string>  $columns
-     * @return non-empty-list<literal-string>
-     */
-    private function searchColumns(array $columns): array
-    {
-        /** @var non-empty-list<literal-string> $columns An integration appends to the base columns; it never replaces them. */
-        $columns = $this->integration->searchColumns('timeline', $columns);
-
-        return $columns;
-    }
-
-    /**
      * The active projects a search term puts on the board. A term that matches nothing leaves the
      * query untouched, so an empty search is every active project.
      *
@@ -171,11 +173,12 @@ final class TimelineQuery extends ListQueryBase
     {
         $query = Project::query()->where('PRO_projects.active', true);
 
-        $this->integration->scope($query, 'timeline', 'timeline_customers');
+        $this->queryIntegration->scope($query, 'timeline', 'timeline_customers');
 
-        $nameColumns = $this->searchColumns(['PRO_projects.name']);
+        $nameColumns = $this->searchColumns('timeline', ['PRO_projects.name']);
 
         return $query->where(function (Builder $query) use ($search, $nameColumns): void {
+            /** @phpstan-ignore argument.type */
             $this->whereMatches($query, $search, $nameColumns);
 
             if ($search !== '') {
@@ -197,13 +200,14 @@ final class TimelineQuery extends ListQueryBase
     {
         $query = Project::query()->where('PRO_projects.active', true);
 
-        $this->integration->scope($query, 'timeline', 'timeline_customers');
+        $this->queryIntegration->scope($query, 'timeline', 'timeline_customers');
 
         // Select only PRO_projects columns to avoid issues with pluck() after joins
         $query->select('PRO_projects.*');
 
         return $query->where(function (Builder $query) use ($search): void {
-            $this->whereMatches($query, $search, $this->searchColumns(['PRO_projects.name']));
+            /** @phpstan-ignore argument.type */
+            $this->whereMatches($query, $search, $this->searchColumns('timeline', ['PRO_projects.name']));
         });
     }
 
@@ -332,7 +336,7 @@ final class TimelineQuery extends ListQueryBase
             'id' => $project->id,
             'test' => 'timeline-project-'.$project->id,
             'name' => $project->name,
-            'trail' => $this->integration->trail($project),
+            'trail' => $this->displayIntegration->trail($project),
             'url' => route('projects.index', ['search' => $project->name]),
             'start' => $project->start_date,
             'end' => $project->end_date,

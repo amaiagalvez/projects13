@@ -19,7 +19,7 @@ class TimelineControllerTest extends TestCase
         $controller = new TimelineController;
         $request = TimelineListRequest::create('/timeline', 'GET');
 
-        $result = $controller->index($request, new TimelineQuery(new NullProjectIntegration));
+        $result = $controller->index($request, new TimelineQuery(new NullProjectIntegration, new NullProjectIntegration));
 
         $this->assertInstanceOf(View::class, $result);
         $this->assertSame('projects13::timeline.index', $result->name());

@@ -5,15 +5,15 @@ namespace Projects13\Transformers;
 use Projects13\Models\Project;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Transformers\ListTransformer;
-use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Projects13\Contracts\ProjectDisplayIntegration;
 
 /**
  * @extends ListTransformer<Project>
  */
 class ProjectListTransformer extends ListTransformer
 {
-    public function __construct(private readonly ProjectIntegration $integration) {}
+    public function __construct(private readonly ProjectDisplayIntegration $integration) {}
 
     /**
      * @param  LengthAwarePaginator<int, Project>  $projects

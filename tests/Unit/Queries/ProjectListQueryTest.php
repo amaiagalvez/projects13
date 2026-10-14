@@ -4,11 +4,9 @@ namespace Projects13\Tests\Unit\Queries;
 
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Projects13\Contracts\ProjectIntegration;
-use Projects13\Http\Requests\ProjectRequest;
 use Projects13\Contracts\NullProjectIntegration;
+use Projects13\Contracts\ProjectQueryIntegration;
 use Projects13\Queries\Projects\ProjectListQuery;
 
 class ProjectListQueryTest extends TestCase
@@ -83,7 +81,7 @@ class ProjectListQueryTest extends TestCase
      */
     public function test_the_integration_is_asked_for_the_project_scope_and_the_project_alias(): void
     {
-        $integration = new RecordingProjectListIntegration;
+        $integration = new RecordingProjectListQueryIntegration;
         $query = new ProjectListQuery($integration);
 
         (new \ReflectionMethod($query, 'scoped'))->invoke($query, $this->queryWithoutRunningIt());
@@ -94,11 +92,11 @@ class ProjectListQueryTest extends TestCase
 
     public function test_the_project_search_asks_the_integration_after_its_own_columns(): void
     {
-        $integration = new RecordingProjectListIntegration;
+        $integration = new RecordingProjectListQueryIntegration;
         $query = new ProjectListQuery($integration);
         $base = ['PRO_projects.name'];
 
-        $columns = (new \ReflectionMethod($query, 'searchColumns'))->invoke($query, $base);
+        $columns = (new \ReflectionMethod($query, 'searchColumns'))->invoke($query, 'project', $base);
 
         $this->assertSame(['project'], $integration->searchScopes);
         $this->assertSame($base, $columns);
@@ -131,7 +129,7 @@ class ProjectListQueryTest extends TestCase
  * Records what the query asked of it instead of changing anything, so the test can assert on the
  * seam rather than on the SQL that ends up behind it.
  */
-final class RecordingProjectListIntegration implements ProjectIntegration
+final class RecordingProjectListQueryIntegration implements ProjectQueryIntegration
 {
     /** @var list<string> */
     public array $scopes = [];
@@ -159,56 +157,11 @@ final class RecordingProjectListIntegration implements ProjectIntegration
         return $columns;
     }
 
-    /** @return array<string, array<int, mixed>> */
-    public function rules(ProjectRequest $request): array
-    {
-        return [];
-    }
-
-    /** @return array<string, string> */
-    public function attributes(): array
-    {
-        return [];
-    }
-
-    /** @return array<string, mixed> */
-    public function saving(ProjectRequest $request, ?Project $project): array
-    {
-        return [];
-    }
-
-    public function label(Project $project): string
-    {
-        return $project->name;
-    }
-
-    /** @return list<string> */
-    public function trail(Project $project): array
-    {
-        return [];
-    }
-
-    /** @return array<string, mixed> */
-    public function row(Model $record): array
-    {
-        return [];
-    }
-
-    public function hasActiveRelatedEntities(): bool
-    {
-        return false;
-    }
-
     /**
      * @return list<string>
      */
     public function orderings(string $scope, string $alias): array
     {
         return [];
-    }
-
-    public function noRelatedEntitiesBanner(): ?array
-    {
-        return null;
     }
 }

@@ -13,7 +13,7 @@
             "dist": {
                 "type": "path",
                 "url": "../packages/basics13",
-                "reference": "0b06b93749cdcc463b4ff4bffb8db6e686c7e50a"
+                "reference": "a348a45eaefaeae398924881f90d2ac61765d734"
             },
             "require": {
                 "laravel/boost": "^2.10",

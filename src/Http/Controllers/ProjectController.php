@@ -9,11 +9,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Database\QueryException;
 use Basics13\Http\Controllers\Controller;
-use Projects13\Contracts\ProjectIntegration;
 use Projects13\Http\Requests\ProjectRequest;
 use Projects13\Http\Requests\ProjectListRequest;
 use Projects13\Queries\Projects\ProjectListQuery;
+use Projects13\Contracts\ProjectDisplayIntegration;
 use Projects13\Transformers\ProjectListTransformer;
+use Projects13\Contracts\ProjectValidationIntegration;
 use Basics13\Support\Database\UniqueConstraintViolation;
 use Projects13\Http\Requests\ProjectSelectOptionsRequest;
 use Projects13\Queries\Projects\ProjectSelectOptionsQuery;
@@ -24,7 +25,7 @@ class ProjectController extends Controller
         ProjectListRequest $request,
         ProjectListQuery $query,
         ProjectListTransformer $transformer,
-        ProjectIntegration $integration,
+        ProjectDisplayIntegration $integration,
     ): View|string {
         $search = $request->search();
         $projects = $query->active($search);
@@ -53,12 +54,13 @@ class ProjectController extends Controller
     public function store(
         ProjectRequest $request,
         ProjectListQuery $query,
-        ProjectIntegration $integration,
+        ProjectValidationIntegration $integration,
     ): RedirectResponse|JsonResponse {
         $name = $request->string('name')->toString();
         $deletedProject = $query->findTrashedByName($name);
 
         if ($deletedProject && ! $request->boolean('reuse_deleted_name')) {
+            /** @phpstan-ignore argument.type */
             return $this->deletedNameConflict($request, $deletedProject, 'projects.index', 'deleted_project_conflict');
         }
 
@@ -80,7 +82,7 @@ class ProjectController extends Controller
     public function update(
         ProjectRequest $request,
         Project $project,
-        ProjectIntegration $integration,
+        ProjectValidationIntegration $integration,
     ): RedirectResponse {
         try {
             DB::transaction(static function () use ($request, $project, $integration): void {

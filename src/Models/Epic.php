@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Projects13\Policies\EpicPolicy;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Concerns\TracksAuditColumns;
+use Basics13\Concerns\TransactionalDelete;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Projects13\Database\Factories\EpicFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -40,7 +41,7 @@ class Epic extends Model
     protected $table = 'PRO_epics';
 
     /** @use HasFactory<EpicFactory> */
-    use HasFactory, SoftDeletes, TracksAuditColumns;
+    use HasFactory, SoftDeletes, TracksAuditColumns, TransactionalDelete;
 
     /**
      * @var array{active: bool}

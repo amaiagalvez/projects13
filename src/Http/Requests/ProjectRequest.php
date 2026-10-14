@@ -6,7 +6,7 @@ use Projects13\Models\Project;
 use Illuminate\Validation\Rule;
 use Basics13\Support\Validation\MaxLength;
 use Illuminate\Foundation\Http\FormRequest;
-use Projects13\Contracts\ProjectIntegration;
+use Projects13\Contracts\ProjectValidationIntegration;
 
 class ProjectRequest extends FormRequest
 {
@@ -15,9 +15,9 @@ class ProjectRequest extends FormRequest
      * passes the incoming payload to the parent constructor, so this one takes no arguments of its
      * own.
      */
-    private function integration(): ProjectIntegration
+    private function integration(): ProjectValidationIntegration
     {
-        return app(ProjectIntegration::class);
+        return app(ProjectValidationIntegration::class);
     }
 
     /**

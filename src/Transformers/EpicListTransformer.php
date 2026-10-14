@@ -5,15 +5,15 @@ namespace Projects13\Transformers;
 use Projects13\Models\Epic;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Transformers\ListTransformer;
-use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Projects13\Contracts\ProjectDisplayIntegration;
 
 /**
  * @extends ListTransformer<Epic>
  */
 class EpicListTransformer extends ListTransformer
 {
-    public function __construct(private readonly ProjectIntegration $integration) {}
+    public function __construct(private readonly ProjectDisplayIntegration $integration) {}
 
     /**
      * @param  LengthAwarePaginator<int, Epic>  $epics

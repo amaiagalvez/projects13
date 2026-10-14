@@ -49,7 +49,11 @@ class PlanningBarTest extends TestCase
             'months' => [['label' => '2026-10', 'width' => 100.0]],
         ];
 
-        $bar = (new ReflectionMethod(PlanningQuery::class, 'bar'))->invoke(new PlanningQuery(new NullProjectIntegration), $row, $timeline);
+        $bar = (new ReflectionMethod(PlanningQuery::class, 'bar'))->invoke(
+            new PlanningQuery(new NullProjectIntegration, new NullProjectIntegration),
+            $row,
+            $timeline
+        );
 
         $this->assertSame($expected, $bar);
     }

@@ -8,8 +8,9 @@ use Projects13\Models\Project;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Database\Eloquent\Builder;
-use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Projects13\Contracts\ProjectQueryIntegration;
+use Projects13\Contracts\ProjectDisplayIntegration;
 
 /**
  * The planning screen: the active projects, ordered by the day they are due and grouped by the
@@ -54,7 +55,23 @@ final class PlanningQuery extends ListQueryBase
      */
     private const MAX_MONTHS = 24;
 
-    public function __construct(private readonly ProjectIntegration $integration) {}
+    public function __construct(
+        private readonly ProjectQueryIntegration $queryIntegration,
+        private readonly ProjectDisplayIntegration $displayIntegration,
+    ) {}
+
+    /**
+     * @return class-string<Project>
+     */
+    protected function getModelClass(): string
+    {
+        return Project::class;
+    }
+
+    protected function integration(): ProjectQueryIntegration
+    {
+        return $this->queryIntegration;
+    }
 
     /**
      * @return array{
@@ -122,30 +139,15 @@ final class PlanningQuery extends ListQueryBase
             // integration's join from adding columns this pluck would then have to step over.
             ->select('PRO_projects.id');
 
-        $this->integration->scope($query, 'planning', 'planning_customers');
+        $this->queryIntegration->scope($query, 'planning', 'planning_customers');
 
         /** @var list<int|string> $ids */
-        $ids = $this->whereMatches($query, $search, $this->searchColumns(['PRO_projects.name']))
+        $ids = $this->whereMatches($query, $search, /** @phpstan-ignore argument.type */ $this->searchColumns('planning', ['PRO_projects.name']))
             ->orderBy('PRO_projects.id')
             ->pluck('PRO_projects.id')
             ->all();
 
         return array_map(static fn (int|string $id): int => (int) $id, $ids);
-    }
-
-    /**
-     * Base search columns, with whatever the integration contributes appended. The base list comes
-     * first so the search order does not move when an integration is installed.
-     *
-     * @param  non-empty-list<literal-string>  $columns
-     * @return non-empty-list<literal-string>
-     */
-    private function searchColumns(array $columns): array
-    {
-        /** @var non-empty-list<literal-string> $columns An integration appends to the base columns; it never replaces them. */
-        $columns = $this->integration->searchColumns('planning', $columns);
-
-        return $columns;
     }
 
     /**
@@ -234,7 +236,7 @@ final class PlanningQuery extends ListQueryBase
         return [
             'test' => 'planning-project-'.$project->id,
             'name' => $project->name,
-            'trail' => $this->integration->trail($project),
+            'trail' => $this->displayIntegration->trail($project),
             'url' => route('projects.index', ['search' => $project->name]),
             'start' => $project->start_date,
             'end' => $project->end_date,

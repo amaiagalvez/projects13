@@ -12,7 +12,7 @@ use Projects13\Http\Requests\ProjectRequest;
  * fields, named by its own name. Registered as the default binding so no consumer has to check
  * whether an integration exists.
  */
-final class NullProjectIntegration implements ProjectIntegration
+final class NullProjectIntegration implements ProjectDisplayIntegration, ProjectQueryIntegration, ProjectValidationIntegration
 {
     /** @return array<string, array<int, mixed>> */
     public function rules(ProjectRequest $request): array
@@ -46,6 +46,14 @@ final class NullProjectIntegration implements ProjectIntegration
         return $columns;
     }
 
+    /**
+     * @return list<string>
+     */
+    public function orderings(string $scope, string $alias): array
+    {
+        return [];
+    }
+
     public function label(Project $project): string
     {
         return $project->name;
@@ -66,14 +74,6 @@ final class NullProjectIntegration implements ProjectIntegration
     public function hasActiveRelatedEntities(): bool
     {
         return false;
-    }
-
-    /**
-     * @return list<string>
-     */
-    public function orderings(string $scope, string $alias): array
-    {
-        return [];
     }
 
     public function noRelatedEntitiesBanner(): ?array

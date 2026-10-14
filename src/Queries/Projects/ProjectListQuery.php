@@ -5,8 +5,8 @@ namespace Projects13\Queries\Projects;
 use Projects13\Models\Project;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Builder;
-use Projects13\Contracts\ProjectIntegration;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Projects13\Contracts\ProjectQueryIntegration;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 /**
@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
  */
 final class ProjectListQuery extends ListQueryBase
 {
-    public function __construct(private readonly ProjectIntegration $integration) {}
+    public function __construct(private readonly ProjectQueryIntegration $integration) {}
 
     /**
      * @return LengthAwarePaginator<int, Project>
@@ -29,7 +29,8 @@ final class ProjectListQuery extends ListQueryBase
         return $this->paginate(
             $this->withActiveCounts($query),
             $search,
-            searchColumns: $this->searchColumns(['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date']),
+            /** @phpstan-ignore argument.type */
+            searchColumns: $this->searchColumns('project', ['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date']),
         );
     }
 
@@ -45,7 +46,8 @@ final class ProjectListQuery extends ListQueryBase
         return $this->paginate(
             $this->withActiveCounts($query),
             $search,
-            searchColumns: $this->searchColumns([
+            /** @phpstan-ignore argument.type */
+            searchColumns: $this->searchColumns('project', [
                 'PRO_projects.name',
                 'PRO_projects.start_date',
                 'PRO_projects.end_date',
@@ -64,7 +66,8 @@ final class ProjectListQuery extends ListQueryBase
                 ->latest('PRO_projects.deleted_at')
                 ->orderBy('PRO_projects.id'),
             $search,
-            searchColumns: $this->searchColumns([
+            /** @phpstan-ignore argument.type */
+            searchColumns: $this->searchColumns('project', [
                 'PRO_projects.name',
                 'PRO_projects.start_date',
                 'PRO_projects.end_date',
@@ -73,22 +76,17 @@ final class ProjectListQuery extends ListQueryBase
         );
     }
 
-    public function findTrashedByName(string $name): ?Project
+    /**
+     * @return class-string<Project>
+     */
+    protected function getModelClass(): string
     {
-        return $this->firstTrashedByName(Project::onlyTrashed(), $name);
+        return Project::class;
     }
 
-    /**
-     * Number of records in each list state, shown as the badge of the state tabs.
-     *
-     * @return array{active: int, archived: int, trashed: int}
-     */
-    public function stateCounts(
-        ?int $activeTotal = null,
-        ?int $archivedTotal = null,
-        ?int $trashedTotal = null,
-    ): array {
-        return $this->countStates(Project::class, $activeTotal, $archivedTotal, $trashedTotal);
+    protected function integration(): ProjectQueryIntegration
+    {
+        return $this->integration;
     }
 
     /**
@@ -126,20 +124,6 @@ final class ProjectListQuery extends ListQueryBase
             'epics' => fn (Builder $epics) => $epics->where('PRO_epics.active', true),
             'comments' => fn (Builder $comments) => $comments->where('PRO_epics.active', true),
         ]);
-    }
-
-    /**
-     * Base search columns for this list, with whatever the integration contributes appended.
-     *
-     * @param  non-empty-list<literal-string>  $columns
-     * @return non-empty-list<literal-string>
-     */
-    private function searchColumns(array $columns): array
-    {
-        /** @var non-empty-list<literal-string> $columns An integration appends to the base columns; it never replaces them. */
-        $columns = $this->integration->searchColumns('project', $columns);
-
-        return $columns;
     }
 
     /**

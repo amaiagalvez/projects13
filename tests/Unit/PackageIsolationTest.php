@@ -61,7 +61,8 @@ class PackageIsolationTest extends TestCase
             $offences,
             'projects13 must work without customers13 installed, but its production code still '
             .'names it. Move whatever needs a customer into the integration package, and keep the '
-            .'contract in Projects13\\Contracts\\ProjectIntegration as the only seam.'.PHP_EOL
+            .'contracts in Projects13\\Contracts\\ProjectValidationIntegration, '
+            .'ProjectQueryIntegration, ProjectDisplayIntegration as the only seams.'.PHP_EOL
             .PHP_EOL.implode(PHP_EOL, $offences),
         );
     }
