@@ -26,7 +26,7 @@ class UniqueProjectName implements DataAwareRule, Rule
     public function passes(mixed $attribute, mixed $value): bool
     {
         // Check if a project with this name already exists (including soft-deleted)
-        $existing = Project::where('name', $value)->first();
+        $existing = Project::withTrashed()->where('name', $value)->first();
 
         if (! $existing) {
             return true;

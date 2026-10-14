@@ -72,7 +72,14 @@ class ProjectListTransformer extends ListTransformer
                 'extraDate' => $project->deleted_at?->toIso8601String(),
                 'actions' => [
                     $this->restoreAction($project, $project->active),
-                    $this->forceDeleteAction($project),
+                    $project->epics_count > 0
+                        ? $this->blockedAction(
+                            __('basics13::messages.delete_permanently'),
+                            'lock-closed',
+                            'project-force-delete-blocked-'.$project->id,
+                            __('basics13::messages.cannot_force_delete_related'),
+                        )
+                        : $this->forceDeleteAction($project),
                 ],
             ])->all(),
         ];
