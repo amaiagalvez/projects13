@@ -17,6 +17,7 @@ class ProjectRequest extends FormRequest
      */
     private function integration(): ProjectValidationIntegration
     {
+        /** @phpstan-return ProjectValidationIntegration */
         return app(ProjectValidationIntegration::class);
     }
 

@@ -80,19 +80,24 @@ class EpicController extends Controller
             return $this->deletedNameConflict($request, $deletedEpic, 'epics.index', 'deleted_epic_conflict');
         }
 
+        $epic = null;
         try {
-            DB::transaction(static function () use ($request): void {
+            DB::transaction(static function () use ($request, &$epic): void {
                 Project::query()->lockForUpdate()->findOrFail($request->integer('project_id'));
-                Epic::create($request->validated());
+                $epic = Epic::create($request->validated());
             });
         } catch (QueryException $exception) {
             UniqueConstraintViolation::rethrowAsValidationError($exception);
         }
 
+        if ($request->expectsJson()) {
+            return response()->json($epic->only(['id', 'name']), 201);
+        }
+
         return to_route('epics.index')->with('status', __('basics13::messages.created'));
     }
 
-    public function update(EpicRequest $request, Epic $epic): RedirectResponse
+    public function update(EpicRequest $request, Epic $epic): RedirectResponse|JsonResponse
     {
         try {
             DB::transaction(static function () use ($request, $epic): void {
@@ -101,6 +106,10 @@ class EpicController extends Controller
             });
         } catch (QueryException $exception) {
             UniqueConstraintViolation::rethrowAsValidationError($exception);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json($epic->only(['id', 'name']));
         }
 
         return to_route('epics.index')->with('status', __('basics13::messages.updated'));

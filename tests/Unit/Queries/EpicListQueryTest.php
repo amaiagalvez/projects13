@@ -7,8 +7,8 @@ use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
 use Illuminate\Database\Eloquent\Builder;
 use Projects13\Queries\Epics\EpicListQuery;
-use Projects13\Contracts\NullProjectIntegration;
 use Projects13\Contracts\ProjectQueryIntegration;
+use Projects13\Contracts\ProjectQueryIntegrationDefaults;
 
 class EpicListQueryTest extends TestCase
 {
@@ -17,7 +17,7 @@ class EpicListQueryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->query = new EpicListQuery(new NullProjectIntegration);
+        $this->query = new EpicListQuery($this->nullQueryIntegration());
     }
 
     public function test_recent_comments_limit_constant_is_20(): void
@@ -137,6 +137,14 @@ class EpicListQueryTest extends TestCase
     private function queryWithoutRunningIt(): Builder
     {
         return Epic::query();
+    }
+
+    private function nullQueryIntegration(): ProjectQueryIntegration
+    {
+        return new class implements ProjectQueryIntegration
+        {
+            use ProjectQueryIntegrationDefaults;
+        };
     }
 }
 

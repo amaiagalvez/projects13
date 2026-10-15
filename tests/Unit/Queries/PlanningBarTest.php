@@ -7,7 +7,10 @@ use Carbon\CarbonImmutable;
 use Projects13\Tests\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Projects13\Queries\Planning\PlanningQuery;
-use Projects13\Contracts\NullProjectIntegration;
+use Projects13\Contracts\ProjectQueryIntegration;
+use Projects13\Contracts\ProjectDisplayIntegration;
+use Projects13\Contracts\ProjectQueryIntegrationDefaults;
+use Projects13\Contracts\ProjectDisplayIntegrationDefaults;
 
 class PlanningBarTest extends TestCase
 {
@@ -50,11 +53,27 @@ class PlanningBarTest extends TestCase
         ];
 
         $bar = (new ReflectionMethod(PlanningQuery::class, 'bar'))->invoke(
-            new PlanningQuery(new NullProjectIntegration, new NullProjectIntegration),
+            new PlanningQuery($this->nullQueryIntegration(), $this->nullDisplayIntegration()),
             $row,
             $timeline
         );
 
         $this->assertSame($expected, $bar);
+    }
+
+    private function nullQueryIntegration(): ProjectQueryIntegration
+    {
+        return new class implements ProjectQueryIntegration
+        {
+            use ProjectQueryIntegrationDefaults;
+        };
+    }
+
+    private function nullDisplayIntegration(): ProjectDisplayIntegration
+    {
+        return new class implements ProjectDisplayIntegration
+        {
+            use ProjectDisplayIntegrationDefaults;
+        };
     }
 }

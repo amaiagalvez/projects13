@@ -5,9 +5,11 @@ namespace Projects13\Models;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Concerns\TracksAuditColumns;
+use Projects13\Policies\EpicCommentPolicy;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Projects13\Database\Factories\EpicCommentFactory;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 
@@ -27,6 +29,7 @@ use Illuminate\Database\Eloquent\Attributes\UseFactory;
  */
 #[Fillable(['body', 'notes'])]
 #[UseFactory(EpicCommentFactory::class)]
+#[UsePolicy(EpicCommentPolicy::class)]
 class EpicComment extends Model
 {
     protected $table = 'PRO_epic_comments';

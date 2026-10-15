@@ -5,9 +5,9 @@ namespace Projects13\Tests\Unit\Queries;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
 use Illuminate\Database\Eloquent\Builder;
-use Projects13\Contracts\NullProjectIntegration;
 use Projects13\Contracts\ProjectQueryIntegration;
 use Projects13\Queries\Projects\ProjectListQuery;
+use Projects13\Contracts\ProjectQueryIntegrationDefaults;
 
 class ProjectListQueryTest extends TestCase
 {
@@ -16,7 +16,7 @@ class ProjectListQueryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->query = new ProjectListQuery(new NullProjectIntegration);
+        $this->query = new ProjectListQuery($this->nullQueryIntegration());
     }
 
     public function test_active_method_exists(): void
@@ -122,6 +122,14 @@ class ProjectListQueryTest extends TestCase
     private function queryWithoutRunningIt(): Builder
     {
         return Project::query();
+    }
+
+    private function nullQueryIntegration(): ProjectQueryIntegration
+    {
+        return new class implements ProjectQueryIntegration
+        {
+            use ProjectQueryIntegrationDefaults;
+        };
     }
 }
 

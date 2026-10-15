@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
  */
 final class ProjectListQuery extends ListQueryBase
 {
+    private const RESOURCE_PROJECT = 'project';
+
     public function __construct(private readonly ProjectQueryIntegration $integration) {}
 
     /**
@@ -30,7 +32,7 @@ final class ProjectListQuery extends ListQueryBase
             $this->withActiveCounts($query),
             $search,
             /** @phpstan-ignore argument.type */
-            searchColumns: $this->searchColumns('project', ['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date']),
+            searchColumns: $this->searchColumns(self::RESOURCE_PROJECT, ['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date']),
         );
     }
 
@@ -47,7 +49,7 @@ final class ProjectListQuery extends ListQueryBase
             $this->withActiveCounts($query),
             $search,
             /** @phpstan-ignore argument.type */
-            searchColumns: $this->searchColumns('project', [
+            searchColumns: $this->searchColumns(self::RESOURCE_PROJECT, [
                 'PRO_projects.name',
                 'PRO_projects.start_date',
                 'PRO_projects.end_date',
@@ -67,7 +69,7 @@ final class ProjectListQuery extends ListQueryBase
                 ->orderBy('PRO_projects.id'),
             $search,
             /** @phpstan-ignore argument.type */
-            searchColumns: $this->searchColumns('project', [
+            searchColumns: $this->searchColumns(self::RESOURCE_PROJECT, [
                 'PRO_projects.name',
                 'PRO_projects.start_date',
                 'PRO_projects.end_date',
@@ -106,7 +108,7 @@ final class ProjectListQuery extends ListQueryBase
         // that table's columns overwrite this one's on hydration.
         $query->select('PRO_projects.*');
 
-        $this->integration->scope($query, 'project', 'project_customers');
+        $this->integration->scope($query, self::RESOURCE_PROJECT, 'project_customers');
 
         return $query;
     }
@@ -136,7 +138,7 @@ final class ProjectListQuery extends ListQueryBase
         $query->orderBy('PRO_projects.start_date')
             ->orderBy('PRO_projects.end_date');
 
-        foreach ($this->integration->orderings('project', 'project_customers') as $column) {
+        foreach ($this->integration->orderings(self::RESOURCE_PROJECT, 'project_customers') as $column) {
             $query->orderBy($column);
         }
 

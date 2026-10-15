@@ -63,8 +63,9 @@ class ProjectController extends Controller
             return $this->deletedNameConflict($request, $deletedProject, 'projects.index', 'deleted_project_conflict');
         }
 
+        $project = null;
         try {
-            DB::transaction(static function () use ($request, $integration): void {
+            DB::transaction(static function () use ($request, $integration, &$project): void {
                 // The integration contributes attributes that are not part of the base model, so
                 // they are force-filled instead of mass-assigned and only after it validated them.
                 $project = new Project($request->validated());
@@ -75,6 +76,10 @@ class ProjectController extends Controller
             UniqueConstraintViolation::rethrowAsValidationError($exception);
         }
 
+        if ($request->expectsJson()) {
+            return response()->json($project->only(['id', 'name']), 201);
+        }
+
         return to_route('projects.index')->with('status', __('basics13::messages.created'));
     }
 
@@ -82,7 +87,7 @@ class ProjectController extends Controller
         ProjectRequest $request,
         Project $project,
         ProjectValidationIntegration $integration,
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         try {
             DB::transaction(static function () use ($request, $project, $integration): void {
                 $project->fill($request->validated());
@@ -91,6 +96,10 @@ class ProjectController extends Controller
             });
         } catch (QueryException $exception) {
             UniqueConstraintViolation::rethrowAsValidationError($exception);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json($project->only(['id', 'name']));
         }
 
         return to_route('projects.index')->with('status', __('basics13::messages.updated'));

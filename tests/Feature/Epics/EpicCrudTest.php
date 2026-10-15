@@ -6,9 +6,11 @@ use App\Models\User;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 use Projects13\Models\EpicComment;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Projects13\Transformers\EpicListTransformer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -111,6 +113,48 @@ class EpicCrudTest extends TestCase
         ]);
     }
 
+    public function test_deleted_name_conflict_does_not_create_until_reuse_is_confirmed(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+        $epic = Epic::factory()->for($project)->create(['name' => 'Checkout flow']);
+        $epic->delete();
+        $data = [
+            'name' => $epic->name,
+            'project_id' => $project->id,
+        ];
+
+        $this->post(route('epics.store'), $data)
+            ->assertRedirect(route('epics.index'))
+            ->assertSessionHas('deleted_epic_conflict', ['id' => $epic->id, 'name' => $epic->name]);
+        $this->assertDatabaseCount('PRO_epics', 1);
+
+        $this->post(route('epics.store'), [...$data, 'reuse_deleted_name' => true])
+            ->assertSessionHas('status', __('Record created successfully.'));
+
+        $this->assertDatabaseCount('PRO_epics', 2);
+        $this->assertSoftDeleted($epic);
+    }
+
+    public function test_deleted_name_json_conflict_returns_409(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+        $epic = Epic::factory()->for($project)->create();
+        $epic->delete();
+        $message = __('basics13::messages.deleted_name_conflict', ['name' => $epic->name]);
+
+        $this->postJson(route('epics.store'), [
+            'name' => $epic->name,
+            'project_id' => $project->id,
+        ])->assertConflict()->assertExactJson([
+            'message' => $message,
+            'errors' => ['name' => [$message]],
+        ]);
+
+        $this->assertDatabaseCount('PRO_epics', 1);
+    }
+
     public function test_a_project_can_have_multiple_epics(): void
     {
         $project = Project::factory()->create();
@@ -187,6 +231,74 @@ class EpicCrudTest extends TestCase
         $this->assertSoftDeleted($deletedEpic);
         $this->assertModelExists($activeEpic);
         $this->assertModelExists($otherProjectEpic);
+    }
+
+    public function test_store_converts_a_concurrent_duplicate_name_into_a_validation_error(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+        $name = 'Concurrent epic';
+        $this->createDuplicateNameAfterValidation($name, $project);
+
+        $this->postJson(route('epics.store'), ['name' => $name, 'project_id' => $project->id])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('name');
+
+        $this->assertDatabaseCount('PRO_epics', 1);
+        $this->assertDatabaseHas('PRO_epics', ['name' => $name, 'project_id' => $project->id]);
+    }
+
+    public function test_update_converts_a_concurrent_duplicate_name_into_a_validation_error(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+        $epic = Epic::factory()->for($project)->create(['name' => 'Original epic']);
+        $name = 'Concurrent epic';
+        $this->createDuplicateNameAfterValidation($name, $project);
+
+        $this->putJson(route('epics.update', $epic), ['name' => $name, 'project_id' => $project->id])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('name');
+
+        $this->assertDatabaseHas('PRO_epics', ['id' => $epic->id, 'name' => 'Original epic']);
+        $this->assertDatabaseHas('PRO_epics', ['name' => $name, 'project_id' => $project->id]);
+        $this->assertDatabaseCount('PRO_epics', 2);
+    }
+
+    /**
+     * The soft delete has to happen inside a transaction even when no rule asks for one, because a
+     * guard registered by an optional integration package takes its row lock in a transaction of its
+     * own and would otherwise let go of it before the delete is written.
+     */
+    public function test_direct_model_delete_runs_the_soft_delete_inside_a_transaction(): void
+    {
+        $project = Project::factory()->create();
+        $epic = Epic::factory()->for($project)->create();
+        $transactionLevel = null;
+
+        DB::listen(static function (QueryExecuted $query) use (&$transactionLevel): void {
+            if (str_starts_with($query->sql, 'update') && str_contains($query->sql, 'PRO_epics')) {
+                $transactionLevel = DB::transactionLevel();
+            }
+        });
+
+        $initialTransactionLevel = DB::transactionLevel();
+
+        $epic->delete();
+
+        $this->assertSame($initialTransactionLevel + 1, $transactionLevel);
+        $this->assertSoftDeleted($epic);
+    }
+
+    public function test_invalid_epic_names_are_rejected(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+
+        $this->postJson(route('epics.store'), ['name' => 'Ab', 'project_id' => $project->id])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('name');
+        $this->assertDatabaseCount('PRO_epics', 0);
     }
 
     public function test_epics_are_ordered_by_start_date_end_date_and_project(): void
@@ -414,5 +526,26 @@ class EpicCrudTest extends TestCase
         $this->assertDatabaseCount('PRO_epics', 1);
         $this->assertDatabaseHas('PRO_epics', ['id' => $epic->id, 'name' => 'Existing epic']);
         $this->assertNotSoftDeleted($epic);
+    }
+
+    private function createDuplicateNameAfterValidation(string $name, Project $project): void
+    {
+        $table = (new Epic)->getTable();
+        $competitorCreated = false;
+
+        DB::listen(static function (QueryExecuted $query) use ($name, $table, $project, &$competitorCreated): void {
+            if (
+                $competitorCreated
+                || ! str_starts_with(strtolower(ltrim($query->sql)), 'select')
+                || ! str_contains(strtolower($query->sql), strtolower($table))
+                || ! in_array($name, $query->bindings, true)
+                || ! in_array($project->id, $query->bindings, true)
+            ) {
+                return;
+            }
+
+            $competitorCreated = true;
+            Epic::factory()->for($project)->create(['name' => $name]);
+        });
     }
 }

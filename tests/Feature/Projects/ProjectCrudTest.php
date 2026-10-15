@@ -6,10 +6,12 @@ use App\Models\User;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 use Projects13\Models\EpicComment;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ProjectCrudTest extends TestCase
@@ -25,6 +27,16 @@ class ProjectCrudTest extends TestCase
     public function test_guests_are_redirected_from_project_list(): void
     {
         $this->get(route('projects.index'))->assertRedirect(route('login'));
+    }
+
+    public function test_unverified_users_cannot_create_projects(): void
+    {
+        $user = User::create(['name' => 'Test user', 'email' => 'test@example.test', 'password' => 'unused']);
+
+        $this->actingAs($user)
+            ->post(route('projects.store'), ['name' => 'Unverified project', 'start_date' => '2026-01-01'])
+            ->assertRedirect(route('verification.notice'));
+        $this->assertDatabaseCount('PRO_projects', 0);
     }
 
     public function test_authenticated_users_can_create_update_and_delete_projects(): void
@@ -100,6 +112,18 @@ class ProjectCrudTest extends TestCase
         ]);
     }
 
+    public function test_json_creation_trims_name_and_returns_created_record(): void
+    {
+        $this->actingAs(User::factory()->create(['email_verified_at' => now()]));
+
+        $this->postJson(route('projects.store'), ['name' => '  Trimmed project  ', 'start_date' => '2026-01-01'])
+            ->assertCreated()
+            ->assertJsonStructure(['id', 'name'])
+            ->assertJsonPath('name', 'Trimmed project');
+
+        $this->assertDatabaseHas('PRO_projects', ['name' => 'Trimmed project']);
+    }
+
     public function test_live_duplicate_name_is_rejected(): void
     {
         $this->actingAs(User::factory()->create());
@@ -151,6 +175,70 @@ class ProjectCrudTest extends TestCase
         ]);
 
         $this->assertDatabaseCount('PRO_projects', 1);
+    }
+
+    public function test_store_converts_a_concurrent_duplicate_name_into_a_validation_error(): void
+    {
+        $this->actingAs(User::factory()->create(['email_verified_at' => now()]));
+        $name = 'Concurrent project';
+        $this->createDuplicateNameAfterValidation($name);
+
+        $this->postJson(route('projects.store'), ['name' => $name, 'start_date' => '2026-01-01'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('name');
+
+        $this->assertDatabaseCount('PRO_projects', 1);
+        $this->assertDatabaseHas('PRO_projects', ['name' => $name]);
+    }
+
+    public function test_update_converts_a_concurrent_duplicate_name_into_a_validation_error(): void
+    {
+        $this->actingAs(User::factory()->create(['email_verified_at' => now()]));
+        $project = Project::factory()->create(['name' => 'Original project']);
+        $name = 'Concurrent project';
+        $this->createDuplicateNameAfterValidation($name);
+
+        $this->putJson(route('projects.update', $project), ['name' => $name, 'start_date' => '2026-01-01'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('name');
+
+        $this->assertDatabaseHas('PRO_projects', ['id' => $project->id, 'name' => 'Original project']);
+        $this->assertDatabaseHas('PRO_projects', ['name' => $name]);
+        $this->assertDatabaseCount('PRO_projects', 2);
+    }
+
+    /**
+     * The soft delete has to happen inside a transaction even when no rule asks for one, because a
+     * guard registered by an optional integration package takes its row lock in a transaction of its
+     * own and would otherwise let go of it before the delete is written.
+     */
+    public function test_direct_model_delete_runs_the_soft_delete_inside_a_transaction(): void
+    {
+        $project = Project::factory()->create();
+        $transactionLevel = null;
+
+        DB::listen(static function (QueryExecuted $query) use (&$transactionLevel): void {
+            if (str_starts_with($query->sql, 'update') && str_contains($query->sql, 'PRO_projects')) {
+                $transactionLevel = DB::transactionLevel();
+            }
+        });
+
+        $initialTransactionLevel = DB::transactionLevel();
+
+        $project->delete();
+
+        $this->assertSame($initialTransactionLevel + 1, $transactionLevel);
+        $this->assertSoftDeleted($project);
+    }
+
+    public function test_invalid_project_names_are_rejected(): void
+    {
+        $this->actingAs(User::factory()->create(['email_verified_at' => now()]));
+
+        $this->postJson(route('projects.store'), ['name' => 'Ab', 'start_date' => '2026-01-01'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('name');
+        $this->assertDatabaseCount('PRO_projects', 0);
     }
 
     public function test_archive_and_activate_preserve_children(): void
@@ -419,11 +507,37 @@ class ProjectCrudTest extends TestCase
 
     public function test_creation_requires_authorization(): void
     {
-        $this->signIn();
+        $user = User::create([
+            'name' => 'Test user',
+            'email' => 'test@example.test',
+            'password' => 'unused',
+            'email_verified_at' => now(),
+        ]);
+        $this->actingAs($user);
         Gate::before(static fn (): bool => false);
 
         $this->post(route('projects.store'), [])->assertForbidden();
 
         $this->assertDatabaseCount('PRO_projects', 0);
+    }
+
+    private function createDuplicateNameAfterValidation(string $name): void
+    {
+        $table = (new Project)->getTable();
+        $competitorCreated = false;
+
+        DB::listen(static function (QueryExecuted $query) use ($name, $table, &$competitorCreated): void {
+            if (
+                $competitorCreated
+                || ! str_starts_with(strtolower(ltrim($query->sql)), 'select')
+                || ! str_contains(strtolower($query->sql), strtolower($table))
+                || ! in_array($name, $query->bindings, true)
+            ) {
+                return;
+            }
+
+            $competitorCreated = true;
+            Project::factory()->create(['name' => $name, 'start_date' => '2026-01-01']);
+        });
     }
 }

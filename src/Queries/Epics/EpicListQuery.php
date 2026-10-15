@@ -18,6 +18,8 @@ final class EpicListQuery extends ListQueryBase
      */
     public const RECENT_COMMENTS_LIMIT = 20;
 
+    private const RESOURCE_EPIC = 'epic';
+
     public function __construct(private readonly ProjectQueryIntegration $integration) {}
 
     /**
@@ -40,7 +42,7 @@ final class EpicListQuery extends ListQueryBase
             ),
             $search,
             /** @phpstan-ignore argument.type */
-            searchColumns: $this->searchColumns('epic', [
+            searchColumns: $this->searchColumns(self::RESOURCE_EPIC, [
                 'PRO_epics.name',
                 'epic_projects.name',
                 'PRO_epics.start_date',
@@ -67,7 +69,7 @@ final class EpicListQuery extends ListQueryBase
             ),
             $search,
             /** @phpstan-ignore argument.type */
-            searchColumns: $this->searchColumns('epic', [
+            searchColumns: $this->searchColumns(self::RESOURCE_EPIC, [
                 'PRO_epics.name',
                 'epic_projects.name',
                 'PRO_epics.start_date',
@@ -88,7 +90,7 @@ final class EpicListQuery extends ListQueryBase
                 ->orderBy('PRO_epics.id'),
             $search,
             /** @phpstan-ignore argument.type */
-            searchColumns: $this->searchColumns('epic', [
+            searchColumns: $this->searchColumns(self::RESOURCE_EPIC, [
                 'PRO_epics.name',
                 'epic_projects.name',
                 'PRO_epics.start_date',
@@ -124,7 +126,7 @@ final class EpicListQuery extends ListQueryBase
      */
     private function scoped(Builder $query): Builder
     {
-        $this->integration->scope($query, 'epic', 'epic_customers');
+        $this->integration->scope($query, self::RESOURCE_EPIC, 'epic_customers');
 
         return $query;
     }
@@ -153,7 +155,7 @@ final class EpicListQuery extends ListQueryBase
      */
     private function withIntegrationOrderings(Builder $query): Builder
     {
-        foreach ($this->integration->orderings('epic', 'epic_customers') as $column) {
+        foreach ($this->integration->orderings(self::RESOURCE_EPIC, 'epic_customers') as $column) {
             $query->orderBy($column);
         }
 
