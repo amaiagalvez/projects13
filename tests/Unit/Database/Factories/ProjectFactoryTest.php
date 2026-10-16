@@ -77,7 +77,7 @@ class ProjectFactoryTest extends TestCase
         $faker->shouldReceive('boolean')->once()->with(20)->andReturnTrue();
         $locale = config('app.faker_locale');
         $this->assertIsString($locale);
-        app()->instance(Generator::class . ':' . $locale, $faker);
+        app()->instance(Generator::class.':'.$locale, $faker);
 
         $dates = $factory->callGetDateRange(true);
 
