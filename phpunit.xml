@@ -30,7 +30,7 @@
         <env name="DUSK_BASE_URL" value="http://laravel13-dusk"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
+        <env name="SESSION_DRIVER" value="file"/>
         <env name="VIEW_COMPILED_PATH" value="storage/framework/views"/>
     </php>
 </phpunit>

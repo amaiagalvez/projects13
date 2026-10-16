@@ -534,12 +534,16 @@ class EpicCrudTest extends TestCase
         $competitorCreated = false;
 
         DB::listen(static function (QueryExecuted $query) use ($name, $table, $project, &$competitorCreated): void {
+            $sql = strtolower(ltrim($query->sql));
+            $bindings = $query->bindings;
+
             if (
                 $competitorCreated
-                || ! str_starts_with(strtolower(ltrim($query->sql)), 'select')
-                || ! str_contains(strtolower($query->sql), strtolower($table))
-                || ! in_array($name, $query->bindings, true)
-                || ! in_array($project->id, $query->bindings, true)
+                || ! str_starts_with($sql, 'select')
+                || ! str_contains($sql, strtolower($table))
+                || ! in_array($name, $bindings, true)
+                // project_id in query bindings is a string, so compare as string
+                || ! in_array((string) $project->id, $bindings, true)
             ) {
                 return;
             }
