@@ -25,6 +25,7 @@ abstract class TestCase extends TestbenchTestCase
             'name' => 'Test author',
             'email' => 'author@example.test',
             'password' => 'password',
+            'email_verified_at' => now(),
         ]);
 
         $this->actingAs($user);
