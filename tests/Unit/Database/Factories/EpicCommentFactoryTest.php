@@ -46,14 +46,14 @@ class EpicCommentFactoryTest extends TestCase
     {
         $existing = User::factory()->create();
 
-        $user = EpicCommentFactory::getRecord(User::class);
+        $user = EpicCommentFactory::getRecordOrNew(User::class);
 
         $this->assertSame($existing->id, $user->id);
     }
 
     public function test_epic_comment_factory_get_record_creates_new_user_when_none_exists(): void
     {
-        $user = EpicCommentFactory::getRecord(User::class);
+        $user = EpicCommentFactory::getRecordOrNew(User::class);
 
         $this->assertInstanceOf(User::class, $user);
         $this->assertDatabaseHas('users', ['id' => $user->id]);
@@ -63,14 +63,14 @@ class EpicCommentFactoryTest extends TestCase
     {
         $existing = Epic::factory()->create();
 
-        $epic = EpicCommentFactory::getRecord(Epic::class);
+        $epic = EpicCommentFactory::getRecordOrNew(Epic::class);
 
         $this->assertSame($existing->id, $epic->id);
     }
 
     public function test_epic_comment_factory_get_record_creates_new_epic_when_none_exists(): void
     {
-        $epic = EpicCommentFactory::getRecord(Epic::class);
+        $epic = EpicCommentFactory::getRecordOrNew(Epic::class);
 
         $this->assertInstanceOf(Epic::class, $epic);
         $this->assertDatabaseHas('PRO_epics', ['id' => $epic->id]);

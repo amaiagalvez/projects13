@@ -30,8 +30,8 @@ class EpicCommentFactory extends Factory
 
         return [
             'body' => fake()->paragraph(),
-            'user_id' => static::getRecord($userModel),
-            'epic_id' => static::getRecord(Epic::class),
+            'user_id' => static::getRecordOrNew($userModel),
+            'epic_id' => static::getRecordOrNew(Epic::class),
         ];
     }
 }

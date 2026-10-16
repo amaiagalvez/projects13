@@ -53,7 +53,7 @@ class EpicCommentMigrationTest extends TestCase
                 $table->softDeletes();
             });
 
-            $migration = require dirname(__DIR__, 3).'/src/Database/Migrations/2026_09_30_175707_create_epic_comments_table.php';
+            $migration = require dirname(__DIR__, 3).'/database/migrations/2026_09_30_175707_create_epic_comments_table.php';
             $migration->up();
 
             $this->assertTrue(Schema::hasTable('PRO_epic_comments'));
@@ -128,7 +128,7 @@ class EpicCommentMigrationTest extends TestCase
                 $table->softDeletes();
             });
 
-            $migration = require dirname(__DIR__, 3).'/src/Database/Migrations/2026_09_30_175707_create_epic_comments_table.php';
+            $migration = require dirname(__DIR__, 3).'/database/migrations/2026_09_30_175707_create_epic_comments_table.php';
             $migration->up();
 
             $foreignKeys = DB::select("SELECT * FROM pragma_foreign_key_list('PRO_epic_comments')");

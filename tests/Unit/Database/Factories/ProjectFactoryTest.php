@@ -48,7 +48,7 @@ class ProjectFactoryTest extends TestCase
             /** @return array{start_date: string|null, end_date: string|null} */
             public function callGetDateRange(): array
             {
-                return $this->getDateRange();
+                return $this->getDatesInRange();
             }
         };
 
@@ -69,7 +69,7 @@ class ProjectFactoryTest extends TestCase
             /** @return array{start_date: string|null, end_date: string|null} */
             public function callGetDateRange(bool $allowNull): array
             {
-                return $this->getDateRange(-1, 1, $allowNull);
+                return $this->getDatesInRange(-1, 1, $allowNull);
             }
         };
 

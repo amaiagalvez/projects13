@@ -128,14 +128,14 @@ class EpicFactoryTest extends TestCase
     {
         $existing = Project::factory()->create();
 
-        $project = EpicFactory::getRecord(Project::class);
+        $project = EpicFactory::getRecordOrNew(Project::class);
 
         $this->assertSame($existing->id, $project->id);
     }
 
     public function test_epic_factory_get_record_creates_new_when_none_exists(): void
     {
-        $project = EpicFactory::getRecord(Project::class);
+        $project = EpicFactory::getRecordOrNew(Project::class);
 
         $this->assertInstanceOf(Project::class, $project);
         $this->assertDatabaseHas('PRO_projects', ['id' => $project->id]);

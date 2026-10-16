@@ -37,7 +37,7 @@ class EpicMigrationTest extends TestCase
                 $table->softDeletes();
             });
 
-            $migration = require dirname(__DIR__, 3).'/src/Database/Migrations/2026_09_30_175706_create_epics_table.php';
+            $migration = require dirname(__DIR__, 3).'/database/migrations/2026_09_30_175706_create_epics_table.php';
             $migration->up();
 
             $this->assertTrue(Schema::hasTable('PRO_epics'));
@@ -97,7 +97,7 @@ class EpicMigrationTest extends TestCase
                 $table->softDeletes();
             });
 
-            $migration = require dirname(__DIR__, 3).'/src/Database/Migrations/2026_09_30_175706_create_epics_table.php';
+            $migration = require dirname(__DIR__, 3).'/database/migrations/2026_09_30_175706_create_epics_table.php';
             $migration->up();
 
             $indexes = DB::select("SELECT name, sql FROM sqlite_master WHERE type='index' AND tbl_name='PRO_epics'");

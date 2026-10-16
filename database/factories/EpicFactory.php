@@ -26,7 +26,7 @@ class EpicFactory extends Factory
         /** @var Project $project */
         $project = $projectId
             ? Project::query()->findOrFail($projectId)
-            : static::getRecord(Project::class);
+            : static::getRecordOrNew(Project::class);
 
         // Epic dates must be within project dates
         $projectStart = CarbonImmutable::parse($project->start_date);

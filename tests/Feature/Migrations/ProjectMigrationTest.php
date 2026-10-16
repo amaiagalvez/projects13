@@ -29,7 +29,7 @@ class ProjectMigrationTest extends TestCase
 
         try {
 
-            $migration = require dirname(__DIR__, 3).'/src/Database/Migrations/2026_09_28_173607_create_projects_table.php';
+            $migration = require dirname(__DIR__, 3).'/database/migrations/2026_09_28_173607_create_projects_table.php';
             $migration->up();
 
             $this->assertTrue(Schema::hasTable('PRO_projects'));
@@ -81,7 +81,7 @@ class ProjectMigrationTest extends TestCase
 
         try {
 
-            $migration = require dirname(__DIR__, 3).'/src/Database/Migrations/2026_09_28_173607_create_projects_table.php';
+            $migration = require dirname(__DIR__, 3).'/database/migrations/2026_09_28_173607_create_projects_table.php';
             $migration->up();
 
             $indexes = DB::select("SELECT name, sql FROM sqlite_master WHERE type='index' AND tbl_name='PRO_projects'");
