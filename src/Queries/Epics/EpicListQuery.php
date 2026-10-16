@@ -20,6 +20,12 @@ final class EpicListQuery extends ListQueryBase
 
     private const RESOURCE_EPIC = 'epic';
 
+    /**
+     * The alias the integration joins its customer table under. Like the scope above, it crosses
+     * the integration on every call, so both live in a named constant.
+     */
+    private const CUSTOMER_ALIAS = 'epic_customers';
+
     public function __construct(private readonly ProjectQueryIntegration $integration) {}
 
     /**
@@ -126,7 +132,7 @@ final class EpicListQuery extends ListQueryBase
      */
     private function scoped(Builder $query): Builder
     {
-        $this->integration->scope($query, self::RESOURCE_EPIC, 'epic_customers');
+        $this->integration->scope($query, self::RESOURCE_EPIC, self::CUSTOMER_ALIAS);
 
         return $query;
     }
@@ -155,7 +161,7 @@ final class EpicListQuery extends ListQueryBase
      */
     private function withIntegrationOrderings(Builder $query): Builder
     {
-        foreach ($this->integration->orderings(self::RESOURCE_EPIC, 'epic_customers') as $column) {
+        foreach ($this->integration->orderings(self::RESOURCE_EPIC, self::CUSTOMER_ALIAS) as $column) {
             $query->orderBy($column);
         }
 

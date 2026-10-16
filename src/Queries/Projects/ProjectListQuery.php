@@ -16,6 +16,12 @@ final class ProjectListQuery extends ListQueryBase
 {
     private const RESOURCE_PROJECT = 'project';
 
+    /**
+     * The alias the integration joins its customer table under. Like the scope above, it crosses
+     * the integration on every call, so both live in a named constant.
+     */
+    private const CUSTOMER_ALIAS = 'project_customers';
+
     public function __construct(private readonly ProjectQueryIntegration $integration) {}
 
     /**
@@ -108,7 +114,7 @@ final class ProjectListQuery extends ListQueryBase
         // that table's columns overwrite this one's on hydration.
         $query->select('PRO_projects.*');
 
-        $this->integration->scope($query, self::RESOURCE_PROJECT, 'project_customers');
+        $this->integration->scope($query, self::RESOURCE_PROJECT, self::CUSTOMER_ALIAS);
 
         return $query;
     }
@@ -138,7 +144,7 @@ final class ProjectListQuery extends ListQueryBase
         $query->orderBy('PRO_projects.start_date')
             ->orderBy('PRO_projects.end_date');
 
-        foreach ($this->integration->orderings(self::RESOURCE_PROJECT, 'project_customers') as $column) {
+        foreach ($this->integration->orderings(self::RESOURCE_PROJECT, self::CUSTOMER_ALIAS) as $column) {
             $query->orderBy($column);
         }
 
