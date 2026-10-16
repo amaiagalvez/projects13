@@ -103,6 +103,23 @@ class ProjectListQueryTest extends TestCase
     }
 
     /**
+     * An integration that contributes an ordering is asked for it under the same project scope and
+     * alias as the search, and the column it names reaches the query after the base orderings.
+     */
+    public function test_an_ordering_contributed_by_the_integration_reaches_the_query(): void
+    {
+        $integration = new RecordingProjectListQueryIntegration(['project_customers.name']);
+        $query = new ProjectListQuery($integration);
+        $builder = $this->queryWithoutRunningIt();
+
+        (new \ReflectionMethod($query, 'applyOrderings'))->invoke($query, $builder);
+
+        $this->assertSame(['project'], $integration->orderingScopes);
+        $this->assertSame(['project_customers'], $integration->orderingAliases);
+        $this->assertContains('project_customers.name', array_column($builder->getQuery()->orders ?? [], 'column'));
+    }
+
+    /**
      * The join that used to live here was the only reason this query knew a customer, and nothing
      * in the base can use it any more.
      */
@@ -148,6 +165,17 @@ final class RecordingProjectListQueryIntegration implements ProjectQueryIntegrat
     /** @var list<string> */
     public array $searchScopes = [];
 
+    /** @var list<string> */
+    public array $orderingScopes = [];
+
+    /** @var list<string> */
+    public array $orderingAliases = [];
+
+    /**
+     * @param  list<string>  $orderings
+     */
+    public function __construct(private readonly array $orderings = []) {}
+
     public function scope(Builder $query, string $scope, string $alias): void
     {
         $this->scopes[] = $scope;
@@ -170,6 +198,9 @@ final class RecordingProjectListQueryIntegration implements ProjectQueryIntegrat
      */
     public function orderings(string $scope, string $alias): array
     {
-        return [];
+        $this->orderingScopes[] = $scope;
+        $this->orderingAliases[] = $alias;
+
+        return $this->orderings;
     }
 }

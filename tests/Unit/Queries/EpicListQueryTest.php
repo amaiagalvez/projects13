@@ -118,6 +118,23 @@ class EpicListQueryTest extends TestCase
     }
 
     /**
+     * An integration that contributes an ordering is asked for it under the same epic scope and
+     * alias as the search, and the column it names reaches the query after the base orderings.
+     */
+    public function test_an_ordering_contributed_by_the_integration_reaches_the_query(): void
+    {
+        $integration = new RecordingProjectQueryIntegration(['epic_customers.name']);
+        $query = new EpicListQuery($integration);
+        $builder = $this->queryWithoutRunningIt();
+
+        (new \ReflectionMethod($query, 'withIntegrationOrderings'))->invoke($query, $builder);
+
+        $this->assertSame(['epic'], $integration->orderingScopes);
+        $this->assertSame(['epic_customers'], $integration->orderingAliases);
+        $this->assertContains('epic_customers.name', array_column($builder->getQuery()->orders ?? [], 'column'));
+    }
+
+    /**
      * Loading the customer of every project on the page was the other half of what made this query
      * know about customers; nothing in the base can use it any more.
      */
@@ -163,6 +180,17 @@ final class RecordingProjectQueryIntegration implements ProjectQueryIntegration
     /** @var list<string> */
     public array $searchScopes = [];
 
+    /** @var list<string> */
+    public array $orderingScopes = [];
+
+    /** @var list<string> */
+    public array $orderingAliases = [];
+
+    /**
+     * @param  list<string>  $orderings
+     */
+    public function __construct(private readonly array $orderings = []) {}
+
     public function scope(Builder $query, string $scope, string $alias): void
     {
         $this->scopes[] = $scope;
@@ -185,6 +213,9 @@ final class RecordingProjectQueryIntegration implements ProjectQueryIntegration
      */
     public function orderings(string $scope, string $alias): array
     {
-        return [];
+        $this->orderingScopes[] = $scope;
+        $this->orderingAliases[] = $alias;
+
+        return $this->orderings;
     }
 }

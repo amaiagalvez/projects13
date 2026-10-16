@@ -90,6 +90,27 @@ class TimelineTest extends TestCase
             ->assertSeeInOrder(['Dated epic', 'Undated epic']);
     }
 
+    /**
+     * An epic with an end date but no start date still has a place on the axis: it is drawn from
+     * its end date onwards, so it is a milestone rather than a row with nothing to show.
+     */
+    public function test_an_epic_with_only_an_end_date_still_draws_a_bar(): void
+    {
+        $project = Project::factory()->create();
+        $epic = Epic::factory()->for($project)->create([
+            'name' => 'Milestone epic',
+            'start_date' => null,
+            'end_date' => '2026-04-15',
+        ]);
+
+        $this->travelTo('2026-04-01');
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('timeline'))
+            ->assertOk()
+            ->assertSee('data-test="timeline-bar-'.$epic->id.'"', false);
+    }
+
     public function test_archived_and_trashed_records_never_reach_the_board(): void
     {
         $project = Project::factory()->create(['name' => 'Shown project']);

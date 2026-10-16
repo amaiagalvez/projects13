@@ -124,6 +124,19 @@ class ProjectCrudTest extends TestCase
         $this->assertDatabaseHas('PRO_projects', ['name' => 'Trimmed project']);
     }
 
+    public function test_json_update_returns_the_updated_record(): void
+    {
+        $this->actingAs(User::factory()->create(['email_verified_at' => now()]));
+        $project = Project::factory()->create(['name' => 'Original project']);
+
+        $this->putJson(route('projects.update', $project), ['name' => '  Renamed project  ', 'start_date' => '2026-01-01'])
+            ->assertOk()
+            ->assertJsonStructure(['id', 'name'])
+            ->assertJsonPath('name', 'Renamed project');
+
+        $this->assertDatabaseHas('PRO_projects', ['id' => $project->id, 'name' => 'Renamed project']);
+    }
+
     public function test_live_duplicate_name_is_rejected(): void
     {
         $this->actingAs(User::factory()->create());

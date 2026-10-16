@@ -113,6 +113,39 @@ class EpicCrudTest extends TestCase
         ]);
     }
 
+    public function test_json_creation_returns_the_created_record(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+
+        $this->postJson(route('epics.store'), [
+            'name' => '  Trimmed epic  ',
+            'project_id' => $project->id,
+        ])
+            ->assertCreated()
+            ->assertJsonStructure(['id', 'name'])
+            ->assertJsonPath('name', 'Trimmed epic');
+
+        $this->assertDatabaseHas('PRO_epics', ['name' => 'Trimmed epic', 'project_id' => $project->id]);
+    }
+
+    public function test_json_update_returns_the_updated_record(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+        $epic = Epic::factory()->for($project)->create(['name' => 'Original epic']);
+
+        $this->putJson(route('epics.update', $epic), [
+            'name' => '  Renamed epic  ',
+            'project_id' => $project->id,
+        ])
+            ->assertOk()
+            ->assertJsonStructure(['id', 'name'])
+            ->assertJsonPath('name', 'Renamed epic');
+
+        $this->assertDatabaseHas('PRO_epics', ['id' => $epic->id, 'name' => 'Renamed epic']);
+    }
+
     public function test_deleted_name_conflict_does_not_create_until_reuse_is_confirmed(): void
     {
         $this->actingAs(User::factory()->create());
