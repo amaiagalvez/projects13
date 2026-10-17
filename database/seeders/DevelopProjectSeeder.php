@@ -32,6 +32,25 @@ class DevelopProjectSeeder extends Seeder
             return;
         }
 
+        // Edge cases
+
+        for ($index = 0; $index < 3; $index++) {
+            Project::factory()->create([
+                'name' => "Project without epics {$index}",
+            ]);
+        }
+
+        for ($index = 0; $index < 3; $index++) {
+            $project = Project::factory()->create([
+                'name' => "Project for epic without comments {$index}",
+            ]);
+
+            Epic::factory()->create([
+                'name' => "Epic without comments {$index}",
+                'project_id' => $project->id,
+            ]);
+        }
+
         $userModel = config()->string('auth.providers.users.model');
 
         if (! is_subclass_of($userModel, Model::class)) {
