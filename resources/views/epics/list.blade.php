@@ -257,7 +257,15 @@
                                 </flux:table.cell>
                                 <flux:table.cell class="max-w-[16rem] truncate"
                                     :title="$row['project']">
-                                    {{ $row['project'] }}
+                                    <span class="inline-flex items-center gap-1">
+                                        {{ $row['project'] }}
+                                        @if (isset($row['project_active']) && $row['project_active'] === false)
+                                            <span
+                                                class="shrink-0 rounded-full bg-zinc-800/5 px-1.5 py-0.5 text-[10px] text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+                                                {{ __('basics13::messages.archived_label') }}
+                                            </span>
+                                        @endif
+                                    </span>
                                 </flux:table.cell>
                                 @includeIf(config('projects13.views.epic_list.cells'))
                                 <flux:table.cell>
