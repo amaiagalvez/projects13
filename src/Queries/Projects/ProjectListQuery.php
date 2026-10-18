@@ -17,10 +17,10 @@ final class ProjectListQuery extends ListQueryBase
     private const RESOURCE_PROJECT = 'project';
 
     /**
-     * The alias the integration joins its customer table under. Like the scope above, it crosses
+     * The alias the integration joins its entity table under. Like the scope above, it crosses
      * the integration on every call, so both live in a named constant.
      */
-    private const CUSTOMER_ALIAS = 'project_customers';
+    private const ENTITY_ALIAS = 'project_entities';
 
     public function __construct(private readonly ProjectQueryIntegration $integration) {}
 
@@ -30,7 +30,7 @@ final class ProjectListQuery extends ListQueryBase
     public function active(string $search): LengthAwarePaginator
     {
         $query = $this->scoped(Project::query()->where('PRO_projects.active', true))
-            ->withExists(['epics' => fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)]);
+            ->withExists(['epics' => fn(Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)]);
 
         $this->applyOrderings($query);
 
@@ -114,7 +114,7 @@ final class ProjectListQuery extends ListQueryBase
         // that table's columns overwrite this one's on hydration.
         $query->select('PRO_projects.*');
 
-        $this->integration->scope($query, self::RESOURCE_PROJECT, self::CUSTOMER_ALIAS);
+        $this->integration->scope($query, self::RESOURCE_PROJECT, self::ENTITY_ALIAS);
 
         return $query;
     }
@@ -129,8 +129,8 @@ final class ProjectListQuery extends ListQueryBase
     private function withActiveCounts(Builder $query): Builder
     {
         return $query->withCount([
-            'epics' => fn (Builder $epics) => $epics->where('PRO_epics.active', true),
-            'comments' => fn (Builder $comments) => $comments->where('PRO_epics.active', true),
+            'epics' => fn(Builder $epics) => $epics->where('PRO_epics.active', true),
+            'comments' => fn(Builder $comments) => $comments->where('PRO_epics.active', true),
         ]);
     }
 
@@ -144,7 +144,7 @@ final class ProjectListQuery extends ListQueryBase
         $query->orderBy('PRO_projects.start_date')
             ->orderBy('PRO_projects.end_date');
 
-        foreach ($this->integration->orderings(self::RESOURCE_PROJECT, self::CUSTOMER_ALIAS) as $column) {
+        foreach ($this->integration->orderings(self::RESOURCE_PROJECT, self::ENTITY_ALIAS) as $column) {
             $query->orderBy($column);
         }
 

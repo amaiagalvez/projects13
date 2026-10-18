@@ -36,7 +36,7 @@ class PlanningBarTest extends TestCase
         $row = [
             'test' => 'planning-project-1',
             'name' => 'Defensive date input',
-            'trail' => ['Customer'],
+            'trail' => ['Entity'],
             'url' => '/projects',
             'start' => null,
             'end' => $end === null ? null : CarbonImmutable::parse($end),

@@ -87,7 +87,7 @@ class ProjectListQueryTest extends TestCase
         (new \ReflectionMethod($query, 'scoped'))->invoke($query, $this->queryWithoutRunningIt());
 
         $this->assertSame(['project'], $integration->scopes);
-        $this->assertSame(['project_customers'], $integration->aliases);
+        $this->assertSame(['project_entities'], $integration->aliases);
     }
 
     public function test_the_project_search_asks_the_integration_after_its_own_columns(): void
@@ -108,26 +108,26 @@ class ProjectListQueryTest extends TestCase
      */
     public function test_an_ordering_contributed_by_the_integration_reaches_the_query(): void
     {
-        $integration = new RecordingProjectListQueryIntegration(['project_customers.name']);
+        $integration = new RecordingProjectListQueryIntegration(['project_entities.name']);
         $query = new ProjectListQuery($integration);
         $builder = $this->queryWithoutRunningIt();
 
         (new \ReflectionMethod($query, 'applyOrderings'))->invoke($query, $builder);
 
         $this->assertSame(['project'], $integration->orderingScopes);
-        $this->assertSame(['project_customers'], $integration->orderingAliases);
-        $this->assertContains('project_customers.name', array_column($builder->getQuery()->orders ?? [], 'column'));
+        $this->assertSame(['project_entities'], $integration->orderingAliases);
+        $this->assertContains('project_entities.name', array_column($builder->getQuery()->orders ?? [], 'column'));
     }
 
     /**
-     * The join that used to live here was the only reason this query knew a customer, and nothing
+     * The join that used to live here was the only reason this query knew a entity, and nothing
      * in the base can use it any more.
      */
-    public function test_the_customer_join_is_gone_from_the_base_query(): void
+    public function test_the_entity_join_is_gone_from_the_base_query(): void
     {
         $reflection = new \ReflectionClass($this->query);
 
-        $this->assertFalse($reflection->hasMethod('withCustomer'));
+        $this->assertFalse($reflection->hasMethod('withEntity'));
     }
 
     /**

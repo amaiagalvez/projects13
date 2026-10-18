@@ -32,7 +32,7 @@ class ProjectController extends Controller
 
         return $this->listView($request, 'projects13::projects.list', [
             'projects' => $projects,
-            'hasCustomers' => $integration->hasActiveRelatedEntities(),
+            'hasEntities' => $integration->hasActiveRelatedEntities(),
             'noRelatedEntitiesBanner' => $integration->noRelatedEntitiesBanner(),
             'list' => $transformer->active(
                 $projects,
@@ -111,7 +111,7 @@ class ProjectController extends Controller
 
         // The deleting hook holds the row lock and refuses the delete while children exist, so the
         // controller only has to run it inside a transaction and report the outcome.
-        $deleted = DB::transaction(static fn (): bool => $project->delete() !== false);
+        $deleted = DB::transaction(static fn(): bool => $project->delete() !== false);
 
         if (! $deleted) {
             return to_route('projects.index')

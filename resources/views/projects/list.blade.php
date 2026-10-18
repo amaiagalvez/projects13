@@ -81,13 +81,14 @@
         </x-basics13::list.page-header>
 
         @if ($list['create'] && $noRelatedEntitiesBanner)
-            <div class="p-4 text-center bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-900/20 dark:border-amber-800" data-test="project-no-customers-banner">
+            <div class="p-4 text-center bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-900/20 dark:border-amber-800"
+                data-test="project-no-entities-banner">
                 <p class="text-sm text-amber-800 dark:text-amber-200">
                     {{ $noRelatedEntitiesBanner['message'] }}
                 </p>
                 <a href="{{ $noRelatedEntitiesBanner['action_url'] }}"
                     class="inline-flex items-center gap-1.5 mt-2 text-sm font-medium text-amber-800 hover:underline dark:text-amber-200"
-                    data-test="project-no-customer-form-button">
+                    data-test="project-no-entity-form-button">
                     {{ $noRelatedEntitiesBanner['action_label'] }}
                 </a>
             </div>
@@ -135,13 +136,16 @@
                                 </flux:table.cell>
                                 <flux:table.cell>
                                     <x-basics13::list.count icon="flag" :count="$row['epicsCount']"
-                                        :url="$row['epicsUrl']"
-                                        :label="__('View :count epics', ['count' => $row['epicsCount']])"
+                                        :url="$row['epicsUrl']" :label="__('View :count epics', [
+                                            'count' => $row['epicsCount'],
+                                        ])"
                                         data-test="project-epics-count-{{ $row['id'] }}" />
                                 </flux:table.cell>
                                 <flux:table.cell>
                                     <x-basics13::list.count icon="chat-bubble-left" :count="$row['commentsCount']"
-                                        :label="__('Comments: :count', ['count' => $row['commentsCount']])"
+                                        :label="__('Comments: :count', [
+                                            'count' => $row['commentsCount'],
+                                        ])"
                                         data-test="project-comments-count-{{ $row['id'] }}" />
                                 </flux:table.cell>
                                 <flux:table.cell align="end" sticky

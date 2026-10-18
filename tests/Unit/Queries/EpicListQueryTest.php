@@ -102,7 +102,7 @@ class EpicListQueryTest extends TestCase
         (new \ReflectionMethod($query, 'scoped'))->invoke($query, $this->queryWithoutRunningIt());
 
         $this->assertSame(['epic'], $integration->scopes);
-        $this->assertSame(['epic_customers'], $integration->aliases);
+        $this->assertSame(['epic_entities'], $integration->aliases);
     }
 
     public function test_the_epic_search_asks_the_integration_after_its_own_columns(): void
@@ -123,26 +123,26 @@ class EpicListQueryTest extends TestCase
      */
     public function test_an_ordering_contributed_by_the_integration_reaches_the_query(): void
     {
-        $integration = new RecordingProjectQueryIntegration(['epic_customers.name']);
+        $integration = new RecordingProjectQueryIntegration(['epic_entities.name']);
         $query = new EpicListQuery($integration);
         $builder = $this->queryWithoutRunningIt();
 
         (new \ReflectionMethod($query, 'withIntegrationOrderings'))->invoke($query, $builder);
 
         $this->assertSame(['epic'], $integration->orderingScopes);
-        $this->assertSame(['epic_customers'], $integration->orderingAliases);
-        $this->assertContains('epic_customers.name', array_column($builder->getQuery()->orders ?? [], 'column'));
+        $this->assertSame(['epic_entities'], $integration->orderingAliases);
+        $this->assertContains('epic_entities.name', array_column($builder->getQuery()->orders ?? [], 'column'));
     }
 
     /**
-     * Loading the customer of every project on the page was the other half of what made this query
-     * know about customers; nothing in the base can use it any more.
+     * Loading the entity of every project on the page was the other half of what made this query
+     * know about entities; nothing in the base can use it any more.
      */
-    public function test_the_customer_join_is_gone_from_the_base_query(): void
+    public function test_the_entity_join_is_gone_from_the_base_query(): void
     {
         $reflection = new \ReflectionClass($this->query);
 
-        $this->assertFalse($reflection->hasMethod('withProjectAndCustomer'));
+        $this->assertFalse($reflection->hasMethod('withProjectAndEntity'));
     }
 
     /**
