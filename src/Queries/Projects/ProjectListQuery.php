@@ -30,7 +30,7 @@ final class ProjectListQuery extends ListQueryBase
     public function active(string $search): LengthAwarePaginator
     {
         $query = $this->scoped(Project::query()->where('PRO_projects.active', true))
-            ->withExists(['epics' => fn(Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)]);
+            ->withExists(['epics' => fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)]);
 
         $this->applyOrderings($query);
 
@@ -129,8 +129,8 @@ final class ProjectListQuery extends ListQueryBase
     private function withActiveCounts(Builder $query): Builder
     {
         return $query->withCount([
-            'epics' => fn(Builder $epics) => $epics->where('PRO_epics.active', true),
-            'comments' => fn(Builder $comments) => $comments->where('PRO_epics.active', true),
+            'epics' => fn (Builder $epics) => $epics->where('PRO_epics.active', true),
+            'comments' => fn (Builder $comments) => $comments->where('PRO_epics.active', true),
         ]);
     }
 

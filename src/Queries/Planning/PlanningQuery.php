@@ -113,7 +113,7 @@ final class PlanningQuery extends ListQueryBase
     {
         // A record is late when it has an end date and that date is behind today. The column is a
         // plain date, so the bound is compared as a string rather than wrapped in whereDate().
-        $late = fn(Builder $query): Builder => $query
+        $late = fn (Builder $query): Builder => $query
             ->where('active', true)
             ->where('end_date', '<', $today->toDateString());
 
@@ -143,13 +143,13 @@ final class PlanningQuery extends ListQueryBase
 
         /** @var list<int|string> $ids */
         $ids = $this->whereMatches($query, $search,
-        /** @phpstan-ignore argument.type */
-        $this->searchColumns('planning', ['PRO_projects.name']))
+            /** @phpstan-ignore argument.type */
+            $this->searchColumns('planning', ['PRO_projects.name']))
             ->orderBy('PRO_projects.id')
             ->pluck('PRO_projects.id')
             ->all();
 
-        return array_map(static fn(int|string $id): int => (int) $id, $ids);
+        return array_map(static fn (int|string $id): int => (int) $id, $ids);
     }
 
     /**
@@ -168,7 +168,7 @@ final class PlanningQuery extends ListQueryBase
 
         $projects = Project::query()
             ->whereIn('PRO_projects.id', $pageIds)
-            ->withCount(['epics' => fn(Builder $epics): Builder => $epics->where('PRO_epics.active', true)])
+            ->withCount(['epics' => fn (Builder $epics): Builder => $epics->where('PRO_epics.active', true)])
             ->get()
             ->keyBy('id');
 
@@ -236,7 +236,7 @@ final class PlanningQuery extends ListQueryBase
         $epicsCount = (int) $project->epics_count;
 
         return [
-            'test' => 'planning-project-' . $project->id,
+            'test' => 'planning-project-'.$project->id,
             'name' => $project->name,
             'trail' => $this->displayIntegration->trail($project),
             'url' => route('projects.index', ['search' => $project->name]),
@@ -280,7 +280,7 @@ final class PlanningQuery extends ListQueryBase
             $end = $row['end'];
             // "2026-3" sorts before "2027-1", and "no-date" sorts after both, so a plain sort of
             // the keys already gives the order the groups should be read in.
-            $key = $end === null ? 'no-date' : $end->format('Y') . '-' . $end->quarter;
+            $key = $end === null ? 'no-date' : $end->format('Y').'-'.$end->quarter;
 
             $buckets[$key] ??= [
                 'key' => $key,

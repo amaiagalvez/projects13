@@ -41,7 +41,7 @@ final class ProjectSelectOptionsQuery extends ListQueryBase
             ->orderBy('PRO_projects.id')
             ->limit(self::PER_PAGE)
             ->get()
-            ->map(fn(Project $project): array => [
+            ->map(fn (Project $project): array => [
                 'id' => $project->id,
                 'text' => $this->displayIntegration->label($project),
             ]);

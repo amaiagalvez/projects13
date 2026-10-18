@@ -267,7 +267,7 @@ final class TimelineQuery extends ListQueryBase
             }
 
             $project->setRelation('epics', $project->epics
-                ->filter(static fn(Epic $epic): bool => in_array($epic->id, $matchedEpics, true))
+                ->filter(static fn (Epic $epic): bool => in_array($epic->id, $matchedEpics, true))
                 ->values());
         }
     }
@@ -281,7 +281,7 @@ final class TimelineQuery extends ListQueryBase
     private function entriesOf(Project $project, CarbonImmutable $today): array
     {
         $epics = $project->epics->all();
-        usort($epics, fn(Epic $left, Epic $right): int => $this->byStartDate(
+        usort($epics, fn (Epic $left, Epic $right): int => $this->byStartDate(
             [$left->start_date, $left->name],
             [$right->start_date, $right->name],
         ));
@@ -290,7 +290,7 @@ final class TimelineQuery extends ListQueryBase
             'kind' => 'project',
             'projectId' => $project->id,
             'controls' => array_map(
-                static fn(Epic $epic): string => 'timeline-epic-' . $epic->id,
+                static fn (Epic $epic): string => 'timeline-epic-'.$epic->id,
                 $epics,
             ),
             'row' => $this->projectRow($project, $today),
@@ -334,7 +334,7 @@ final class TimelineQuery extends ListQueryBase
     {
         return [
             'id' => $project->id,
-            'test' => 'timeline-project-' . $project->id,
+            'test' => 'timeline-project-'.$project->id,
             'name' => $project->name,
             'trail' => $this->displayIntegration->trail($project),
             'url' => route('projects.index', ['search' => $project->name]),
@@ -352,7 +352,7 @@ final class TimelineQuery extends ListQueryBase
     {
         return [
             'id' => $epic->id,
-            'test' => 'timeline-epic-' . $epic->id,
+            'test' => 'timeline-epic-'.$epic->id,
             'name' => $epic->name,
             // The epic is indented under its project rather than carried by a visible trail, so
             // the trail only has to be there for assistive technology to place the row.
