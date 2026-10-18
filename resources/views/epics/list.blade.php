@@ -15,6 +15,7 @@
             'start_date' => old('start_date', ''),
             'end_date' => old('end_date', ''),
             'project_id' => old('project_id', ''),
+            'project_active' => $selectedProjectOption['active'] ?? null,
             'comments' => [],
             'commentsCount' => $editingEpicPayload['commentsCount'] ?? 0,
             'commentsLoading' => false,
@@ -37,6 +38,7 @@
     <div x-data="listConfirmation({
         form: @js($initialForm),
         projectOptions: @js(($selectedProjectOption ?? null) ? [$selectedProjectOption] : []),
+        archivedProjectLabel: @js(__('basics13::messages.archived_label')),
         projectOptionsUrl: @js(route('projects.options', [], false)),
         projectOptionsRequest: null,
         projectOptionsLoading: false,
@@ -46,6 +48,18 @@
         storeUrl: @js(route('epics.store')),
         updateUrl: @js(route('epics.update', '__EPIC__')),
         async searchProjects() {
+            const selectedProject = this.projectOptions.find(
+                (project) => String(project.id) === String(this.form.project_id),
+            ) ?? (
+                this.form.project_id
+                    ? {
+                        id: String(this.form.project_id),
+                        text: this.form.project_label ?? '',
+                        active: this.form.project_active ?? true,
+                    }
+                    : null
+            );
+
             this.projectOptionsRequest?.abort();
             const controller = new AbortController();
             this.projectOptionsRequest = controller;
@@ -66,9 +80,6 @@
                 }
     
                 const result = await response.json();
-                const selectedProject = this.projectOptions.find(
-                    (project) => String(project.id) === String(this.form.project_id),
-                );
                 const results = result.results;
                 this.projectOptionsResultCount = results.length;
                 this.projectOptions = selectedProject && !results.some(
@@ -98,6 +109,7 @@
                 start_date: '',
                 end_date: '',
                 project_id: '',
+                project_active: true,
                 comments: [],
                 commentsCount: 0,
                 commentsLoading: false,
@@ -118,6 +130,7 @@
             this.projectOptions = [{
                 id: String(epic.project_id),
                 text: epic.project_label,
+                active: epic.project_active,
             }];
             this.projectOptionsSearched = false;
             this.projectOptionsResultCount = 0;
@@ -128,6 +141,8 @@
                 commentsLoading: false,
                 commentsError: '',
                 project_id: String(epic.project_id),
+                project_label: epic.project_label,
+                project_active: epic.project_active,
                 commentBody,
                 commentNotes,
                 context: `edit-${epic.id}`,

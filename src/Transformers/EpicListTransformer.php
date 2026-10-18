@@ -97,6 +97,7 @@ class EpicListTransformer extends ListTransformer
             'end_date' => $record->end_date?->toDateString() ?? '',
             'project_id' => $record->project_id,
             'project_label' => $this->integration->label($record->project),
+            'project_active' => $record->project->active,
             'commentAction' => route('epics.comments.store', $record),
             'commentsUrl' => route('epics.comments.index', $record),
             'commentsCount' => (int) $record->comments_count,

@@ -29,7 +29,7 @@ class EpicController extends Controller
         $epics = $query->active($search);
         $projectId = old('project_id');
         $selectedProject = is_numeric($projectId)
-            ? Project::query()->find((int) $projectId, ['id', 'name'])
+            ? Project::query()->find((int) $projectId, ['id', 'name', 'active'])
             : null;
 
         return $this->listView($request, 'projects13::epics.list', [
@@ -38,6 +38,7 @@ class EpicController extends Controller
             'selectedProjectOption' => $selectedProject === null ? null : [
                 'id' => $selectedProject->id,
                 'text' => $integration->label($selectedProject),
+                'active' => $selectedProject->active,
             ],
             'drawerEpic' => $this->drawerEpic($request, $transformer),
             'list' => $transformer->active(

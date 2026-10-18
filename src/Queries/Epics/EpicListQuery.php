@@ -138,8 +138,8 @@ final class EpicListQuery extends ListQueryBase
     }
 
     /**
-     * A row renders the name of the project it belongs to, so that is the only relation loaded
-     * here, limited to the columns a name needs plus the keys to match it.
+     * A row renders the project name and its edit payload needs the active state, so those are the
+     * only relation columns loaded here, plus the keys to match it.
      *
      * @param  Builder<Epic>  $query
      * @return Builder<Epic>
@@ -147,7 +147,7 @@ final class EpicListQuery extends ListQueryBase
     private function withProject(Builder $query): Builder
     {
         return $query
-            ->with('project:id,name')
+            ->with('project:id,name,active')
             ->join('PRO_projects as epic_projects', 'epic_projects.id', '=', 'PRO_epics.project_id')
             ->select('PRO_epics.*')
             ->withCount('comments');

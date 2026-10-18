@@ -16,10 +16,12 @@
         </x-basics13::forms.field-label>
         <flux:select id="epic-project-id" name="project_id" x-model="form.project_id" required
             x-on:focus="searchProjects()" x-bind:aria-busy="projectOptionsLoading"
+            x-on:change="const selectedProject = projectOptions.find((project) => String(project.id) === String(form.project_id)); form.project_active = selectedProject?.active ?? true"
             data-test="epic-project">
             <option value="">{{ __('Select a project') }}</option>
             <template x-for="project in projectOptions" :key="project.id">
-                <option x-bind:value="String(project.id)" x-text="project.text"></option>
+                <option x-bind:value="String(project.id)"
+                    x-text="project.active === false ? `${project.text} (${archivedProjectLabel})` : project.text"></option>
             </template>
         </flux:select>
         <flux:error name="project_id" />
