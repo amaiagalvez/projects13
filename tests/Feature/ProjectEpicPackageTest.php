@@ -44,7 +44,13 @@ class ProjectEpicPackageTest extends TestCase
 
     public function test_package_migrations_can_be_rolled_back_and_reapplied(): void
     {
-        $rollback = $this->artisan('migrate:rollback', ['--step' => 3, '--no-interaction' => true]);
+        $path = dirname(__DIR__, 2).'/database/migrations';
+
+        $rollback = $this->artisan('migrate:rollback', [
+            '--path' => $path,
+            '--realpath' => true,
+            '--no-interaction' => true,
+        ]);
         $this->assertInstanceOf(PendingCommand::class, $rollback);
         $this->assertSame(0, $rollback->run());
 
@@ -52,7 +58,11 @@ class ProjectEpicPackageTest extends TestCase
         $this->assertFalse(Schema::hasTable('PRO_epics'));
         $this->assertFalse(Schema::hasTable('PRO_projects'));
 
-        $migration = $this->artisan('migrate', ['--no-interaction' => true]);
+        $migration = $this->artisan('migrate', [
+            '--path' => $path,
+            '--realpath' => true,
+            '--no-interaction' => true,
+        ]);
         $this->assertInstanceOf(PendingCommand::class, $migration);
         $this->assertSame(0, $migration->run());
 

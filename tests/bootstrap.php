@@ -22,4 +22,5 @@ if (! is_dir($tempDir) && ! mkdir($tempDir, 0777, true) && ! is_dir($tempDir)) {
 
 putenv(sprintf('VIEW_COMPILED_PATH=%s', $storageDir));
 
-require __DIR__.'/../vendor/autoload.php';
+$loader = require __DIR__.'/../vendor/autoload.php';
+$loader->addPsr4('Basics13\\Tests\\', __DIR__.'/../vendor/amaia/basics13/tests/');

@@ -8,12 +8,13 @@ use Flux\FluxServiceProvider;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Blade;
 use Basics13\Tests\TestCase as Basics13TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Basics13\Support\Testing\ValidatesFormRequests;
 use Projects13\ServiceProvider as Projects13ServiceProvider;
 
 abstract class TestCase extends Basics13TestCase
 {
-    use ValidatesFormRequests;
+    use RefreshDatabase, ValidatesFormRequests;
 
     protected function signIn(): User
     {
@@ -35,6 +36,7 @@ abstract class TestCase extends Basics13TestCase
     protected function getPackageProviders($app): array
     {
         return [
+            ...parent::getPackageProviders($app),
             FluxServiceProvider::class,
             Projects13ServiceProvider::class,
         ];
