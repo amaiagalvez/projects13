@@ -32,7 +32,7 @@ class PackageIsolationTest extends TestCase
         'App\\' => 'App\\',
         'EntityProjects13' => 'EntityProjects13',
         'entities13' => 'entities13',
-        'CUM_entities' => 'CUM_entities',
+        'ENT_entities' => 'ENT_entities',
         'entity_id' => 'entity_id',
         "route('entities." => "route('entities.",
         "to_route('entities." => "to_route('entities.",
