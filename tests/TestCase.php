@@ -7,17 +7,13 @@ use Carbon\CarbonImmutable;
 use Flux\FluxServiceProvider;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Route;
-use Livewire\LivewireServiceProvider;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Basics13\Tests\TestCase as Basics13TestCase;
 use Basics13\Support\Testing\ValidatesFormRequests;
-use Orchestra\Testbench\TestCase as TestbenchTestCase;
-use Basics13\ServiceProvider as Basics13ServiceProvider;
 use Projects13\ServiceProvider as Projects13ServiceProvider;
 
-abstract class TestCase extends TestbenchTestCase
+abstract class TestCase extends Basics13TestCase
 {
-    use RefreshDatabase, ValidatesFormRequests;
+    use ValidatesFormRequests;
 
     protected function signIn(): User
     {
@@ -39,29 +35,18 @@ abstract class TestCase extends TestbenchTestCase
     protected function getPackageProviders($app): array
     {
         return [
-            LivewireServiceProvider::class,
             FluxServiceProvider::class,
-            Basics13ServiceProvider::class,
             Projects13ServiceProvider::class,
         ];
     }
 
     protected function getEnvironmentSetUp($app): void
     {
-        Date::use(CarbonImmutable::class);
+        parent::getEnvironmentSetUp($app);
 
-        $app['config']->set('database.default', 'sqlite');
-        $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
-        $app['config']->set('database.connections.sqlite.database', ':memory:');
+        Date::use(CarbonImmutable::class);
         $app['config']->set('auth.providers.users.model', User::class);
         $app['config']->set('view.compiled', dirname(__DIR__).'/storage/framework/views');
-    }
-
-    protected function defineRoutes($router): void
-    {
-        Route::get('login', static fn (): string => 'Login')->name('login');
-        Route::get('email/verify', static fn (): string => 'Verify email')->name('verification.notice');
-        Route::get('dashboard', static fn (): string => 'Dashboard')->name('dashboard');
     }
 
     protected function setUp(): void

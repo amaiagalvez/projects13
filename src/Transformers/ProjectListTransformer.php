@@ -53,23 +53,9 @@ class ProjectListTransformer extends ListTransformer
         return __('basics13::messages.cannot_force_delete_related');
     }
 
-    protected function getExtraDate(Model $record, string $scope): ?string
-    {
-        return match ($scope) {
-            'active' => $record->created_at?->toIso8601String(),
-            'archived' => $record->updated_at?->toIso8601String(),
-            'trash' => $record->deleted_at?->toIso8601String(),
-        };
-    }
-
     protected function integrationRow(Model $record): array
     {
         return $this->integration->row($record);
-    }
-
-    protected function getRestoreActive(Model $record): bool
-    {
-        return $record->active;
     }
 
     /**
