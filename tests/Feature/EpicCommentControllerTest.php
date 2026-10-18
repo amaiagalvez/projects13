@@ -6,7 +6,9 @@ use Projects13\Models\Epic;
 use Projects13\Tests\TestCase;
 use Projects13\Models\EpicComment;
 use Illuminate\Support\Facades\Gate;
+use Projects13\Http\Requests\EpicCommentRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Projects13\Http\Controllers\EpicCommentController;
 
 class EpicCommentControllerTest extends TestCase
 {
@@ -46,6 +48,18 @@ class EpicCommentControllerTest extends TestCase
 
         $this->post(route('epics.comments.store', $epic), ['body' => 'Ready for review'])->assertForbidden();
 
+        $this->assertDatabaseCount('PRO_epic_comments', 0);
+    }
+
+    public function test_comment_is_rejected_if_the_epic_was_deleted_after_binding(): void
+    {
+        $epic = Epic::factory()->create();
+        $epic->delete();
+
+        $response = app(EpicCommentController::class)->store(new EpicCommentRequest, $epic);
+
+        $this->assertSame(route('epics.index'), $response->getTargetUrl());
+        $this->assertSame(__('Cannot comment on a deleted epic.'), $response->getSession()->get('error'));
         $this->assertDatabaseCount('PRO_epic_comments', 0);
     }
 

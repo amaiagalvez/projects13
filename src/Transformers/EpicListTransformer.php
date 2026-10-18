@@ -97,35 +97,8 @@ class EpicListTransformer extends ListTransformer
         return __('Epics');
     }
 
-    protected function noMatchMessage(): string
-    {
-        return __('No epics match your search.');
-    }
-
-    protected function noRecordsMessage(): string
-    {
-        return __('No epics yet.');
-    }
-
     protected function resourceKey(): string
     {
         return 'epic';
-    }
-
-    /**
-     * @return array{active: string, archived: string, trash: string, destroy: string, archive: string, activate: string, restore: string, trashDestroy: string}
-     */
-    protected function routes(): array
-    {
-        return [
-            'active' => 'epics.index',
-            'archived' => 'epics.archived.index',
-            'trash' => 'epics.trash.index',
-            'destroy' => 'epics.destroy',
-            'archive' => 'epics.archive',
-            'activate' => 'epics.archived.activate',
-            'restore' => 'epics.trash.restore',
-            'trashDestroy' => 'epics.trash.destroy',
-        ];
     }
 }

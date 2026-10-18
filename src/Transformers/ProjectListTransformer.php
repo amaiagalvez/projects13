@@ -84,35 +84,8 @@ class ProjectListTransformer extends ListTransformer
         return __('Projects');
     }
 
-    protected function noMatchMessage(): string
-    {
-        return __('No projects match your search.');
-    }
-
-    protected function noRecordsMessage(): string
-    {
-        return __('No projects yet.');
-    }
-
     protected function resourceKey(): string
     {
         return 'project';
-    }
-
-    /**
-     * @return array{active: string, archived: string, trash: string, destroy: string, archive: string, activate: string, restore: string, trashDestroy: string}
-     */
-    protected function routes(): array
-    {
-        return [
-            'active' => 'projects.index',
-            'archived' => 'projects.archived.index',
-            'trash' => 'projects.trash.index',
-            'destroy' => 'projects.destroy',
-            'archive' => 'projects.archive',
-            'activate' => 'projects.archived.activate',
-            'restore' => 'projects.trash.restore',
-            'trashDestroy' => 'projects.trash.destroy',
-        ];
     }
 }
