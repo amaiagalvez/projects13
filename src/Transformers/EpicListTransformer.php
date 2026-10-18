@@ -24,6 +24,7 @@ class EpicListTransformer extends ListTransformer
             'id' => $record->id,
             'name' => $record->name,
             'project' => $record->project->name,
+            'project_active' => $record->project->active,
             'startDate' => $record->start_date?->format('Y-m-d') ?? '',
             'endDate' => $record->end_date?->format('Y-m-d') ?? '',
             'commentsCount' => (int) $record->comments_count,
