@@ -246,14 +246,7 @@
                             <flux:table.row :key="$row['id']"
                                 class="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                                 <flux:table.cell class="max-w-[16rem]">
-                                    <flux:modal.trigger name="epic-form">
-                                        <button type="button"
-                                            class="block max-w-full truncate text-start font-medium text-zinc-900 hover:underline dark:text-zinc-100"
-                                            x-on:click="editEpic(JSON.parse($el.dataset.payload))"
-                                            data-payload="{{ json_encode($row['editPayload']) }}"
-                                            title="{{ $row['name'] }}"
-                                            data-test="epic-name-{{ $row['id'] }}">{{ $row['name'] }}</button>
-                                    </flux:modal.trigger>
+                                    {{ $row['name'] }}
                                 </flux:table.cell>
                                 <flux:table.cell class="max-w-[16rem] truncate"
                                     :title="$row['project']">

@@ -118,14 +118,7 @@
                             <flux:table.row :key="$row['id']"
                                 class="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                                 <flux:table.cell class="max-w-[16rem]">
-                                    <flux:modal.trigger name="project-form">
-                                        <button type="button"
-                                            class="block max-w-full truncate text-start font-medium text-zinc-900 hover:underline dark:text-zinc-100"
-                                            x-on:click="editProject(JSON.parse($el.dataset.payload))"
-                                            data-payload="{{ json_encode($row['editPayload']) }}"
-                                            title="{{ $row['name'] }}"
-                                            data-test="project-name-{{ $row['id'] }}">{{ $row['name'] }}</button>
-                                    </flux:modal.trigger>
+                                    {{ $row['name'] }}
                                 </flux:table.cell>
                                 @includeIf(config('projects13.views.project_list.cells'))
                                 <flux:table.cell>
