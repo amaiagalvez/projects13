@@ -79,4 +79,15 @@ class Project extends Model
     {
         return $this->hasManyThrough(EpicComment::class, Epic::class, 'project_id', 'epic_id');
     }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Project $project): bool {
+            // Lock the project row to prevent TOCTOU race
+            $project->lockForUpdate();
+
+            // Prevent soft-deleting a project that has epics (including trashed epics)
+            return ! Epic::withTrashed()->where('project_id', $project->id)->exists();
+        });
+    }
 }

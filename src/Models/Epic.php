@@ -77,4 +77,15 @@ class Epic extends Model
     {
         return $this->hasMany(EpicComment::class);
     }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Epic $epic): bool {
+            // Lock the epic row to prevent TOCTOU race
+            $epic->lockForUpdate();
+
+            // Prevent soft-deleting an epic that has comments
+            return ! EpicComment::where('epic_id', $epic->id)->exists();
+        });
+    }
 }

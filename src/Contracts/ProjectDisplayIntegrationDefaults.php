@@ -33,6 +33,9 @@ trait ProjectDisplayIntegrationDefaults
         return false;
     }
 
+    /**
+     * @return array{message: string, action_label: string, action_url: string}|null
+     */
     public function noRelatedEntitiesBanner(): ?array
     {
         return null;

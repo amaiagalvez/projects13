@@ -91,19 +91,14 @@ class ArchitectureTest extends TestCase
     }
 
     /**
-     * epic_comments keeps deleted_at and active columns that no model uses: EpicComment declares
-     * neither SoftDeletes nor the flag. They are reserved, so this test records the fact and will
-     * fail if a model starts relying on them without this being revisited.
-     *
-     * deleted_by is reserved the same way: TracksAuditColumns only registers its deletion half on a
-     * soft-deleting model, so a comment is deleted outright and never records who deleted it.
+     * EpicComment uses deleted_at and deleted_by for soft deletes; active remains reserved.
      */
-    public function test_epic_comments_columns_are_reserved_and_unused(): void
+    public function test_epic_comment_active_column_is_reserved_and_unused(): void
     {
         $comment = new EpicComment;
 
-        $this->assertNotContains(SoftDeletes::class, class_uses_recursive($comment));
         $this->assertArrayNotHasKey('active', $comment->getCasts());
+        $this->assertNotContains('active', $comment->getFillable());
     }
 
     public function test_controllers_stay_thin_and_free_of_raw_input(): void

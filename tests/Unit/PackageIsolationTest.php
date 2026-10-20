@@ -86,7 +86,7 @@ class PackageIsolationTest extends TestCase
 
             $source = file_get_contents($file->getPathname());
             $this->assertIsString($source);
-            $this->assertStringNotContainsString('entities13\\', $source, $file->getPathname());
+            $this->assertStringNotContainsString('Entities13\\', $source, $file->getPathname());
             $this->assertStringNotContainsString('EntityProjects13\\', $source, $file->getPathname());
             $this->assertStringNotContainsString('entity_id', $source, $file->getPathname());
         }
