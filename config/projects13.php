@@ -46,4 +46,7 @@ return [
 
     ],
 
+    // Domain integrations append their fields to the project list's advanced search.
+    'searchable_fields' => [],
+
 ];

@@ -28,7 +28,8 @@ class ProjectController extends Controller
         ProjectDisplayIntegration $integration,
     ): View|string {
         $search = $request->search();
-        $projects = $query->active($search);
+        $filters = $request->filters() ?? [];
+        $projects = $query->active($search, $filters);
 
         return $this->listView($request, 'projects13::projects.list', [
             'projects' => $projects,
@@ -39,6 +40,9 @@ class ProjectController extends Controller
                 $search,
                 $query->stateCounts(activeTotal: $search === '' ? $projects->total() : null),
             ),
+            'searchableFields' => $query->searchableFields('active'),
+            'filters' => $filters,
+            'scope' => 'active',
         ]);
     }
 

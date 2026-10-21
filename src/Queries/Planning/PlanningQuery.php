@@ -73,6 +73,12 @@ final class PlanningQuery extends ListQueryBase
         return $this->queryIntegration;
     }
 
+    /** @return array{} */
+    public function searchableFields(string $scope): array
+    {
+        return [];
+    }
+
     /**
      * @return array{
      *     counts: array{projects: int, epics: int, overdue: int},

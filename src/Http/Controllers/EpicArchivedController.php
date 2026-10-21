@@ -18,7 +18,8 @@ class EpicArchivedController extends ArchivedController
         EpicListTransformer $transformer,
     ): View|string {
         $search = $request->search();
-        $epics = $query->archived($search);
+        $filters = $request->filters() ?? [];
+        $epics = $query->archived($search, $filters);
 
         return $this->listView($request, 'projects13::epics.list', [
             'epics' => $epics,
@@ -27,6 +28,9 @@ class EpicArchivedController extends ArchivedController
                 $search,
                 $query->stateCounts(archivedTotal: $search === '' ? $epics->total() : null),
             ),
+            'searchableFields' => $query->searchableFields('archived'),
+            'filters' => $filters,
+            'scope' => 'archived',
         ]);
     }
 

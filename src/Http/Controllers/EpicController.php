@@ -26,7 +26,8 @@ class EpicController extends Controller
         ProjectDisplayIntegration $integration,
     ): View|string {
         $search = $request->search();
-        $epics = $query->active($search);
+        $filters = $request->filters() ?? [];
+        $epics = $query->active($search, $filters);
         $projectId = old('project_id');
         $selectedProject = is_numeric($projectId)
             ? Project::query()->find((int) $projectId, ['id', 'name', 'active'])
@@ -46,6 +47,9 @@ class EpicController extends Controller
                 $search,
                 $query->stateCounts(activeTotal: $search === '' ? $epics->total() : null),
             ),
+            'searchableFields' => $query->searchableFields('active'),
+            'filters' => $filters,
+            'scope' => 'active',
         ]);
     }
 

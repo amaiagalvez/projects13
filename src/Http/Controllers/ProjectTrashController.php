@@ -24,7 +24,8 @@ class ProjectTrashController extends TrashController
         ProjectListTransformer $transformer,
     ): View|string {
         $search = $request->search();
-        $projects = $query->trashed($search);
+        $filters = $request->filters() ?? [];
+        $projects = $query->trashed($search, $filters);
 
         return $this->listView($request, 'projects13::projects.list', [
             'projects' => $projects,
@@ -33,6 +34,9 @@ class ProjectTrashController extends TrashController
                 $search,
                 $query->stateCounts(trashedTotal: $search === '' ? $projects->total() : null),
             ),
+            'searchableFields' => $query->searchableFields('trashed'),
+            'filters' => $filters,
+            'scope' => 'trashed',
         ]);
     }
 

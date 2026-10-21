@@ -32,6 +32,11 @@
             'submitLabel' => $editingEpic ? __('Update epic') : __('Save epic'),
         ]
         : null;
+
+    // Get searchable fields for advanced search modal
+    $searchableFields = $searchableFields ?? [];
+    $filters = $filters ?? [];
+    $scope = $scope ?? 'active';
 @endphp
 
 <x-layouts::app :title="$list['resource']">
@@ -65,20 +70,20 @@
             this.projectOptionsRequest = controller;
             this.projectOptionsLoading = true;
             this.projectOptionsError = '';
-    
+
             const url = new URL(this.projectOptionsUrl, window.location.href);
             url.searchParams.set('q', '');
-    
+
             try {
                 const response = await fetch(url, {
                     headers: { Accept: 'application/json' },
                     signal: controller.signal,
                 });
-    
+
                 if (!response.ok) {
                     throw new Error();
                 }
-    
+
                 const result = await response.json();
                 const results = result.results;
                 this.projectOptionsResultCount = results.length;
@@ -161,19 +166,19 @@
             this.form.comments = [];
             this.form.commentsLoading = true;
             this.form.commentsError = '';
-    
+
             try {
                 const response = await fetch(this.form.commentsUrl, {
                     headers: { Accept: 'application/json' },
                     signal: controller.signal,
                 });
-    
+
                 if (!response.ok) {
                     throw new Error();
                 }
-    
+
                 const result = await response.json();
-    
+
                 if (this.form.id === epicId) {
                     this.form.comments = result.comments;
                 }
@@ -185,7 +190,7 @@
                 if (this.form.id === epicId) {
                     this.form.commentsLoading = false;
                 }
-    
+
                 if (this.commentRequest === controller) {
                     this.commentRequest = null;
                 }
@@ -201,7 +206,7 @@
     @elseif ($deletedEpicConflict)
         x-init="$nextTick(() => $dispatch('modal-show', { name: 'epic-name-conflict' }))" @endif
         class="flex flex-col gap-y-2 sm:gap-y-3">
-        <x-basics13::list.page-header :list="$list" prefix="epic">
+        <x-basics13::list.page-header :list="$list" prefix="epic" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters">
             <x-slot:actions>
                 @if ($list['create'])
                     <x-basics13::list.create-action prefix="epic" :label="__('New epic')" click="createEpic()" />
@@ -225,7 +230,7 @@
         <x-basics13::list.flash prefix="epic" />
 
         @fragment('list-results')
-            <x-basics13::list.searchable-results :search="$list['search']" :total="$epics->total()">
+            <x-basics13::list.searchable-results :search="$list['search']" :total="$epics->total()" :scope="$scope" :filters="$filters">
                 <x-basics13::list.search :search="$list['search']" prefix="epic" />
 
                 <x-basics13::list.table prefix="epic" :paginator="$epics">
@@ -312,6 +317,14 @@
                     restore-test="epic-conflict-restore" />
             @endif
         @endif
+
+        <livewire:basics13.advanced-search-modal
+            :fields="$searchableFields"
+            :filters="$filters"
+            :scope="$scope"
+            :operatorLabels="__('basics13::messages')"
+            :fieldTypeLabels="__('basics13::messages')"
+            :groupLabels="__('basics13::messages')" />
 
         <x-basics13::list.confirm-modal prefix="epic" />
     </div>

@@ -24,7 +24,8 @@ class EpicTrashController extends TrashController
         EpicListTransformer $transformer,
     ): View|string {
         $search = $request->search();
-        $epics = $query->trashed($search);
+        $filters = $request->filters() ?? [];
+        $epics = $query->trashed($search, $filters);
 
         return $this->listView($request, 'projects13::epics.list', [
             'epics' => $epics,
@@ -33,6 +34,9 @@ class EpicTrashController extends TrashController
                 $search,
                 $query->stateCounts(trashedTotal: $search === '' ? $epics->total() : null),
             ),
+            'searchableFields' => $query->searchableFields('trashed'),
+            'filters' => $filters,
+            'scope' => 'trashed',
         ]);
     }
 

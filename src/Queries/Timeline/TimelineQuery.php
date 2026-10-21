@@ -83,6 +83,12 @@ final class TimelineQuery extends ListQueryBase
         return $this->queryIntegration;
     }
 
+    /** @return array{} */
+    public function searchableFields(string $scope): array
+    {
+        return [];
+    }
+
     /**
      * @return array{
      *     entries: Collection<int, Entry>,

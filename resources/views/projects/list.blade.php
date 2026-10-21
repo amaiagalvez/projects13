@@ -32,6 +32,11 @@
             ...$integrationState,
         ]
         : null;
+
+    // Get searchable fields for advanced search modal
+    $searchableFields = $searchableFields ?? [];
+    $filters = $filters ?? [];
+    $scope = $scope ?? 'active';
 @endphp
 
 <x-layouts::app :title="$list['resource']">
@@ -71,7 +76,7 @@
         @elseif ($list['create'] && request()->boolean('create'))
             x-init="createProject(); $nextTick(() => $dispatch('modal-show', { name: 'project-form' }))" @endif
         class="flex flex-col gap-y-2 sm:gap-y-3">
-        <x-basics13::list.page-header :list="$list" prefix="project">
+        <x-basics13::list.page-header :list="$list" prefix="project" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters">
             <x-slot:actions>
                 @if ($list['create'])
                     <x-basics13::list.create-action prefix="project" :label="__('New project')"
@@ -97,7 +102,7 @@
         <x-basics13::list.flash prefix="project" />
 
         @fragment('list-results')
-            <x-basics13::list.searchable-results :search="$list['search']" :total="$projects->total()">
+            <x-basics13::list.searchable-results :search="$list['search']" :total="$projects->total()" :scope="$scope" :filters="$filters">
                 <x-basics13::list.search :search="$list['search']" prefix="project" />
 
                 <x-basics13::list.table prefix="project" :paginator="$projects">
@@ -180,6 +185,14 @@
                     restore-test="project-conflict-restore" />
             @endif
         @endif
+
+        <livewire:basics13.advanced-search-modal
+            :fields="$searchableFields"
+            :filters="$filters"
+            :scope="$scope"
+            :operatorLabels="__('basics13::messages')"
+            :fieldTypeLabels="__('basics13::messages')"
+            :groupLabels="__('basics13::messages')" />
 
         <x-basics13::list.confirm-modal prefix="project" />
     </div>

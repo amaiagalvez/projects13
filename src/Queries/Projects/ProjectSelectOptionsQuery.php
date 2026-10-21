@@ -59,4 +59,14 @@ final class ProjectSelectOptionsQuery extends ListQueryBase
     {
         return $this->queryIntegration;
     }
+
+    /**
+     * Select-option queries do not expose list filters.
+     *
+     * @return array{}
+     */
+    public function searchableFields(string $scope): array
+    {
+        return [];
+    }
 }

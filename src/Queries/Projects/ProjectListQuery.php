@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 /**
  * @extends ListQueryBase<Project>
+ *
+ * @phpstan-import-type SearchFields from \Basics13\Queries\ListQueryBase
+ * @phpstan-import-type SearchFilters from ListQueryBase
  */
 final class ProjectListQuery extends ListQueryBase
 {
@@ -25,9 +28,10 @@ final class ProjectListQuery extends ListQueryBase
     public function __construct(private readonly ProjectQueryIntegration $integration) {}
 
     /**
+     * @param  SearchFilters  $filters
      * @return LengthAwarePaginator<int, Project>
      */
-    public function active(string $search): LengthAwarePaginator
+    public function active(string $search, array $filters = []): LengthAwarePaginator
     {
         $query = $this->scoped(Project::query()->where('PRO_projects.active', true))
             ->withExists(['epics' => fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)]);
@@ -39,13 +43,16 @@ final class ProjectListQuery extends ListQueryBase
             $search,
             /** @phpstan-ignore argument.type */
             searchColumns: $this->searchColumns(self::RESOURCE_PROJECT, ['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date']),
+            filters: $filters,
+            scope: 'active',
         );
     }
 
     /**
+     * @param  SearchFilters  $filters
      * @return LengthAwarePaginator<int, Project>
      */
-    public function archived(string $search): LengthAwarePaginator
+    public function archived(string $search, array $filters = []): LengthAwarePaginator
     {
         $query = $this->scoped(Project::query()->where('PRO_projects.active', false));
 
@@ -61,13 +68,16 @@ final class ProjectListQuery extends ListQueryBase
                 'PRO_projects.end_date',
                 'PRO_projects.updated_at',
             ]),
+            filters: $filters,
+            scope: 'archived',
         );
     }
 
     /**
+     * @param  SearchFilters  $filters
      * @return LengthAwarePaginator<int, Project>
      */
-    public function trashed(string $search): LengthAwarePaginator
+    public function trashed(string $search, array $filters = []): LengthAwarePaginator
     {
         return $this->paginate(
             $this->withActiveCounts($this->scoped(Project::onlyTrashed()))
@@ -81,7 +91,77 @@ final class ProjectListQuery extends ListQueryBase
                 'PRO_projects.end_date',
                 'PRO_projects.deleted_at',
             ]),
+            filters: $filters,
+            scope: 'trashed',
         );
+    }
+
+    /**
+     * Get the searchable field definitions for the current scope.
+     *
+     * @param  string  $scope  One of 'active', 'archived', 'trashed'
+     * @return SearchFields
+     */
+    public function searchableFields(string $scope): array
+    {
+        $fields = [
+            'name' => [
+                'column' => 'PRO_projects.name',
+                'label' => 'projects13::messages.name',
+                'type' => 'text',
+                'visible' => true,
+                'order' => 10,
+                'group' => 'basic',
+            ],
+            'notes' => [
+                'column' => 'PRO_projects.notes',
+                'label' => 'projects13::messages.notes',
+                'type' => 'text',
+                'operators' => ['contains', 'equals', 'not_equals'], // Excludes starts_with/ends_with
+                'visible' => false,
+                'order' => 20,
+                'group' => 'basic',
+            ],
+            'start_date' => [
+                'column' => 'PRO_projects.start_date',
+                'label' => 'projects13::messages.start_date',
+                'type' => 'date',
+                'nullable' => false,
+                'visible' => true,
+                'order' => 10,
+                'group' => 'dates',
+            ],
+            'end_date' => [
+                'column' => 'PRO_projects.end_date',
+                'label' => 'projects13::messages.end_date',
+                'type' => 'date',
+                'nullable' => true,
+                'visible' => true,
+                'order' => 20,
+                'group' => 'dates',
+            ],
+            'active' => [
+                'column' => 'PRO_projects.active',
+                'label' => 'projects13::messages.active',
+                'type' => 'boolean',
+                'visible' => true,
+                'order' => 10,
+                'group' => 'status',
+            ],
+            'created_at' => [
+                'column' => 'PRO_projects.created_at',
+                'label' => 'projects13::messages.created_at',
+                'type' => 'date',
+                'visible' => true,
+                'order' => 30,
+                'group' => 'dates',
+            ],
+        ];
+
+        /** @var SearchFields $integrationFields */
+        $integrationFields = config('projects13.searchable_fields', []);
+
+        return [...$fields, ...$integrationFields];
     }
 
     /**

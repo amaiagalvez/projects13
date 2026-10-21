@@ -18,7 +18,8 @@ class ProjectArchivedController extends ArchivedController
         ProjectListTransformer $transformer,
     ): View|string {
         $search = $request->search();
-        $projects = $query->archived($search);
+        $filters = $request->filters() ?? [];
+        $projects = $query->archived($search, $filters);
 
         return $this->listView($request, 'projects13::projects.list', [
             'projects' => $projects,
@@ -27,6 +28,9 @@ class ProjectArchivedController extends ArchivedController
                 $search,
                 $query->stateCounts(archivedTotal: $search === '' ? $projects->total() : null),
             ),
+            'searchableFields' => $query->searchableFields('archived'),
+            'filters' => $filters,
+            'scope' => 'archived',
         ]);
     }
 
