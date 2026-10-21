@@ -45,7 +45,7 @@ class EpicController extends Controller
             'list' => $transformer->active(
                 $epics,
                 $search,
-                $query->stateCounts(activeTotal: $search === '' ? $epics->total() : null),
+                $query->stateCounts(activeTotal: $search === '' && $filters === [] ? $epics->total() : null),
             ),
             'searchableFields' => $query->searchableFields('active'),
             'filters' => $filters,

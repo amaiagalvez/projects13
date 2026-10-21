@@ -25,7 +25,9 @@ class EpicCrudTest extends TestCase
 
         $response = $this->get(route('epics.index'));
 
-        $response->assertOk();
+        $response->assertOk()
+            ->assertSee('Start date')
+            ->assertDontSee('projects13::messages.', false);
     }
 
     public function test_can_create_an_epic(): void

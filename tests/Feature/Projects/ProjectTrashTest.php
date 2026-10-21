@@ -136,6 +136,20 @@ class ProjectTrashTest extends TestCase
         $this->assertModelExists($epic);
     }
 
+    public function test_project_can_be_permanently_deleted_without_epics(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+
+        $this->assertModelExists($project);
+        $this->assertFalse($project->trashed());
+
+        $this->delete(route('projects.destroy', $project->id))
+            ->assertRedirect(route('projects.index'));
+
+        $this->assertSoftDeleted($project);
+    }
+
     public function test_project_cannot_be_restored_when_an_active_project_uses_its_name(): void
     {
         $this->actingAs(User::factory()->create());

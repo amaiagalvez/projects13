@@ -26,7 +26,7 @@ class EpicArchivedController extends ArchivedController
             'list' => $transformer->archived(
                 $epics,
                 $search,
-                $query->stateCounts(archivedTotal: $search === '' ? $epics->total() : null),
+                $query->stateCounts(archivedTotal: $search === '' && $filters === [] ? $epics->total() : null),
             ),
             'searchableFields' => $query->searchableFields('archived'),
             'filters' => $filters,

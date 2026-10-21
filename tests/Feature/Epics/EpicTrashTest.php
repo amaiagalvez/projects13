@@ -156,6 +156,20 @@ class EpicTrashTest extends TestCase
         $this->assertModelExists($comment);
     }
 
+    public function test_epic_can_be_permanently_deleted_without_comments(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $epic = Epic::factory()->create();
+
+        $this->assertModelExists($epic);
+        $this->assertFalse($epic->trashed());
+
+        $this->delete(route('epics.destroy', $epic->id))
+            ->assertRedirect(route('epics.index'));
+
+        $this->assertSoftDeleted($epic);
+    }
+
     public function test_epic_cannot_be_restored_when_an_active_epic_in_the_same_project_uses_its_name(): void
     {
         $this->actingAs(User::factory()->create());

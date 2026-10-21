@@ -40,6 +40,13 @@ class ProjectSelectOptionsQueryTest extends TestCase
         $this->assertSame($integration, $method->invoke($this->query($integration)));
     }
 
+    public function test_searchable_fields_returns_empty_array_by_default(): void
+    {
+        $query = $this->query();
+
+        $this->assertSame([], $query->searchableFields('project'));
+    }
+
     private function query(?ProjectQueryIntegration $queryIntegration = null): ProjectSelectOptionsQuery
     {
         $displayIntegration = new class implements ProjectDisplayIntegration

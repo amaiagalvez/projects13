@@ -107,7 +107,7 @@ final class ProjectListQuery extends ListQueryBase
         $fields = [
             'name' => [
                 'column' => 'PRO_projects.name',
-                'label' => 'projects13::messages.name',
+                'label' => 'Name',
                 'type' => 'text',
                 'visible' => true,
                 'order' => 10,
@@ -115,7 +115,7 @@ final class ProjectListQuery extends ListQueryBase
             ],
             'notes' => [
                 'column' => 'PRO_projects.notes',
-                'label' => 'projects13::messages.notes',
+                'label' => 'Notes',
                 'type' => 'text',
                 'operators' => ['contains', 'equals', 'not_equals'], // Excludes starts_with/ends_with
                 'visible' => false,
@@ -124,7 +124,7 @@ final class ProjectListQuery extends ListQueryBase
             ],
             'start_date' => [
                 'column' => 'PRO_projects.start_date',
-                'label' => 'projects13::messages.start_date',
+                'label' => 'Start date',
                 'type' => 'date',
                 'nullable' => false,
                 'visible' => true,
@@ -133,7 +133,7 @@ final class ProjectListQuery extends ListQueryBase
             ],
             'end_date' => [
                 'column' => 'PRO_projects.end_date',
-                'label' => 'projects13::messages.end_date',
+                'label' => 'End date',
                 'type' => 'date',
                 'nullable' => true,
                 'visible' => true,
@@ -142,7 +142,7 @@ final class ProjectListQuery extends ListQueryBase
             ],
             'active' => [
                 'column' => 'PRO_projects.active',
-                'label' => 'projects13::messages.active',
+                'label' => 'Status',
                 'type' => 'boolean',
                 'visible' => true,
                 'order' => 10,
@@ -150,7 +150,7 @@ final class ProjectListQuery extends ListQueryBase
             ],
             'created_at' => [
                 'column' => 'PRO_projects.created_at',
-                'label' => 'projects13::messages.created_at',
+                'label' => 'basics13::messages.created_at',
                 'type' => 'date',
                 'visible' => true,
                 'order' => 30,

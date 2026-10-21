@@ -1,8 +1,8 @@
 {
     "Actions": "Ekintzak",
-    "Active epics": "Epikaones",
-    "Active projects": "Proiektuones",
-    "Active projects and their epics, over time.": "Proiektuones eta beren epikak, denboran zehar.",
+    "Active epics": "Epika aktiboak",
+    "Active projects": "Proiektu aktiboak",
+    "Active projects and their epics, over time.": "Proiektu aktiboak eta beren epikak, denboran zehar.",
     "Add comment": "Gehitu iruzkina",
     "Cannot be deleted while it has related records.": "Ez difrutake partikularik ez. Kudeatzaile txertak badituzke.",
     "Cannot be permanently deleted while it has related records.": "Ezin da ezabatu behin betiko lotutako erregistroak dituelako.",

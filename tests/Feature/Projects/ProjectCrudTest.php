@@ -24,7 +24,9 @@ class ProjectCrudTest extends TestCase
 
         $response = $this->get(route('projects.index'));
 
-        $response->assertOk();
+        $response->assertOk()
+            ->assertSee('Start date')
+            ->assertDontSee('projects13::messages.', false);
     }
 
     public function test_can_create_a_project(): void

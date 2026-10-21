@@ -38,7 +38,7 @@ class ProjectController extends Controller
             'list' => $transformer->active(
                 $projects,
                 $search,
-                $query->stateCounts(activeTotal: $search === '' ? $projects->total() : null),
+                $query->stateCounts(activeTotal: $search === '' && $filters === [] ? $projects->total() : null),
             ),
             'searchableFields' => $query->searchableFields('active'),
             'filters' => $filters,

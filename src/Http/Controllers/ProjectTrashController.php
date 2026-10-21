@@ -32,7 +32,7 @@ class ProjectTrashController extends TrashController
             'list' => $transformer->trash(
                 $projects,
                 $search,
-                $query->stateCounts(trashedTotal: $search === '' ? $projects->total() : null),
+                $query->stateCounts(trashedTotal: $search === '' && $filters === [] ? $projects->total() : null),
             ),
             'searchableFields' => $query->searchableFields('trashed'),
             'filters' => $filters,

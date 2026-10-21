@@ -128,7 +128,7 @@ final class EpicListQuery extends ListQueryBase
         return [
             'name' => [
                 'column' => 'PRO_epics.name',
-                'label' => 'projects13::messages.name',
+                'label' => 'Name',
                 'type' => 'text',
                 'visible' => true,
                 'order' => 10,
@@ -136,7 +136,7 @@ final class EpicListQuery extends ListQueryBase
             ],
             'notes' => [
                 'column' => 'PRO_epics.notes',
-                'label' => 'projects13::messages.notes',
+                'label' => 'Notes',
                 'type' => 'text',
                 'operators' => ['contains', 'equals', 'not_equals'], // Excludes starts_with/ends_with
                 'visible' => false,
@@ -145,7 +145,7 @@ final class EpicListQuery extends ListQueryBase
             ],
             'start_date' => [
                 'column' => 'PRO_epics.start_date',
-                'label' => 'projects13::messages.start_date',
+                'label' => 'Start date',
                 'type' => 'date',
                 'nullable' => true,
                 'visible' => true,
@@ -154,7 +154,7 @@ final class EpicListQuery extends ListQueryBase
             ],
             'end_date' => [
                 'column' => 'PRO_epics.end_date',
-                'label' => 'projects13::messages.end_date',
+                'label' => 'End date',
                 'type' => 'date',
                 'nullable' => true,
                 'visible' => true,
@@ -163,7 +163,7 @@ final class EpicListQuery extends ListQueryBase
             ],
             'active' => [
                 'column' => 'PRO_epics.active',
-                'label' => 'projects13::messages.active',
+                'label' => 'Status',
                 'type' => 'boolean',
                 'visible' => true,
                 'order' => 10,
@@ -171,7 +171,7 @@ final class EpicListQuery extends ListQueryBase
             ],
             'created_at' => [
                 'column' => 'PRO_epics.created_at',
-                'label' => 'projects13::messages.created_at',
+                'label' => 'basics13::messages.created_at',
                 'type' => 'date',
                 'visible' => true,
                 'order' => 30,
@@ -179,7 +179,7 @@ final class EpicListQuery extends ListQueryBase
             ],
             'project_name' => [
                 'column' => 'epic_projects.name',
-                'label' => 'projects13::messages.project',
+                'label' => 'Project',
                 'type' => 'text',
                 'visible' => true,
                 'order' => 10,

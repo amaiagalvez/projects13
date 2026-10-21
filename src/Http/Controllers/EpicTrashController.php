@@ -32,7 +32,7 @@ class EpicTrashController extends TrashController
             'list' => $transformer->trash(
                 $epics,
                 $search,
-                $query->stateCounts(trashedTotal: $search === '' ? $epics->total() : null),
+                $query->stateCounts(trashedTotal: $search === '' && $filters === [] ? $epics->total() : null),
             ),
             'searchableFields' => $query->searchableFields('trashed'),
             'filters' => $filters,
