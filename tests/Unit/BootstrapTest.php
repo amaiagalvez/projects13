@@ -2,19 +2,12 @@
 
 namespace Projects13\Tests\Unit;
 
-use Projects13\Tests\TestCase;
-use Illuminate\Support\Facades\Route;
+use Basics13\Tests\BootstrapTestCase;
 
-class BootstrapTest extends TestCase
+class BootstrapTest extends BootstrapTestCase
 {
-    public function test_package_registers_its_routes_and_views(): void
+    protected function packageRoot(): string
     {
-        $this->assertTrue(Route::has('projects.index'));
-        $this->assertTrue(Route::has('epics.index'));
-        $this->assertTrue(Route::has('planning'));
-        $this->assertTrue(Route::has('timeline'));
-
-        $this->assertFileExists(view()->getFinder()->find('projects13::projects.list'));
-        $this->assertFileExists(view()->getFinder()->find('projects13::epics.list'));
+        return dirname(__DIR__, 2);
     }
 }
