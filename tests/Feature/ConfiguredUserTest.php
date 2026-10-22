@@ -2,7 +2,9 @@
 
 namespace Projects13\Tests\Feature;
 
+use Basics13\Models\Role;
 use Projects13\Tests\TestCase;
+use Basics13\Concerns\HasRoles;
 use Projects13\Models\EpicComment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Projects13\Database\Seeders\DevelopProjectSeeder;
@@ -20,6 +22,7 @@ class ConfiguredUserTest extends TestCase
             'email' => 'member@example.test',
             'password' => 'password',
         ]);
+        $member->assignRole(Role::query()->where('slug', 'admin')->firstOrFail());
         $this->actingAs($member);
 
         $comment = EpicComment::factory()->create();
@@ -56,6 +59,8 @@ class ConfiguredUserTest extends TestCase
 
 class Member extends Authenticatable
 {
+    use HasRoles;
+
     protected $table = 'users';
 
     protected $guarded = [];

@@ -78,5 +78,21 @@
     "View :count epics": "Ver :count épicas",
     "View planning": "Ver planificación",
     "Work overview": "Resumen del trabajo",
-    "{0} Nothing is overdue.|{1} One project or epic is overdue.|[2,*] :count projects and epics are overdue.": "{0} No hay nada atrasado.|{1} Un proyecto o épica va con retraso.|[2,*] :count proyectos y épicas van con retraso."
+    "{0} Nothing is overdue.|{1} One project or epic is overdue.|[2,*] :count projects and epics are overdue.": "{0} No hay nada atrasado.|{1} Un proyecto o épica va con retraso.|[2,*] :count proyectos y épicas van con retraso.",
+    "projects.view": "Ver proyectos, planificación y cronograma",
+    "projects.create": "Crear proyectos",
+    "projects.edit": "Editar proyectos",
+    "projects.delete": "Mover proyectos a la papelera",
+    "projects.archive": "Archivar y activar proyectos",
+    "projects.restore": "Restaurar proyectos de la papelera",
+    "projects.force_delete": "Eliminar proyectos definitivamente",
+    "projects.manage": "Gestionar proyectos (acceso total)",
+    "epics.view": "Ver épicas",
+    "epics.create": "Crear épicas",
+    "epics.edit": "Editar y comentar épicas",
+    "epics.delete": "Mover épicas a la papelera",
+    "epics.archive": "Archivar y activar épicas",
+    "epics.restore": "Restaurar épicas de la papelera",
+    "epics.force_delete": "Eliminar épicas definitivamente",
+    "epics.manage": "Gestionar épicas (acceso total)"
 }

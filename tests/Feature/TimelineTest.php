@@ -27,7 +27,7 @@ class TimelineTest extends TestCase
 
     public function test_the_screen_offers_its_heading_a_search_box_and_the_create_action(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->get(route('timeline'))
             ->assertOk()
@@ -58,7 +58,7 @@ class TimelineTest extends TestCase
             'end_date' => '2026-02-01',
         ]);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('timeline'))
             ->assertOk()
             ->assertSeeInOrder([
@@ -84,7 +84,7 @@ class TimelineTest extends TestCase
             'end_date' => '2026-04-01',
         ]);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('timeline'))
             ->assertOk()
             ->assertSeeInOrder(['Dated epic', 'Undated epic']);
@@ -105,7 +105,7 @@ class TimelineTest extends TestCase
 
         $this->travelTo('2026-04-01');
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('timeline'))
             ->assertOk()
             ->assertSee('data-test="timeline-bar-'.$epic->id.'"', false);
@@ -120,7 +120,7 @@ class TimelineTest extends TestCase
         Epic::factory()->for($project)->archived()->create(['name' => 'Hidden archived epic']);
         Epic::factory()->for($project)->trashed()->create(['name' => 'Hidden trashed epic']);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('timeline'))
             ->assertOk()
             ->assertSee('Shown project')
@@ -142,7 +142,7 @@ class TimelineTest extends TestCase
         Epic::factory()->for($project)->create(['name' => 'Refunds']);
         Project::factory()->create(['name' => 'Beta portal']);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('timeline', ['search' => 'Alpha']))
             ->assertOk()
             ->assertSee('Alpha portal')
@@ -162,7 +162,7 @@ class TimelineTest extends TestCase
         Epic::factory()->for($project)->create(['name' => 'Shelf audit']);
         Epic::factory()->for($project)->create(['name' => 'Trolley counting']);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('timeline', ['search' => 'Shelf']))
             ->assertOk()
             ->assertSee('Warehouse move')
@@ -203,7 +203,7 @@ class TimelineTest extends TestCase
 
         $this->travelTo('2026-10-06');
 
-        $response = $this->actingAs(User::factory()->create())
+        $response = $this->actingAs(User::factory()->admin()->create())
             ->get(route('timeline'))
             ->assertOk()
             ->assertSeeInOrder([
@@ -239,7 +239,7 @@ class TimelineTest extends TestCase
 
         $this->travelTo('2026-10-06');
 
-        $response = $this->actingAs(User::factory()->create())
+        $response = $this->actingAs(User::factory()->admin()->create())
             ->get(route('timeline'))
             ->assertOk()
             ->assertSee('data-test="timeline-axis"', false)
@@ -274,7 +274,7 @@ class TimelineTest extends TestCase
             'end_date' => '2026-04-01',
         ]);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('timeline'))
             ->assertOk()
             ->assertSeeInOrder([
@@ -291,7 +291,7 @@ class TimelineTest extends TestCase
     {
         $project = Project::factory()->create();
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('timeline'))
             ->assertOk()
             ->assertSee('data-test="timeline-project-'.$project->id.'"', false)
@@ -300,7 +300,7 @@ class TimelineTest extends TestCase
 
     public function test_an_empty_portfolio_explains_itself(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->get(route('timeline'))
             ->assertOk()
@@ -310,7 +310,7 @@ class TimelineTest extends TestCase
 
     public function test_a_search_without_matches_explains_that_and_offers_the_create_action(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->get(route('timeline', ['search' => 'Nothing here']))
             ->assertOk()
@@ -326,7 +326,7 @@ class TimelineTest extends TestCase
     {
         Project::factory()->count(30)->create();
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('timeline'))
             ->assertOk()
             ->assertSee('data-test="timeline-pagination"', false);

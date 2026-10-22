@@ -78,5 +78,21 @@
     "View :count epics": "Ikusi :count epika",
     "View planning": "Ikusi plangintza",
     "Work overview": "Lanaren laburpena",
-    "{0} Nothing is overdue.|{1} One project or epic is overdue.|[2,*] :count projects and epics are overdue.": "{0} Ez dago ezer atzeratuta.|{1} Proiektu edo epika bat atzeratuta dago.|[2,*] :count proiektu eta epika atzeratuta daude."
+    "{0} Nothing is overdue.|{1} One project or epic is overdue.|[2,*] :count projects and epics are overdue.": "{0} Ez dago ezer atzeratuta.|{1} Proiektu edo epika bat atzeratuta dago.|[2,*] :count proiektu eta epika atzeratuta daude.",
+    "projects.view": "Ikusi proiektuak, plangintza eta kronograma",
+    "projects.create": "Sortu proiektuak",
+    "projects.edit": "Editatu proiektuak",
+    "projects.delete": "Bota proiektuak zakarrontzira",
+    "projects.archive": "Artxibatu eta aktibatu proiektuak",
+    "projects.restore": "Leheneratu proiektuak zakarrontzitik",
+    "projects.force_delete": "Ezabatu proiektuak betiko",
+    "projects.manage": "Kudeatu proiektuak (sarbide osoa)",
+    "epics.view": "Ikusi epikak",
+    "epics.create": "Sortu epikak",
+    "epics.edit": "Editatu eta iruzkindu epikak",
+    "epics.delete": "Bota epikak zakarrontzira",
+    "epics.archive": "Artxibatu eta aktibatu epikak",
+    "epics.restore": "Leheneratu epikak zakarrontzitik",
+    "epics.force_delete": "Ezabatu epikak betiko",
+    "epics.manage": "Kudeatu epikak (sarbide osoa)"
 }

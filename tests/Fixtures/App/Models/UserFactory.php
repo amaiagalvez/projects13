@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Basics13\Models\Role;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,5 +23,16 @@ class UserFactory extends Factory
             'password' => 'password',
             'email_verified_at' => now(),
         ];
+    }
+
+    /**
+     * Give the account the `admin` system role, which the permission migrations grant full access
+     * to projects and epics.
+     */
+    public function admin(): static
+    {
+        return $this->afterCreating(static function (User $user): void {
+            $user->assignRole(Role::query()->where('slug', 'admin')->firstOrFail());
+        });
     }
 }

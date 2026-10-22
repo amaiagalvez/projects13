@@ -2,56 +2,43 @@
 
 namespace Projects13\Tests\Unit\Policies;
 
-use App\Models\User;
 use Projects13\Tests\TestCase;
 use Projects13\Models\EpicComment;
 use Projects13\Policies\EpicCommentPolicy;
+use Basics13\Support\Testing\PermissionsActor;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class EpicCommentPolicyTest extends TestCase
 {
-    private EpicCommentPolicy $policy;
-
-    protected function setUp(): void
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function recordAbilities(): array
     {
-        parent::setUp();
-        $this->policy = new EpicCommentPolicy;
+        return [
+            'update' => ['update', 'epics.edit'],
+            'delete' => ['delete', 'epics.edit'],
+            'forceDelete' => ['forceDelete', 'epics.edit'],
+        ];
     }
 
-    public function test_view_any_returns_true(): void
+    public function test_listing_and_creating_need_their_permission(): void
     {
-        $user = new User;
+        $policy = new EpicCommentPolicy;
 
-        $this->assertTrue($this->policy->viewAny($user));
+        $this->assertTrue($policy->viewAny(PermissionsActor::holding(['epics.view'])));
+        $this->assertFalse($policy->viewAny(PermissionsActor::holding([])));
+        $this->assertTrue($policy->create(PermissionsActor::holding(['epics.edit'])));
+        $this->assertFalse($policy->create(PermissionsActor::holding(['epics.view'])));
     }
 
-    public function test_create_returns_true(): void
+    #[DataProvider('recordAbilities')]
+    public function test_each_ability_on_a_record_needs_its_permission(string $ability, string $permission): void
     {
-        $user = new User;
+        $policy = new EpicCommentPolicy;
 
-        $this->assertTrue($this->policy->create($user));
-    }
-
-    public function test_update_returns_true(): void
-    {
-        $user = new User;
-        $comment = new EpicComment(['body' => 'Comment under test']);
-
-        $this->assertTrue($this->policy->update($user, $comment));
-    }
-
-    public function test_delete_returns_true(): void
-    {
-        $user = new User;
-        $comment = new EpicComment(['body' => 'Comment under test']);
-
-        $this->assertTrue($this->policy->delete($user, $comment));
-    }
-
-    public function test_force_delete_returns_true(): void
-    {
-        $user = new User;
-        $comment = new EpicComment(['body' => 'Comment under test']);
-
-        $this->assertTrue($this->policy->forceDelete($user, $comment));
+        $this->assertTrue($policy->{$ability}(PermissionsActor::holding([$permission]), new EpicComment));
+        $this->assertFalse($policy->{$ability}(PermissionsActor::holding(['epics.view']), new EpicComment));
+        $this->assertTrue($policy->{$ability}(PermissionsActor::holding(['epics.manage']), new EpicComment));
     }
 }

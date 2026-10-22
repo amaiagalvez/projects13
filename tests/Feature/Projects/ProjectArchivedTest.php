@@ -13,7 +13,7 @@ class ProjectArchivedTest extends TestCase
 
     public function test_archived_projects_are_not_shown_in_the_active_list(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         Project::factory()->archived()->create(['name' => 'Dormant project']);
         Project::factory()->create(['name' => 'Active project']);
@@ -25,7 +25,7 @@ class ProjectArchivedTest extends TestCase
 
     public function test_archived_projects_are_searchable_by_name(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->travelTo('2026-10-02 12:30:00');
         $updatedProject = Project::factory()->archived()->create(['name' => 'Alpha Dormant']);
@@ -44,7 +44,7 @@ class ProjectArchivedTest extends TestCase
     public function test_project_can_be_archived_and_reactivated(): void
     {
         $project = Project::factory()->create();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->patch(route('projects.archive', $project))
             ->assertRedirect(route('projects.index'));
@@ -58,7 +58,7 @@ class ProjectArchivedTest extends TestCase
     public function test_restoring_a_trashed_archived_project_preserves_its_archived_state(): void
     {
         $project = Project::factory()->archived()->trashed()->create();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->patch(route('projects.trash.restore', $project->id))
             ->assertRedirect(route('projects.trash.index'));

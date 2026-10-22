@@ -22,7 +22,7 @@ class EpicCrudTest extends TestCase
 
     public function test_can_view_epics_index(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $response = $this->get(route('epics.index'));
 
@@ -33,7 +33,7 @@ class EpicCrudTest extends TestCase
 
     public function test_empty_index_offers_a_create_button_that_resets_the_form(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->get(route('epics.index'))
             ->assertOk()
@@ -42,7 +42,7 @@ class EpicCrudTest extends TestCase
 
     public function test_a_search_without_results_offers_no_create_shortcut(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         Epic::factory()->create(['name' => 'Alpha']);
 
         $this->get(route('epics.index', ['search' => 'Nothing like it']))
@@ -53,7 +53,7 @@ class EpicCrudTest extends TestCase
 
     public function test_can_create_an_epic(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $project = Project::factory()->create([
             'start_date' => '2026-01-01',
@@ -77,7 +77,7 @@ class EpicCrudTest extends TestCase
 
     public function test_json_request_creates_an_epic_and_returns_its_identity(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create([
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
@@ -98,7 +98,7 @@ class EpicCrudTest extends TestCase
 
     public function test_json_request_updates_an_epic_and_returns_its_identity(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create([
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
@@ -123,7 +123,7 @@ class EpicCrudTest extends TestCase
 
     public function test_a_project_trashed_after_validation_is_reported_on_the_field(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create();
 
         // Runs once the request has passed validation, just before the controller locks the project.
@@ -140,7 +140,7 @@ class EpicCrudTest extends TestCase
 
     public function test_can_update_an_epic(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $project = Project::factory()->create([
             'start_date' => '2026-01-01',
@@ -165,7 +165,7 @@ class EpicCrudTest extends TestCase
 
     public function test_can_delete_an_epic_moves_to_trash(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $epic = Epic::factory()->create();
 
@@ -179,7 +179,7 @@ class EpicCrudTest extends TestCase
 
     public function test_cannot_move_an_epic_with_comments_to_trash(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->create();
         $comment = EpicComment::factory()->for($epic)->create();
 
@@ -193,7 +193,7 @@ class EpicCrudTest extends TestCase
 
     public function test_can_create_epic_without_dates(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $project = Project::factory()->create();
 
@@ -216,7 +216,7 @@ class EpicCrudTest extends TestCase
 
     public function test_can_create_epic_with_name_repeating_another_project(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $projectA = Project::factory()->create([
             'start_date' => '2026-01-01',
@@ -244,7 +244,7 @@ class EpicCrudTest extends TestCase
 
     public function test_can_create_epic_with_null_end_date_when_project_has_null_end_date(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $project = Project::factory()->create(['start_date' => '2026-06-01', 'end_date' => null]);
 

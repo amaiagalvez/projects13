@@ -2,88 +2,47 @@
 
 namespace Projects13\Tests\Unit\Policies;
 
-use App\Models\User;
 use Projects13\Models\Epic;
 use Projects13\Tests\TestCase;
 use Projects13\Policies\EpicPolicy;
+use Basics13\Support\Testing\PermissionsActor;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class EpicPolicyTest extends TestCase
 {
-    private EpicPolicy $policy;
-
-    protected function setUp(): void
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function recordAbilities(): array
     {
-        parent::setUp();
-        $this->policy = new EpicPolicy;
+        return [
+            'update' => ['update', 'epics.edit'],
+            'comment' => ['comment', 'epics.edit'],
+            'delete' => ['delete', 'epics.delete'],
+            'restore' => ['restore', 'epics.restore'],
+            'forceDelete' => ['forceDelete', 'epics.force_delete'],
+            'archive' => ['archive', 'epics.archive'],
+            'activate' => ['activate', 'epics.archive'],
+        ];
     }
 
-    public function test_view_any_returns_true(): void
+    public function test_listing_and_creating_need_their_permission(): void
     {
-        $user = new User;
+        $policy = new EpicPolicy;
 
-        $this->assertTrue($this->policy->viewAny($user));
+        $this->assertTrue($policy->viewAny(PermissionsActor::holding(['epics.view'])));
+        $this->assertFalse($policy->viewAny(PermissionsActor::holding([])));
+        $this->assertTrue($policy->create(PermissionsActor::holding(['epics.create'])));
+        $this->assertFalse($policy->create(PermissionsActor::holding(['epics.view'])));
     }
 
-    public function test_create_returns_true(): void
+    #[DataProvider('recordAbilities')]
+    public function test_each_ability_on_a_record_needs_its_permission(string $ability, string $permission): void
     {
-        $user = new User;
+        $policy = new EpicPolicy;
 
-        $this->assertTrue($this->policy->create($user));
-    }
-
-    public function test_update_returns_true(): void
-    {
-        $user = new User;
-        $epic = new Epic(['name' => 'Epic under test']);
-
-        $this->assertTrue($this->policy->update($user, $epic));
-    }
-
-    public function test_comment_returns_true(): void
-    {
-        $user = new User;
-        $epic = new Epic(['name' => 'Epic under test']);
-
-        $this->assertTrue($this->policy->comment($user, $epic));
-    }
-
-    public function test_delete_returns_true(): void
-    {
-        $user = new User;
-        $epic = new Epic(['name' => 'Epic under test']);
-
-        $this->assertTrue($this->policy->delete($user, $epic));
-    }
-
-    public function test_restore_returns_true(): void
-    {
-        $user = new User;
-        $epic = new Epic(['name' => 'Epic under test']);
-
-        $this->assertTrue($this->policy->restore($user, $epic));
-    }
-
-    public function test_force_delete_returns_true(): void
-    {
-        $user = new User;
-        $epic = new Epic(['name' => 'Epic under test']);
-
-        $this->assertTrue($this->policy->forceDelete($user, $epic));
-    }
-
-    public function test_archive_returns_true(): void
-    {
-        $user = new User;
-        $epic = new Epic(['name' => 'Epic under test']);
-
-        $this->assertTrue($this->policy->archive($user, $epic));
-    }
-
-    public function test_activate_returns_true(): void
-    {
-        $user = new User;
-        $epic = new Epic(['name' => 'Epic under test']);
-
-        $this->assertTrue($this->policy->activate($user, $epic));
+        $this->assertTrue($policy->{$ability}(PermissionsActor::holding([$permission]), new Epic));
+        $this->assertFalse($policy->{$ability}(PermissionsActor::holding(['epics.view']), new Epic));
+        $this->assertTrue($policy->{$ability}(PermissionsActor::holding(['epics.manage']), new Epic));
     }
 }

@@ -3,16 +3,23 @@
 namespace Projects13\Policies;
 
 use Projects13\Models\Project;
+use Basics13\Concerns\ChecksPermissions;
 use Illuminate\Contracts\Auth\Authenticatable as User;
 
+/**
+ * Project abilities, each one granted by its `projects.{action}` permission. Planning and timeline
+ * are read through viewAny.
+ */
 class ProjectPolicy
 {
+    use ChecksPermissions;
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $this->permits($user, 'projects.view');
     }
 
     /**
@@ -20,7 +27,7 @@ class ProjectPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $this->permits($user, 'projects.create');
     }
 
     /**
@@ -28,7 +35,7 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
-        return true;
+        return $this->permits($user, 'projects.edit');
     }
 
     /**
@@ -36,7 +43,7 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        return true;
+        return $this->permits($user, 'projects.delete');
     }
 
     /**
@@ -44,7 +51,7 @@ class ProjectPolicy
      */
     public function restore(User $user, Project $project): bool
     {
-        return true;
+        return $this->permits($user, 'projects.restore');
     }
 
     /**
@@ -52,7 +59,7 @@ class ProjectPolicy
      */
     public function forceDelete(User $user, Project $project): bool
     {
-        return true;
+        return $this->permits($user, 'projects.force_delete');
     }
 
     /**
@@ -60,7 +67,7 @@ class ProjectPolicy
      */
     public function archive(User $user, Project $project): bool
     {
-        return true;
+        return $this->permits($user, 'projects.archive');
     }
 
     /**
@@ -68,6 +75,6 @@ class ProjectPolicy
      */
     public function activate(User $user, Project $project): bool
     {
-        return true;
+        return $this->permits($user, 'projects.archive');
     }
 }

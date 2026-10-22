@@ -13,7 +13,7 @@ class EpicArchivedTest extends TestCase
 
     public function test_archived_epics_are_not_shown_in_the_active_list(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         Epic::factory()->archived()->create(['name' => 'Dormant epic']);
         Epic::factory()->create(['name' => 'Active epic']);
@@ -25,7 +25,7 @@ class EpicArchivedTest extends TestCase
 
     public function test_archived_epics_are_searchable_by_name(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         Epic::factory()->archived()->create(['name' => 'Alpha Dormant']);
         Epic::factory()->archived()->create(['name' => 'Beta Dormant']);
@@ -41,7 +41,7 @@ class EpicArchivedTest extends TestCase
     public function test_epics_can_be_archived_and_reactivated(): void
     {
         $epic = Epic::factory()->create();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->patch(route('epics.archive', $epic))
             ->assertRedirect(route('epics.index'));
@@ -55,7 +55,7 @@ class EpicArchivedTest extends TestCase
     public function test_restoring_a_trashed_archived_epic_preserves_its_archived_state(): void
     {
         $epic = Epic::factory()->archived()->trashed()->create();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->patch(route('epics.trash.restore', $epic->id))
             ->assertRedirect(route('epics.trash.index'));

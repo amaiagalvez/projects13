@@ -21,7 +21,7 @@ class EpicTrashTest extends TestCase
 
     public function test_trash_preserves_index_columns_without_deletion_date(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $this->travelTo('2026-10-02 12:00:00');
         $epic = Epic::factory()->create([
             'name' => 'Epic with dates',
@@ -54,7 +54,7 @@ class EpicTrashTest extends TestCase
 
     public function test_trash_orders_by_deletion_timestamp_descending_then_id_ascending(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $this->travelTo('2026-10-02 12:00:00');
         $olderEpic = Epic::factory()->trashed()->create(['name' => 'Older deleted epic']);
         $newerEpic = Epic::factory()->trashed()->create(['name' => 'Newer deleted epic']);
@@ -72,7 +72,7 @@ class EpicTrashTest extends TestCase
 
     public function test_trash_can_be_searched_by_epic_name(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $matchingEpic = Epic::factory()->trashed()->create(['name' => 'Archived epic match']);
         $otherEpic = Epic::factory()->trashed()->create(['name' => 'Unrelated archived epic']);
 
@@ -87,7 +87,7 @@ class EpicTrashTest extends TestCase
      */
     public function test_trash_can_be_searched_by_project_name(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create(['name' => 'Archived epic project']);
         $matchingEpic = Epic::factory()->for($project)->trashed()->create(['name' => 'First archived epic']);
         $otherProject = Project::factory()->create(['name' => 'Other project']);
@@ -101,7 +101,7 @@ class EpicTrashTest extends TestCase
 
     public function test_deleted_epics_can_be_restored_or_permanently_deleted(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $activeEpic = Epic::factory()->create(['name' => 'Active epic']);
         $deletedEpic = Epic::factory()->trashed()->create(['name' => 'Deleted epic']);
 
@@ -129,7 +129,7 @@ class EpicTrashTest extends TestCase
 
     public function test_active_epics_are_not_found_through_trash_actions(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->create();
 
         $this->patch(route('epics.trash.restore', $epic->id))->assertNotFound();
@@ -140,7 +140,7 @@ class EpicTrashTest extends TestCase
 
     public function test_permanently_deleting_an_epic_with_comments_is_refused(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->trashed()->create();
         $comment = EpicComment::factory()->for($epic)->create();
 
@@ -158,7 +158,7 @@ class EpicTrashTest extends TestCase
 
     public function test_epic_can_be_permanently_deleted_without_comments(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->create();
 
         $this->assertModelExists($epic);
@@ -172,7 +172,7 @@ class EpicTrashTest extends TestCase
 
     public function test_epic_cannot_be_restored_when_an_active_epic_in_the_same_project_uses_its_name(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $deletedEpic = Epic::factory()->trashed()->create(['name' => 'Repeated epic']);
         $deletedProject = $deletedEpic->project;
 
@@ -190,7 +190,7 @@ class EpicTrashTest extends TestCase
 
     public function test_epic_cannot_be_restored_when_an_archived_epic_in_the_same_project_uses_its_name(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create();
         $deletedEpic = Epic::factory()->for($project)->trashed()->create(['name' => 'Repeated epic']);
         $archivedEpic = Epic::factory()->for($project)->archived()->create(['name' => 'Repeated epic']);
@@ -209,7 +209,7 @@ class EpicTrashTest extends TestCase
 
     public function test_epic_can_be_restored_when_its_name_is_used_only_in_another_project(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $projectA = Project::factory()->create();
         $projectB = Project::factory()->create();
         $deletedEpic = Epic::factory()->trashed()->create(['name' => 'Repeated epic', 'project_id' => $projectA->id]);
@@ -223,7 +223,7 @@ class EpicTrashTest extends TestCase
 
     public function test_confirmed_restore_does_not_create_an_additional_epic(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $deletedEpic = Epic::factory()->trashed()->create(['name' => 'Restored epic']);
 
         $this->patch(route('epics.trash.restore', $deletedEpic->id), [

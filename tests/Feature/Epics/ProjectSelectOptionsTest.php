@@ -15,7 +15,7 @@ class ProjectSelectOptionsTest extends TestCase
 
     public function test_epic_list_offers_project_form_when_no_projects_exist(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->get(route('epics.index'))
             ->assertOk()
@@ -28,7 +28,7 @@ class ProjectSelectOptionsTest extends TestCase
 
     public function test_epic_list_offers_project_form_when_only_archived_projects_exist(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         Project::factory()->archived()->create();
 
         $this->get(route('epics.index'))
@@ -39,7 +39,7 @@ class ProjectSelectOptionsTest extends TestCase
 
     public function test_epic_list_offers_project_form_when_only_deleted_projects_exist(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         Project::factory()->trashed()->create();
 
         $this->get(route('epics.index'))
@@ -50,7 +50,7 @@ class ProjectSelectOptionsTest extends TestCase
 
     public function test_epic_list_hides_project_form_notice_when_an_active_project_exists(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         Project::factory()->create();
 
         $this->get(route('epics.index'))
@@ -61,7 +61,7 @@ class ProjectSelectOptionsTest extends TestCase
 
     public function test_epic_form_does_not_preload_every_project(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $total = ListQueryBase::PER_PAGE + 1;
 
@@ -78,7 +78,7 @@ class ProjectSelectOptionsTest extends TestCase
 
     public function test_project_options_search_by_project_and_are_limited_to_the_shared_page_size(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $total = ListQueryBase::PER_PAGE + 1;
 
@@ -103,7 +103,7 @@ class ProjectSelectOptionsTest extends TestCase
 
     public function test_project_options_only_include_active_projects(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         Project::factory()->create(['name' => 'Active select project']);
         Project::factory()->archived()->create(['name' => 'Inactive select project']);
         Project::factory()->trashed()->create(['name' => 'Deleted select project']);
@@ -116,7 +116,7 @@ class ProjectSelectOptionsTest extends TestCase
 
     public function test_project_options_reject_search_terms_over_the_configured_maximum(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $term = str_repeat('a', MaxLength::string() + 1);
 

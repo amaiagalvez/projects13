@@ -27,7 +27,7 @@ class ResourceNotesTest extends TestCase
     #[DataProvider('resources')]
     public function test_notes_are_saved_and_replaced_on_update(string $table, string $resource, string $prefix, string $notes): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $payload = $this->storePayload($resource);
 
         $this->post(route($resource.'.store'), [...$payload, 'notes' => $notes])
@@ -51,7 +51,7 @@ class ResourceNotesTest extends TestCase
     #[DataProvider('resources')]
     public function test_notes_are_optional_and_can_be_cleared(string $table, string $resource, string $prefix, string $notes): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $payload = $this->storePayload($resource);
 
         $this->post(route($resource.'.store'), $payload)
@@ -80,7 +80,7 @@ class ResourceNotesTest extends TestCase
     #[DataProvider('resources')]
     public function test_the_edit_form_is_bound_to_the_saved_notes(string $table, string $resource, string $prefix, string $notes): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->post(route($resource.'.store'), [...$this->storePayload($resource), 'notes' => $notes])
             ->assertRedirect(route($resource.'.index'))

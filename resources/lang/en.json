@@ -78,5 +78,21 @@
     "View :count epics": "View :count epics",
     "View planning": "View planning",
     "Work overview": "Work overview",
-    "{0} Nothing is overdue.|{1} One project or epic is overdue.|[2,*] :count projects and epics are overdue.": "{0} Nothing is overdue.|{1} One project or epic is overdue.|[2,*] :count projects and epics are overdue."
+    "{0} Nothing is overdue.|{1} One project or epic is overdue.|[2,*] :count projects and epics are overdue.": "{0} Nothing is overdue.|{1} One project or epic is overdue.|[2,*] :count projects and epics are overdue.",
+    "projects.view": "View projects, planning and timeline",
+    "projects.create": "Create projects",
+    "projects.edit": "Edit projects",
+    "projects.delete": "Move projects to the trash",
+    "projects.archive": "Archive and activate projects",
+    "projects.restore": "Restore projects from the trash",
+    "projects.force_delete": "Delete projects permanently",
+    "projects.manage": "Manage projects (full access)",
+    "epics.view": "View epics",
+    "epics.create": "Create epics",
+    "epics.edit": "Edit and comment on epics",
+    "epics.delete": "Move epics to the trash",
+    "epics.archive": "Archive and activate epics",
+    "epics.restore": "Restore epics from the trash",
+    "epics.force_delete": "Delete epics permanently",
+    "epics.manage": "Manage epics (full access)"
 }

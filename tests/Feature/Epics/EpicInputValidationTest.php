@@ -14,7 +14,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_name_and_project_are_required(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->from(route('epics.index'))
             ->post(route('epics.store'), [])
@@ -25,7 +25,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_can_be_created_without_dates(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create();
 
         $this->post(route('epics.store'), [
@@ -43,7 +43,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_name_must_be_unique_within_the_project(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->create(['name' => 'Existing epic']);
 
         $this->from(route('epics.index'))
@@ -56,7 +56,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_store_trims_epic_name_before_unique_validation(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $existingEpic = Epic::factory()->create(['name' => 'Existing epic']);
 
         $this->from(route('epics.index'))
@@ -72,7 +72,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_name_can_repeat_in_another_project(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         Epic::factory()->create(['name' => 'Existing epic']);
         $otherProject = Project::factory()->create();
 
@@ -85,7 +85,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_name_cannot_be_changed_to_another_epic_name_in_the_same_project(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $existingEpic = Epic::factory()->create(['name' => 'Existing epic']);
         $existingProject = $existingEpic->project;
 
@@ -103,7 +103,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_name_can_be_kept_when_updating_the_same_epic(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->create(['name' => 'Existing epic']);
 
         $this->put(route('epics.update', $epic), [
@@ -115,7 +115,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_update_trims_epic_name_before_persisting(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->create(['name' => 'Original epic']);
 
         $this->put(route('epics.update', $epic), [
@@ -132,7 +132,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_start_date_can_be_set_without_end_date(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create([
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
@@ -149,7 +149,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_archived_projects_cannot_receive_epics(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->archived()->create();
 
         $this->from(route('epics.index'))
@@ -165,7 +165,7 @@ class EpicInputValidationTest extends TestCase
      */
     public function test_an_epic_can_keep_its_archived_project_while_being_edited(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->archived()->create();
         $epic = Epic::factory()->for($project)->create();
 
@@ -186,7 +186,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_an_epic_cannot_be_moved_to_an_archived_project(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->create();
         $archived = Project::factory()->archived()->create();
 
@@ -210,7 +210,7 @@ class EpicInputValidationTest extends TestCase
      */
     public function test_a_missing_project_falls_back_to_global_uniqueness(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create();
         Epic::factory()->for($project)->create(['name' => 'Existing epic name']);
 
@@ -225,7 +225,7 @@ class EpicInputValidationTest extends TestCase
      */
     public function test_a_non_numeric_project_falls_back_to_global_uniqueness(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create();
         Epic::factory()->for($project)->create(['name' => 'Existing epic name']);
 
@@ -240,7 +240,7 @@ class EpicInputValidationTest extends TestCase
      */
     public function test_a_missing_project_does_not_conflict_with_a_trashed_epic_name(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create();
         Epic::factory()->for($project)->trashed()->create(['name' => 'Trashed epic name']);
 
@@ -252,7 +252,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_cannot_belong_to_a_deleted_project(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->trashed()->create();
 
         $this->from(route('epics.index'))
@@ -262,7 +262,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_deleted_epic_name_conflict_can_be_resolved_by_creating_a_new_epic(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $deletedEpic = Epic::factory()->trashed()->create(['name' => 'Deleted epic']);
         $payload = ['name' => 'Deleted epic', 'project_id' => $deletedEpic->project_id];
 
@@ -290,7 +290,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_a_trashed_epic_of_another_project_does_not_raise_the_name_conflict(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create();
         Epic::factory()->for(Project::factory())->trashed()->create(['name' => 'Shared epic name']);
 
@@ -304,7 +304,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_start_date_cannot_be_before_project_start_date(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create(['start_date' => '2026-06-01']);
 
         $this->from(route('epics.index'))
@@ -321,7 +321,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_start_date_can_equal_project_start_date(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create(['start_date' => '2026-06-01', 'end_date' => '2026-12-31']);
 
         $this->post(route('epics.store'), [
@@ -337,7 +337,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_end_date_cannot_be_after_project_end_date(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create([
             'start_date' => '2026-06-01',
             'end_date' => '2026-12-31',
@@ -357,7 +357,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_without_end_date_cannot_start_after_project_end_date(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create(['start_date' => '2026-06-01', 'end_date' => '2026-12-31']);
 
         $this->from(route('epics.index'))
@@ -373,7 +373,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_end_date_can_equal_project_end_date(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create(['start_date' => '2026-06-01', 'end_date' => '2026-12-31']);
 
         $this->post(route('epics.store'), [
@@ -389,7 +389,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_end_date_not_validated_when_project_has_no_end_date(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create(['start_date' => '2026-06-01', 'end_date' => null]);
 
         $this->post(route('epics.store'), [
@@ -405,7 +405,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_dates_must_be_within_project_when_updating(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create(['start_date' => '2026-06-01', 'end_date' => '2026-12-31']);
         $epic = Epic::factory()->for($project)->create([
             'start_date' => '2026-07-01',
@@ -424,7 +424,7 @@ class EpicInputValidationTest extends TestCase
 
     public function test_epic_can_be_updated_to_remove_dates(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create(['start_date' => '2026-06-01', 'end_date' => '2026-12-31']);
         $epic = Epic::factory()->for($project)->create([
             'start_date' => '2026-07-01',

@@ -3,6 +3,7 @@
 namespace Projects13\Tests;
 
 use App\Models\User;
+use Basics13\Models\Role;
 use Carbon\CarbonImmutable;
 use Flux\FluxServiceProvider;
 use Illuminate\Support\Facades\Date;
@@ -23,6 +24,7 @@ abstract class TestCase extends Basics13TestCase
             'password' => 'password',
             'email_verified_at' => now(),
         ]);
+        $user->assignRole(Role::query()->where('slug', 'admin')->firstOrFail());
 
         $this->actingAs($user);
 

@@ -3,16 +3,23 @@
 namespace Projects13\Policies;
 
 use Projects13\Models\Epic;
+use Basics13\Concerns\ChecksPermissions;
 use Illuminate\Contracts\Auth\Authenticatable as User;
 
+/**
+ * Epic abilities, each one granted by its `epics.{action}` permission. Commenting is part of
+ * working on the epic, so it asks for `epics.edit`.
+ */
 class EpicPolicy
 {
+    use ChecksPermissions;
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $this->permits($user, 'epics.view');
     }
 
     /**
@@ -20,7 +27,7 @@ class EpicPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $this->permits($user, 'epics.create');
     }
 
     /**
@@ -28,15 +35,15 @@ class EpicPolicy
      */
     public function update(User $user, Epic $epic): bool
     {
-        return true;
+        return $this->permits($user, 'epics.edit');
     }
 
     /**
-     * Determine whether the user can add comments to the model.
+     * Determine whether the user can comment on the model.
      */
     public function comment(User $user, Epic $epic): bool
     {
-        return true;
+        return $this->permits($user, 'epics.edit');
     }
 
     /**
@@ -44,7 +51,7 @@ class EpicPolicy
      */
     public function delete(User $user, Epic $epic): bool
     {
-        return true;
+        return $this->permits($user, 'epics.delete');
     }
 
     /**
@@ -52,7 +59,7 @@ class EpicPolicy
      */
     public function restore(User $user, Epic $epic): bool
     {
-        return true;
+        return $this->permits($user, 'epics.restore');
     }
 
     /**
@@ -60,7 +67,7 @@ class EpicPolicy
      */
     public function forceDelete(User $user, Epic $epic): bool
     {
-        return true;
+        return $this->permits($user, 'epics.force_delete');
     }
 
     /**
@@ -68,7 +75,7 @@ class EpicPolicy
      */
     public function archive(User $user, Epic $epic): bool
     {
-        return true;
+        return $this->permits($user, 'epics.archive');
     }
 
     /**
@@ -76,6 +83,6 @@ class EpicPolicy
      */
     public function activate(User $user, Epic $epic): bool
     {
-        return true;
+        return $this->permits($user, 'epics.archive');
     }
 }

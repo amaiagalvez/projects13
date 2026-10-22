@@ -19,7 +19,7 @@ class EpicCommentTest extends TestCase
     public function test_users_can_comment_on_an_epic_and_author_and_time_are_stored(): void
     {
         $this->freezeSecond();
-        $user = User::factory()->create(['name' => 'Ane Author']);
+        $user = User::factory()->admin()->create(['name' => 'Ane Author']);
         $epic = Epic::factory()->create();
 
         $this->actingAs($user)
@@ -52,7 +52,7 @@ class EpicCommentTest extends TestCase
      */
     public function test_a_comment_reopens_the_drawer_for_an_epic_outside_the_first_page(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $project = Project::factory()->create();
 
         for ($index = 1; $index <= ListQueryBase::PER_PAGE + 1; $index++) {
@@ -79,7 +79,7 @@ class EpicCommentTest extends TestCase
 
     public function test_epic_comments_are_loaded_on_demand_with_author_and_date(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->create();
         EpicComment::factory()->for($epic)->for(User::factory()->state(['name' => 'Ane Author']))->create([
             'body' => 'Visible comment',
@@ -100,7 +100,7 @@ class EpicCommentTest extends TestCase
 
     public function test_comment_endpoint_shows_deleted_user_when_the_author_is_trashed(): void
     {
-        $actingUser = User::factory()->create();
+        $actingUser = User::factory()->admin()->create();
         // The author must be a user of its own: the factory picks whichever user it finds
         // first, which is the signed-in one, and deleting it would end the request.
         $author = User::factory()->create();
@@ -118,7 +118,7 @@ class EpicCommentTest extends TestCase
 
     public function test_comment_endpoint_returns_only_the_latest_comments_for_the_requested_epic(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $limit = EpicListQuery::RECENT_COMMENTS_LIMIT;
         $epic = Epic::factory()->create();
         $otherEpic = Epic::factory()->create();
@@ -155,7 +155,7 @@ class EpicCommentTest extends TestCase
 
     public function test_comment_notes_are_optional_and_saved(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->create();
 
         $this->post(route('epics.comments.store', $epic), ['body' => 'Comment without notes'])
@@ -177,7 +177,7 @@ class EpicCommentTest extends TestCase
 
     public function test_comment_body_at_the_configured_maximum_is_accepted_over_http(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->create();
         $body = str_repeat('x', $this->longtextLimit());
 
@@ -191,7 +191,7 @@ class EpicCommentTest extends TestCase
 
     public function test_deleted_epics_cannot_receive_comments(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->trashed()->create();
 
         $this->post(route('epics.comments.store', $epic), ['body' => 'Late comment'])
@@ -220,7 +220,7 @@ class EpicCommentTest extends TestCase
 
     public function test_trashed_epics_do_not_expose_their_comments(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $epic = Epic::factory()->trashed()->create();
 
         $this->getJson(route('epics.comments.index', $epic))

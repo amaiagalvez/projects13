@@ -78,5 +78,21 @@
     "View :count epics": "Voir :count \u00e9pop\u00e9es",
     "View planning": "Voir la planification",
     "Work overview": "Aperçu du travail",
-    "{0} Nothing is overdue.|{1} One project or epic is overdue.|[2,*] :count projects and epics are overdue.": "{0} Rien n’est en retard.|{1} Un projet ou une épopée est en retard.|[2,*] :count projets et épopées sont en retard."
+    "{0} Nothing is overdue.|{1} One project or epic is overdue.|[2,*] :count projects and epics are overdue.": "{0} Rien n’est en retard.|{1} Un projet ou une épopée est en retard.|[2,*] :count projets et épopées sont en retard.",
+    "projects.view": "Voir les projets, le planning et la chronologie",
+    "projects.create": "Créer des projets",
+    "projects.edit": "Modifier les projets",
+    "projects.delete": "Mettre des projets à la corbeille",
+    "projects.archive": "Archiver et activer des projets",
+    "projects.restore": "Restaurer des projets de la corbeille",
+    "projects.force_delete": "Supprimer définitivement des projets",
+    "projects.manage": "Gérer les projets (accès complet)",
+    "epics.view": "Voir les épopées",
+    "epics.create": "Créer des épopées",
+    "epics.edit": "Modifier et commenter les épopées",
+    "epics.delete": "Mettre des épopées à la corbeille",
+    "epics.archive": "Archiver et activer des épopées",
+    "epics.restore": "Restaurer des épopées de la corbeille",
+    "epics.force_delete": "Supprimer définitivement des épopées",
+    "epics.manage": "Gérer les épopées (accès complet)"
 }

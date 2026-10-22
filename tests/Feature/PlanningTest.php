@@ -26,7 +26,7 @@ class PlanningTest extends TestCase
 
     public function test_the_screen_offers_its_heading_a_search_box_and_the_create_action(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->get(route('planning'))
             ->assertOk()
@@ -61,7 +61,7 @@ class PlanningTest extends TestCase
 
         $this->travelTo('2026-10-06');
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning'))
             ->assertOk()
             ->assertSeeInOrder(['data-test="planning-summary-projects"', '>1</span>'], false)
@@ -97,7 +97,7 @@ class PlanningTest extends TestCase
 
         $this->travelTo('2026-10-06');
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning'))
             ->assertOk()
             ->assertSeeInOrder(['data-test="planning-summary-overdue"', '>2</span>'], false);
@@ -112,7 +112,7 @@ class PlanningTest extends TestCase
         Epic::factory()->archived()->for($project)->create(['name' => 'Hidden archived epic']);
         Epic::factory()->trashed()->for($project)->create(['name' => 'Hidden trashed epic']);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning'))
             ->assertOk()
             ->assertSee('Shown project')
@@ -138,7 +138,7 @@ class PlanningTest extends TestCase
 
         Project::factory()->state(['end_date' => null])->create(['name' => 'Undated project']);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning'))
             ->assertOk()
             ->assertSeeInOrder([
@@ -177,7 +177,7 @@ class PlanningTest extends TestCase
 
         $this->travelTo('2026-10-06');
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning'))
             ->assertOk()
             ->assertSee('data-test="planning-project-'.$project->id.'"', false)
@@ -205,7 +205,7 @@ class PlanningTest extends TestCase
     {
         $project = Project::factory()->create(['name' => 'Portal rewrite']);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning', ['view' => $layout]))
             ->assertOk()
             ->assertSee('Portal rewrite')
@@ -230,14 +230,14 @@ class PlanningTest extends TestCase
 
         $this->travelTo('2026-10-06');
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning', ['view' => 'timeline']))
             ->assertOk()
             ->assertSeeInOrder(['<th scope="col"', __('Timeline')], false)
             // The axis is one labelled block per month of the window, each sized as a share of it.
             ->assertSeeInOrder(['style="width: ', '>', '2026'], false);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning', ['view' => 'roadmap']))
             ->assertOk()
             ->assertSee(__('Dates'))
@@ -250,7 +250,7 @@ class PlanningTest extends TestCase
      */
     public function test_an_unknown_layout_falls_back_to_the_roadmap(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->get(route('planning', ['view' => 'nonsense']))
             ->assertOk()
@@ -266,7 +266,7 @@ class PlanningTest extends TestCase
         Project::factory()->create(['name' => 'Alpha portal']);
         Project::factory()->create(['name' => 'Beta portal']);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning', ['search' => 'Alpha']))
             ->assertOk()
             ->assertSee('Alpha portal')
@@ -282,7 +282,7 @@ class PlanningTest extends TestCase
         Project::factory()->create(['name' => 'Alpha portal']);
         Project::factory()->create(['name' => 'Beta portal']);
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning', ['search' => 'Alpha']))
             ->assertOk()
             ->assertSeeInOrder(['data-test="planning-summary-projects"', '>2</span>'], false);
@@ -293,7 +293,7 @@ class PlanningTest extends TestCase
         // The href is compared escaped because Blade escapes the ampersand between the parameters.
         $timelineUrl = e(route('planning', ['search' => 'Portal', 'view' => 'timeline']));
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning', ['search' => 'Portal']))
             ->assertOk()
             ->assertSee('href="'.$timelineUrl.'"', false);
@@ -301,7 +301,7 @@ class PlanningTest extends TestCase
 
     public function test_a_search_without_matches_explains_that_and_offers_the_create_action(): void
     {
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning', ['search' => 'Nothing here']))
             ->assertOk()
             ->assertSee(__('No record matches your search.'))
@@ -310,7 +310,7 @@ class PlanningTest extends TestCase
 
     public function test_an_empty_portfolio_explains_itself(): void
     {
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning'))
             ->assertOk()
             ->assertSee(__('There is nothing to plan yet.'))
@@ -324,7 +324,7 @@ class PlanningTest extends TestCase
     {
         Project::factory()->count(30)->create();
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->get(route('planning'))
             ->assertOk()
             ->assertSee('data-test="planning-pagination"', false);
