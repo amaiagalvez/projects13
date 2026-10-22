@@ -261,8 +261,7 @@
                                     <span class="inline-flex items-center gap-1">
                                         {{ $row['project'] }}
                                         @if (isset($row['project_active']) && $row['project_active'] === false)
-                                            <span
-                                                class="shrink-0 rounded-full bg-zinc-800/5 px-1.5 py-0.5 text-[10px] text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+                                            <span class="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                                                 {{ __('basics13::messages.archived_label') }}
                                             </span>
                                         @endif
@@ -293,23 +292,14 @@
                                 </flux:table.cell>
                             </flux:table.row>
                         @empty
-                            <x-basics13::list.empty-state :colspan="6 + (int) config('projects13.views.epic_list.count', 0)" :message="$list['emptyMessage']">
+                            <x-basics13::list.empty-state :narrowed="$list['narrowed']" :colspan="6 + (int) config('projects13.views.epic_list.count', 0)" :message="$list['emptyMessage']">
                                 @if ($list['create'] && ! $list['narrowed'])
-                                    <div class="flex flex-col items-center gap-4 py-8">
-                                        <flux:icon.rectangle-stack size="w-16 h-16 text-zinc-400 dark:text-zinc-500" class="mb-4"/>
-                                        <flux:heading size="md" class="text-zinc-700 dark:text-zinc-300 text-center">
-                                            {{ __('No epics yet') }}
-                                        </flux:heading>
-                                        <p class="text-zinc-500 dark:text-zinc-400 text-center">
-                                            {{ __('Create your first epic to start organizing work within your projects.') }}
-                                        </p>
-                                        <flux:modal.trigger name="epic-form">
-                                            <flux:button variant="primary" icon="plus"
-                                                x-on:click="createEpic()" data-test="epic-empty-create">
-                                                {{ __('New epic') }}
-                                            </flux:button>
-                                        </flux:modal.trigger>
-                                    </div>
+                                    <flux:modal.trigger name="epic-form">
+                                        <flux:button size="sm" variant="primary" icon="plus"
+                                            x-on:click="createEpic()" data-test="epic-empty-create">
+                                            {{ __('New epic') }}
+                                        </flux:button>
+                                    </flux:modal.trigger>
                                 @endif
                             </x-basics13::list.empty-state>
                         @endforelse

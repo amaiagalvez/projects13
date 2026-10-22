@@ -108,7 +108,7 @@ class PlanningQueryBehaviorTest extends TestCase
 
         $result = $query->overview('', 1);
 
-        $this->assertCount(25, $result['paginator']->items()); // PER_PAGE
+        $this->assertCount(PlanningQuery::PER_PAGE, $result['paginator']->items());
         $this->assertSame(30, $result['paginator']->total());
     }
 

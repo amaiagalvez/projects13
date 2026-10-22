@@ -191,7 +191,7 @@ class TimelineQueryBehaviorTest extends TestCase
 
         $result = $query->overview('');
 
-        $this->assertCount(25, $result['paginator']->items()); // PER_PAGE
+        $this->assertCount(TimelineQuery::PER_PAGE, $result['paginator']->items());
         $this->assertSame(30, $result['paginator']->total());
     }
 

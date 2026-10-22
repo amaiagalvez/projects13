@@ -125,7 +125,7 @@ class ProjectSelectOptionsQueryBehaviorTest extends TestCase
 
         $result = $query->search('');
 
-        $this->assertCount(25, $result); // PER_PAGE from ListQueryBase
+        $this->assertCount(ProjectSelectOptionsQuery::PER_PAGE, $result);
     }
 
     private function selectOptionsQuery(): ProjectSelectOptionsQuery
