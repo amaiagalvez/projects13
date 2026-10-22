@@ -309,7 +309,7 @@
         @endfragment
 
         @if ($list['create'])
-            <flux:modal name="epic-form" aria-labelledby="epic-form-heading" variant="flyout"
+            <flux:modal name="epic-form" aria-labelledby="epic-form-heading" flyout variant="floating"
                 position="right"
                 x-on:close="window.clearForm($el.querySelector('form')); window.resetTrackedForms($el)"
                 x-on:cancel.prevent="window.requestTrackedModalClose($el)"

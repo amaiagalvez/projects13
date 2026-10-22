@@ -14,7 +14,7 @@
 
 <{{ $url ? 'a' : 'div' }} @if ($url) href="{{ $url }}" wire:navigate @endif
     data-test="{{ $test }}"
-    class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900 {{ $url ? 'transition-colors hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus dark:hover:border-zinc-700 dark:hover:bg-zinc-800/60' : '' }}">
+    class="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white shadow-card px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900 {{ $url ? 'transition-[colors,box-shadow] hover:border-zinc-300 hover:shadow-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus dark:hover:border-zinc-700 dark:hover:bg-zinc-800/60' : '' }}">
     <span
         class="flex size-9 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
         <flux:icon :name="$icon" class="size-5" aria-hidden="true" />

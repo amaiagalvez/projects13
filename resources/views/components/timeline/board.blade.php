@@ -19,14 +19,14 @@
 <div class="flex flex-col gap-6">
     @if ($entries->isEmpty())
         <div
-            class="flex flex-col items-center gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-12 text-center dark:border-zinc-800 dark:bg-zinc-900"
+            class="flex flex-col items-center gap-3 rounded-2xl border border-zinc-200 bg-white shadow-card px-4 py-12 text-center dark:border-zinc-800 dark:bg-zinc-900"
             data-test="timeline-empty-state">
             <flux:icon.calendar-days class="size-8 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
             <flux:text class="text-zinc-600 dark:text-zinc-400">{{ $message }}</flux:text>
             {{ $slot }}
         </div>
     @else
-        <div class="overflow-x-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="overflow-x-auto rounded-2xl border border-zinc-200 bg-white shadow-card dark:border-zinc-800 dark:bg-zinc-900">
             <table class="w-full border-collapse text-sm">
                 <caption class="sr-only">{{ __('Timeline') }}</caption>
                 <thead>

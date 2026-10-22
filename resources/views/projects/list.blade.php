@@ -173,7 +173,7 @@
         @endfragment
 
         @if ($list['create'])
-            <flux:modal name="project-form" aria-labelledby="project-form-heading" variant="flyout"
+            <flux:modal name="project-form" aria-labelledby="project-form-heading" flyout variant="floating"
                 position="right"
                 x-on:close="window.clearForm($el.querySelector('form')); window.resetTrackedForms($el)"
                 x-on:cancel.prevent="window.requestTrackedModalClose($el)"
