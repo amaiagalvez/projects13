@@ -30,7 +30,7 @@
         </flux:text>
         <flux:text x-show="projectOptionsSearched && !projectOptionsLoading && !projectOptionsError && projectOptionsResultCount === 0"
             role="status" data-test="epic-project-empty">
-            {{ __('No projects match your search.') }}
+            {{ __('No projects to choose from.') }}
         </flux:text>
         <flux:text x-show="projectOptionsError" x-text="projectOptionsError" role="alert"
             data-test="epic-project-error" />
@@ -50,7 +50,10 @@
             {{ __('End date') }}
         </x-basics13::forms.field-label>
         <flux:input id="epic-end-date" type="date" name="end_date" x-model="form.end_date"
-            x-bind:min="window.addDays(form.start_date, 1)" data-test="epic-end-date" />
+            x-bind:min="window.addDays(form.start_date, 1)" data-test="epic-end-date"
+            aria-describedby="epic-end-date-hint" />
+        <x-basics13::forms.field-hint :request="\Projects13\Http\Requests\EpicRequest::class" field="end_date"
+            id="epic-end-date-hint" :labels="['start_date' => __('Start date')]" />
         <flux:error name="end_date" />
     </flux:field>
     <flux:field>
@@ -71,11 +74,48 @@
                 <flux:heading size="lg" id="epic-comments-heading">{{ __('Comments') }}
                 </flux:heading>
 
+                <p x-show="form.commentsLoading" class="text-sm text-zinc-600 dark:text-zinc-400"
+                    data-test="epic-comments-loading">{{ __('Loading records...') }}</p>
+
+                <p x-show="form.commentsError" x-text="form.commentsError" role="alert"
+                    class="text-sm text-red-600" data-test="epic-comments-error"></p>
+
+                <p x-show="!form.commentsLoading && !form.commentsError && form.comments.length === 0"
+                    class="text-sm text-zinc-600 dark:text-zinc-400" data-test="epic-comments-empty">{{ __('No comments yet.') }}</p>
+
+                <p x-show="!form.commentsLoading && !form.commentsError && form.commentsCount > form.comments.length"
+                    class="text-xs text-zinc-600 dark:text-zinc-400" data-test="epic-comments-truncated"
+                    x-text="@js(__('Showing the latest :shown of :total comments.')).replace(':shown', form.comments.length).replace(':total', form.commentsCount)">
+                </p>
+
+                <ul class="flex flex-col gap-3"
+                    x-show="!form.commentsLoading && !form.commentsError && form.comments.length > 0">
+                    <template x-for="comment in form.comments" :key="comment.id">
+                        <li class="flex gap-3" data-test="epic-comment">
+                            <span aria-hidden="true" x-text="window.initials(comment.author)"
+                                class="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700 dark:bg-brand-400/10 dark:text-brand-300"></span>
+                            <div class="min-w-0 flex-1 rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
+                                <div class="flex flex-wrap items-baseline justify-between gap-x-2 text-xs text-zinc-600 dark:text-zinc-400">
+                                    <span class="font-medium text-zinc-800 dark:text-zinc-200" x-text="comment.author"></span>
+                                    {{-- How long ago, with the exact moment on hover. --}}
+                                    <time x-bind:datetime="comment.dateTime"
+                                        x-bind:title="window.formatLocalDateTime(comment.dateTime, 'datetime')"
+                                        x-text="window.formatRelativeTime(comment.dateTime)"
+                                        data-test="epic-comment-written-at"></time>
+                                </div>
+                                <p class="mt-1.5 whitespace-pre-line text-sm" x-text="comment.body"></p>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+
+                {{-- The form closes the thread, so a new comment is written below the ones it answers. --}}
                 <form method="POST" x-bind:action="form.commentAction"
                     x-data="{ isSubmitting: false, isDirty: false }"
                     x-on:form-dirty-change="isDirty = $event.detail.isDirty"
                     x-on:submit="if (!isDirty || isSubmitting) { $event.preventDefault(); return; } isSubmitting = true"
-                    data-track-changes class="flex flex-col gap-3">
+                    data-track-changes data-required-message="{{ __('validation.required') }}"
+                    class="flex flex-col gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
                     @csrf
                     <input type="hidden" name="_comment_epic_id" x-bind:value="form.id">
                     <flux:field>
@@ -104,7 +144,7 @@
                             </flux:text>
                         @enderror
                     </flux:field>
-                    <flux:text class="text-xs text-zinc-500">
+                    <flux:text class="text-xs text-zinc-600 dark:text-zinc-400">
                         {{ __('Unsaved epic changes are discarded when adding a comment.') }}
                     </flux:text>
                     <div class="flex justify-end">
@@ -116,37 +156,6 @@
                         </flux:button>
                     </div>
                 </form>
-
-                <p x-show="form.commentsLoading" class="text-sm text-zinc-500"
-                    data-test="epic-comments-loading">{{ __('Loading records...') }}</p>
-
-                <p x-show="form.commentsError" x-text="form.commentsError" role="alert"
-                    class="text-sm text-red-600" data-test="epic-comments-error"></p>
-
-                <p x-show="!form.commentsLoading && !form.commentsError && form.comments.length === 0"
-                    class="text-sm text-zinc-500" data-test="epic-comments-empty">{{ __('No comments yet.') }}</p>
-
-                <p x-show="!form.commentsLoading && !form.commentsError && form.commentsCount > form.comments.length"
-                    class="text-xs text-zinc-500" data-test="epic-comments-truncated"
-                    x-text="@js(__('Showing the latest :shown of :total comments.')).replace(':shown', form.comments.length).replace(':total', form.commentsCount)">
-                </p>
-
-                <ul class="flex flex-col gap-3"
-                    x-show="!form.commentsLoading && !form.commentsError && form.comments.length > 0">
-                    <template x-for="comment in form.comments" :key="comment.id">
-                        <li class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
-                            data-test="epic-comment">
-                            <div class="flex items-center justify-between gap-2 text-xs text-zinc-500">
-                                <span class="font-medium text-zinc-700 dark:text-zinc-300"
-                                    x-text="comment.author"></span>
-                                <time x-bind:datetime="comment.dateTime"
-                                    x-text="window.formatLocalDateTime(comment.dateTime, 'datetime')"
-                                    data-test="epic-comment-written-at"></time>
-                            </div>
-                            <p class="mt-2 whitespace-pre-line text-sm" x-text="comment.body"></p>
-                        </li>
-                    </template>
-                </ul>
             </section>
         </template>
     </x-slot:after>

@@ -35,7 +35,10 @@
             {{ __('End date') }}
         </x-basics13::forms.field-label>
         <flux:input type="date" name="end_date" x-model="form.end_date"
-            x-bind:min="form.start_date" id="project-end-date" data-test="project-end-date" />
+            x-bind:min="form.start_date" id="project-end-date" data-test="project-end-date"
+            aria-describedby="project-end-date-hint" />
+        <x-basics13::forms.field-hint :request="\Projects13\Http\Requests\ProjectRequest::class" field="end_date"
+            id="project-end-date-hint" :labels="['start_date' => __('Start date')]" />
         <flux:error name="end_date" />
     </flux:field>
     {{-- Where an integration that owns a field of this form puts it. Null by default. --}}
