@@ -26,6 +26,11 @@ class TimelineQueryTest extends TestCase
         $this->assertSame(Project::class, $method->invoke($this->timelineQuery()));
     }
 
+    public function test_the_board_offers_no_advanced_filters(): void
+    {
+        $this->assertSame([], $this->timelineQuery()->searchableFields('active'));
+    }
+
     /**
      * An id the id query returns but the row query cannot load - a project trashed between the two
      * reads - is skipped instead of failing the whole board. The integration is what keeps the

@@ -35,16 +35,16 @@ interface ProjectDisplayIntegration
     public function row(Model $record): array;
 
     /**
-     * Whether the integration has active related entities that can be selected for a new project.
+     * Whether the integration has active related records that can be selected for a new project.
      * When false, the UI should offer to create one instead of showing an empty selector.
      */
-    public function hasActiveRelatedEntities(): bool;
+    public function hasActiveRelated(): bool;
 
     /**
-     * Banner to show when there are no active related entities and the user can create a new project.
+     * Banner to show when there are no active related records and the user can create a new project.
      * Returns null if no banner should be shown.
      *
      * @return array{message: string, action_label: string, action_url: string}|null
      */
-    public function noRelatedEntitiesBanner(): ?array;
+    public function noRelatedBanner(): ?array;
 }

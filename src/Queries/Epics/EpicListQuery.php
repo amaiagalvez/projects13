@@ -179,14 +179,16 @@ final class EpicListQuery extends ListQueryBase
                 'order' => 20,
                 'group' => 'dates',
             ],
-            'active' => [
+            // Only the trash mixes active and archived records: on the active and archived lists
+            // the status filter could only return everything or nothing.
+            ...($scope === 'trashed' ? ['active' => [
                 'column' => 'PRO_epics.active',
                 'label' => 'Status',
                 'type' => 'boolean',
                 'visible' => true,
                 'order' => 10,
                 'group' => 'status',
-            ],
+            ]] : []),
             'created_at' => [
                 'column' => 'PRO_epics.created_at',
                 'label' => 'basics13::messages.created_at',
@@ -240,7 +242,8 @@ final class EpicListQuery extends ListQueryBase
 
     /**
      * A row renders the project name and its edit payload needs the active state, so those are the
-     * only relation columns loaded here, plus the keys to match it.
+     * only relation columns loaded here, plus the keys to match it. The project's dates come from
+     * the join, so a row can show that the epic has fallen outside them.
      *
      * @param  Builder<Epic>  $query
      * @return Builder<Epic>
@@ -250,7 +253,11 @@ final class EpicListQuery extends ListQueryBase
         return $query
             ->with('project:id,name,active')
             ->join('PRO_projects as epic_projects', 'epic_projects.id', '=', 'PRO_epics.project_id')
-            ->select('PRO_epics.*')
+            ->select([
+                'PRO_epics.*',
+                'epic_projects.start_date as project_start_date',
+                'epic_projects.end_date as project_end_date',
+            ])
             ->withCount('comments');
     }
 

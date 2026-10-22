@@ -27,10 +27,39 @@ class EpicListTransformer extends ListTransformer
             'project_active' => $record->project->active,
             'startDate' => $record->start_date?->format('Y-m-d') ?? '',
             'endDate' => $record->end_date?->format('Y-m-d') ?? '',
+            'outsideProjectDates' => $this->outsideProjectDates($record),
             'commentsCount' => (int) $record->comments_count,
             'editPayload' => $this->editPayload($record),
             ...$extra,
         ];
+    }
+
+    /**
+     * Moving a project's dates does not move its epics, so an epic can end up outside them; the
+     * list flags it rather than the project edit refusing the change. The project dates are the
+     * ones the list query joins.
+     */
+    private function outsideProjectDates(Epic $record): bool
+    {
+        $projectStart = $this->day($record->getAttribute('project_start_date'));
+        $projectEnd = $this->day($record->getAttribute('project_end_date'));
+
+        foreach ([$record->start_date?->toDateString(), $record->end_date?->toDateString()] as $date) {
+            if ($date === null) {
+                continue;
+            }
+
+            if (($projectStart !== null && $date < $projectStart) || ($projectEnd !== null && $date > $projectEnd)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function day(mixed $value): ?string
+    {
+        return is_string($value) && $value !== '' ? substr($value, 0, 10) : null;
     }
 
     protected function getDeleteBlockCondition(Model $record): bool

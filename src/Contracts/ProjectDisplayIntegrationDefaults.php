@@ -28,7 +28,7 @@ trait ProjectDisplayIntegrationDefaults
         return [];
     }
 
-    public function hasActiveRelatedEntities(): bool
+    public function hasActiveRelated(): bool
     {
         return false;
     }
@@ -36,7 +36,7 @@ trait ProjectDisplayIntegrationDefaults
     /**
      * @return array{message: string, action_label: string, action_url: string}|null
      */
-    public function noRelatedEntitiesBanner(): ?array
+    public function noRelatedBanner(): ?array
     {
         return null;
     }

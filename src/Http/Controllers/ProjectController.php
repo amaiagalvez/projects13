@@ -33,8 +33,8 @@ class ProjectController extends Controller
 
         return $this->listView($request, 'projects13::projects.list', [
             'projects' => $projects,
-            'hasRelated' => $integration->hasActiveRelatedEntities(),
-            'noRelatedEntitiesBanner' => $integration->noRelatedEntitiesBanner(),
+            'hasRelated' => $integration->hasActiveRelated(),
+            'noRelatedBanner' => $integration->noRelatedBanner(),
             'list' => $transformer->active(
                 $projects,
                 $search,

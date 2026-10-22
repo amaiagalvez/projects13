@@ -140,14 +140,16 @@ final class ProjectListQuery extends ListQueryBase
                 'order' => 20,
                 'group' => 'dates',
             ],
-            'active' => [
+            // Only the trash mixes active and archived records: on the active and archived lists
+            // the status filter could only return everything or nothing.
+            ...($scope === 'trashed' ? ['active' => [
                 'column' => 'PRO_projects.active',
                 'label' => 'Status',
                 'type' => 'boolean',
                 'visible' => true,
                 'order' => 10,
                 'group' => 'status',
-            ],
+            ]] : []),
             'created_at' => [
                 'column' => 'PRO_projects.created_at',
                 'label' => 'basics13::messages.created_at',

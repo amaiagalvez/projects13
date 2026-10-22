@@ -39,4 +39,22 @@ class EpicListFilterTest extends TestCase
             ->assertSee('Payment step')
             ->assertDontSee('Ranking tweaks');
     }
+
+    public function test_epics_left_outside_their_project_dates_are_flagged(): void
+    {
+        $project = Project::factory()->create(['start_date' => '2026-06-01', 'end_date' => '2026-12-31']);
+        $inside = Epic::factory()->for($project)->create(['start_date' => '2026-07-01', 'end_date' => '2026-08-01']);
+        $outside = Epic::factory()->for($project)->create(['start_date' => '2026-07-01', 'end_date' => '2026-08-01']);
+        $undated = Epic::factory()->for($project)->withoutDates()->create();
+
+        // The project moves; the epic edit is the only place that validated the dates.
+        $outside->forceFill(['end_date' => '2027-02-01'])->saveQuietly();
+
+        $this->get(route('epics.index'))
+            ->assertOk()
+            ->assertSee('data-test="epic-outside-project-dates-'.$outside->id.'"', false)
+            ->assertDontSee('data-test="epic-outside-project-dates-'.$inside->id.'"', false)
+            ->assertDontSee('data-test="epic-outside-project-dates-'.$undated->id.'"', false)
+            ->assertSee(__('Outside the project dates'));
+    }
 }

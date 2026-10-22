@@ -49,14 +49,14 @@ class ProjectDisplayIntegrationDefaultsTest extends TestCase
 
     public function test_has_active_related_entities_returns_false(): void
     {
-        $result = $this->integration->hasActiveRelatedEntities();
+        $result = $this->integration->hasActiveRelated();
 
         $this->assertFalse($result);
     }
 
     public function test_no_related_entities_banner_returns_null(): void
     {
-        $result = $this->integration->noRelatedEntitiesBanner();
+        $result = $this->integration->noRelatedBanner();
 
         $this->assertNull($result);
     }

@@ -26,6 +26,11 @@ class PlanningQueryTest extends TestCase
         $this->assertSame(Project::class, $method->invoke($this->planningQuery()));
     }
 
+    public function test_the_board_offers_no_advanced_filters(): void
+    {
+        $this->assertSame([], $this->planningQuery()->searchableFields('active'));
+    }
+
     /**
      * A page whose id no longer resolves to a project (the record was trashed between the id read
      * and the row read) is skipped instead of failing the whole board.

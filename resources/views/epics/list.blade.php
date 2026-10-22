@@ -269,10 +269,16 @@
                                     </span>
                                 </flux:table.cell>
                                 @includeIf(config('projects13.views.epic_list.cells'))
-                                <flux:table.cell>
+                                {{-- An epic left outside its project's dates (the project moved) shows in red, and says so. --}}
+                                <flux:table.cell @class(['text-red-600 dark:text-red-400' => $row['outsideProjectDates']])
+                                    :title="$row['outsideProjectDates'] ? __('Outside the project dates') : null">
                                     <x-basics13::list.local-time :datetime="$row['startDate']" format="date" />
+                                    @if ($row['outsideProjectDates'])
+                                        <span class="sr-only" data-test="epic-outside-project-dates-{{ $row['id'] }}">{{ __('Outside the project dates') }}</span>
+                                    @endif
                                 </flux:table.cell>
-                                <flux:table.cell>
+                                <flux:table.cell @class(['text-red-600 dark:text-red-400' => $row['outsideProjectDates']])
+                                    :title="$row['outsideProjectDates'] ? __('Outside the project dates') : null">
                                     <x-basics13::list.local-time :datetime="$row['endDate']" format="date" />
                                 </flux:table.cell>
                                 <flux:table.cell>
