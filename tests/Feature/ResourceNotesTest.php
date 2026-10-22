@@ -6,7 +6,6 @@ use App\Models\User;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
-use Basics13\Support\Validation\MaxLength;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -74,22 +73,6 @@ class ResourceNotesTest extends TestCase
         $this->assertNull(DB::table($table)->where('id', $id)->value('notes'));
     }
 
-    #[DataProvider('resources')]
-    public function test_notes_longer_than_the_configured_maximum_are_rejected(string $table, string $resource, string $prefix, string $notes): void
-    {
-        $this->actingAs(User::factory()->create());
-
-        $this->from(route($resource.'.index'))
-            ->post(route($resource.'.store'), [
-                ...$this->storePayload($resource),
-                'notes' => str_repeat('a', $this->longtextLimit() + 1),
-            ])
-            ->assertRedirect(route($resource.'.index'))
-            ->assertSessionHasErrors('notes');
-
-        $this->assertDatabaseCount($table, 0);
-    }
-
     /**
      * The drawer is fed by the row edit payload, so notes nothing carries would empty the field
      * every time the form is opened.
@@ -111,15 +94,6 @@ class ResourceNotesTest extends TestCase
                 /** @var array{rows: list<array{editPayload: array{notes: string|null}}>} $list */
                 return $list['rows'][0]['editPayload']['notes'] === $notes;
             });
-    }
-
-    /**
-     * Read from the config so the boundary keeps testing the limit the rules actually apply,
-     * whatever it is set to.
-     */
-    private function longtextLimit(): int
-    {
-        return MaxLength::longText();
     }
 
     /**

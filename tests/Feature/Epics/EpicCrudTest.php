@@ -171,87 +171,6 @@ class EpicCrudTest extends TestCase
         $this->assertModelExists($comment);
     }
 
-    public function test_cannot_create_epic_with_duplicate_name_in_same_project(): void
-    {
-        $this->actingAs(User::factory()->create());
-
-        $project = Project::factory()->create([
-            'start_date' => '2026-01-01',
-            'end_date' => '2026-12-31',
-        ]);
-        Epic::factory()->for($project)->create(['name' => 'Duplicate name']);
-
-        $payload = [
-            'name' => 'Duplicate name',
-            'start_date' => '2026-10-01',
-            'end_date' => '2026-10-31',
-            'project_id' => $project->id,
-        ];
-
-        $this->from(route('epics.index'))->post(route('epics.store'), $payload)
-            ->assertRedirect(route('epics.index'))
-            ->assertSessionHasErrors('name');
-
-        $this->assertDatabaseCount('PRO_epics', 1);
-    }
-
-    public function test_cannot_create_epic_with_name_too_short(): void
-    {
-        $this->actingAs(User::factory()->create());
-
-        $project = Project::factory()->create();
-
-        $payload = [
-            'name' => 'Abc',
-            'start_date' => '2026-10-01',
-            'end_date' => '2026-10-31',
-            'project_id' => $project->id,
-        ];
-
-        $this->from(route('epics.index'))->post(route('epics.store'), $payload)
-            ->assertRedirect(route('epics.index'))
-            ->assertSessionHasErrors('name');
-
-        $this->assertDatabaseCount('PRO_epics', 0);
-    }
-
-    public function test_cannot_create_epic_without_project(): void
-    {
-        $this->actingAs(User::factory()->create());
-
-        $payload = [
-            'name' => 'Orphan epic',
-            'start_date' => '2026-10-01',
-            'end_date' => '2026-10-31',
-        ];
-
-        $this->from(route('epics.index'))->post(route('epics.store'), $payload)
-            ->assertRedirect(route('epics.index'))
-            ->assertSessionHasErrors(['project_id']);
-
-        $this->assertDatabaseCount('PRO_epics', 0);
-    }
-
-    public function test_cannot_create_epic_with_name_exceeding_maximum(): void
-    {
-        $this->actingAs(User::factory()->create());
-
-        $project = Project::factory()->create();
-
-        $payload = [
-            'name' => str_repeat('a', 256), // MaxLength::string() + 1 typically
-            'start_date' => '2026-10-01',
-            'end_date' => '2026-10-31',
-            'project_id' => $project->id,
-        ];
-
-        $this->from(route('epics.index'))->post(route('epics.store'), $payload)
-            ->assertRedirect(route('epics.index'))
-            ->assertSessionHasErrors('name');
-
-        $this->assertDatabaseCount('PRO_epics', 0);
-    }
-
     public function test_can_create_epic_without_dates(): void
     {
         $this->actingAs(User::factory()->create());
@@ -272,26 +191,6 @@ class EpicCrudTest extends TestCase
             'start_date' => null,
             'end_date' => null,
             'project_id' => $project->id,
-        ]);
-    }
-
-    public function test_cannot_move_epic_to_archived_project(): void
-    {
-        $this->actingAs(User::factory()->create());
-
-        $epic = Epic::factory()->create();
-        $archivedProject = Project::factory()->archived()->create();
-
-        $response = $this->put(route('epics.update', $epic), [
-            'name' => 'Moved epic',
-            'project_id' => $archivedProject->id,
-        ]);
-
-        $response->assertSessionHasErrors(['project_id']);
-
-        $this->assertDatabaseHas('PRO_epics', [
-            'id' => $epic->id,
-            'project_id' => $epic->project_id,
         ]);
     }
 

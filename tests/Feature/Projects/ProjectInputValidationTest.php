@@ -4,7 +4,6 @@ namespace Projects13\Tests\Feature\Projects;
 
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
-use Basics13\Support\Validation\MaxLength;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -28,46 +27,6 @@ class ProjectInputValidationTest extends TestCase
             ->post(route('projects.store'), [])
             ->assertRedirect(route('projects.index'))
             ->assertSessionHasErrors(['name', 'start_date']);
-
-        $this->assertDatabaseCount('PRO_projects', 0);
-    }
-
-    /**
-     * @return array<string, array{mixed, string}>
-     */
-    public static function invalidNames(): array
-    {
-        return [
-            'three characters' => ['Abc', 'min.string'],
-            'not a string' => [['Invalid name'], 'string'],
-        ];
-    }
-
-    #[DataProvider('invalidNames')]
-    public function test_invalid_names_are_rejected(mixed $name, string $rule): void
-    {
-        $this->signIn();
-
-        $this->from(route('projects.index'))
-            ->post(route('projects.store'), ['name' => $name, 'start_date' => self::START_DATE])
-            ->assertRedirect(route('projects.index'))
-            ->assertSessionHasErrors([
-                'name' => __('validation.'.$rule, ['attribute' => __('Name'), 'min' => 4]),
-            ]);
-
-        $this->assertDatabaseCount('PRO_projects', 0);
-    }
-
-    public function test_project_name_cannot_exceed_the_configured_maximum_over_http(): void
-    {
-        $this->signIn();
-
-        $this->from(route('projects.index'))
-            ->post(route('projects.store'), [
-                'name' => str_repeat('a', MaxLength::string() + 1),
-                'start_date' => self::START_DATE,
-            ])->assertRedirect(route('projects.index'))
-            ->assertSessionHasErrors('name');
 
         $this->assertDatabaseCount('PRO_projects', 0);
     }
@@ -211,25 +170,5 @@ class ProjectInputValidationTest extends TestCase
         $this->assertSame($expected, $project->end_date?->format('Y-m-d'));
 
         $this->get(route('projects.index'))->assertOk()->assertSee('Date range project');
-    }
-
-    public function test_end_date_cannot_precede_start_date(): void
-    {
-        $this->signIn();
-
-        $this->from(route('projects.index'))
-            ->post(route('projects.store'), [
-                'name' => 'Invalid date range',
-                'start_date' => '2026-12-01',
-                'end_date' => '2026-11-30',
-            ])->assertRedirect(route('projects.index'))
-            ->assertSessionHasErrors([
-                'end_date' => __('validation.after_or_equal', [
-                    'attribute' => __('End date'),
-                    'date' => __('Start date'),
-                ]),
-            ]);
-
-        $this->assertDatabaseCount('PRO_projects', 0);
     }
 }

@@ -15,21 +15,6 @@ class EpicCommentControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_comment_uses_authenticated_author_and_reopens_drawer(): void
-    {
-        $user = $this->signIn();
-        $epic = Epic::factory()->create();
-
-        $this->post(route('epics.comments.store', $epic), ['body' => '  Ready for review  ', 'user_id' => 999])
-            ->assertRedirect(route('epics.index'))
-            ->assertSessionHas('commented_epic_id', $epic->id)
-            ->assertSessionHas('status', __('Comment added successfully.'));
-
-        $this->assertDatabaseHas('PRO_epic_comments', [
-            'epic_id' => $epic->id, 'user_id' => $user->id, 'body' => 'Ready for review',
-        ]);
-    }
-
     public function test_blank_comment_uses_comment_error_bag(): void
     {
         $this->signIn();

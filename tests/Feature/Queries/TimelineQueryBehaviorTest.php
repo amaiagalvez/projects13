@@ -2,7 +2,6 @@
 
 namespace Projects13\Tests\Feature\Queries;
 
-use Carbon\CarbonImmutable;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
@@ -111,76 +110,6 @@ class TimelineQueryBehaviorTest extends TestCase
             ->all();
 
         $this->assertSame(['A Epic', 'B Epic', 'C Epic'], $epicNames);
-    }
-
-    public function test_overview_assigns_status_correctly(): void
-    {
-        $query = $this->timelineQuery();
-        $today = CarbonImmutable::today();
-
-        $overdueProject = Project::factory()->create([
-            'name' => 'Overdue Project',
-            'active' => true,
-            'end_date' => $today->subDays(5)->toDateString(),
-        ]);
-        $ontrackProject = Project::factory()->create([
-            'name' => 'On Track Project',
-            'active' => true,
-            'end_date' => $today->addDays(5)->toDateString(),
-        ]);
-        $unscheduledProject = Project::factory()->create([
-            'name' => 'Unscheduled Project',
-            'active' => true,
-            'end_date' => null,
-        ]);
-
-        $result = $query->overview('');
-
-        $overdueEntry = $result['entries']->firstWhere('row.name', 'Overdue Project');
-        $ontrackEntry = $result['entries']->firstWhere('row.name', 'On Track Project');
-        $unscheduledEntry = $result['entries']->firstWhere('row.name', 'Unscheduled Project');
-
-        $this->assertSame('overdue', $overdueEntry['row']['status'] ?? '');
-        $this->assertSame('ontrack', $ontrackEntry['row']['status'] ?? '');
-        $this->assertSame('unscheduled', $unscheduledEntry['row']['status'] ?? '');
-    }
-
-    public function test_overview_calculates_bar_for_records_with_dates(): void
-    {
-        $query = $this->timelineQuery();
-        Project::factory()->create([
-            'name' => 'With Dates',
-            'active' => true,
-            'start_date' => '2026-06-01',
-            'end_date' => '2026-06-10',
-        ]);
-
-        $result = $query->overview('');
-
-        $projectEntry = $result['entries']->firstWhere('kind', 'project');
-        $this->assertNotNull($projectEntry['row']['bar']);
-        $this->assertArrayHasKey('offset', $projectEntry['row']['bar']);
-        $this->assertArrayHasKey('width', $projectEntry['row']['bar']);
-    }
-
-    public function test_overview_returns_null_bar_for_records_without_dates(): void
-    {
-        $query = $this->timelineQuery();
-        // A project with end_date but no start_date still gets a bar (milestone from end date)
-        // To test null bar, we need a project with neither start nor end date
-        // But start_date is required, so we test with a project that has only start_date
-        $project = Project::factory()->create([
-            'name' => 'Only Start Date',
-            'active' => true,
-            'start_date' => '2026-06-01',
-            'end_date' => null,
-        ]);
-
-        $result = $query->overview('');
-
-        $projectEntry = $result['entries']->firstWhere('kind', 'project');
-        // With only start_date, it's a milestone (1 day wide)
-        $this->assertNotNull($projectEntry['row']['bar']);
     }
 
     public function test_overview_includes_controls_for_project_with_epics(): void

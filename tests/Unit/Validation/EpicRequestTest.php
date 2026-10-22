@@ -9,6 +9,7 @@ use Illuminate\Validation\Rules\Unique;
 use Illuminate\Support\Facades\Validator;
 use Projects13\Http\Requests\EpicRequest;
 use Basics13\Support\Validation\MaxLength;
+use PHPUnit\Framework\Attributes\TestWith;
 
 class EpicRequestTest extends TestCase
 {
@@ -82,11 +83,13 @@ class EpicRequestTest extends TestCase
         $this->assertRequestValidationFails($request, static fn (): array => $request->rules(), 'end_date');
     }
 
-    public function test_end_date_must_be_after_start_date(): void
+    #[TestWith(['2026-10-01'])]
+    #[TestWith(['2026-09-30'])]
+    public function test_end_date_must_be_after_start_date(string $endDate): void
     {
         $request = EpicRequest::create('/', 'POST', [
             'start_date' => '2026-10-01',
-            'end_date' => '2026-09-30',
+            'end_date' => $endDate,
         ]);
 
         $this->assertRequestValidationFails($request, static fn (): array => $request->rules(), 'end_date');

@@ -122,8 +122,8 @@
                         @forelse ($list['rows'] as $row)
                             <flux:table.row :key="$row['id']"
                                 class="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                                <flux:table.cell class="max-w-[16rem]">
-                                    <span class="block max-w-full truncate" title="{{ $row['name'] }}"
+                                <flux:table.cell>
+                                    <span class="font-medium block truncate" title="{{ $row['name'] }}"
                                         data-test="project-name-{{ $row['id'] }}">
                                         {{ $row['name'] }}
                                     </span>
@@ -150,13 +150,31 @@
                                         data-test="project-comments-count-{{ $row['id'] }}" />
                                 </flux:table.cell>
                                 <flux:table.cell align="end" sticky
-                                    class="bg-white dark:bg-zinc-900">
+                                    class="bg-white dark:bg-zinc-900 px-2">
                                     <x-basics13::list.row-actions :actions="$row['actions']" prefix="project"
                                         edit-handler="editProject" />
                                 </flux:table.cell>
                             </flux:table.row>
                         @empty
-                            <x-basics13::list.empty-state :colspan="6 + (int) config('projects13.views.project_list.count', 0)" :message="$list['emptyMessage']" />
+                            <x-basics13::list.empty-state :colspan="6 + (int) config('projects13.views.project_list.count', 0)" :message="$list['emptyMessage']">
+                                @if ($list['create'])
+                                    <div class="flex flex-col items-center gap-4 py-8">
+                                        <flux:icon.briefcase size="w-16 h-16 text-zinc-400 dark:text-zinc-500" class="mb-4"/>
+                                        <flux:heading size="md" class="text-zinc-700 dark:text-zinc-300 text-center">
+                                            {{ __('No projects yet') }}
+                                        </flux:heading>
+                                        <p class="text-zinc-500 dark:text-zinc-400 text-center">
+                                            {{ __('Create your first project to organize your work.') }}
+                                        </p>
+                                        <flux:modal.trigger name="project-form">
+                                            <flux:button variant="primary" icon="plus"
+                                                click="createProject()">
+                                                {{ __('New project') }}
+                                            </flux:button>
+                                        </flux:modal.trigger>
+                                    </div>
+                                @endif
+                            </x-basics13::list.empty-state>
                         @endforelse
                     </flux:table.rows>
                 </x-basics13::list.table>

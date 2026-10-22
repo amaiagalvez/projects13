@@ -52,6 +52,16 @@ class ProjectListQueryBehaviorTest extends TestCase
         }
     }
 
+    public function test_active_searches_by_start_date(): void
+    {
+        Project::factory()->create(['name' => 'Project A', 'start_date' => '2026-01-15', 'end_date' => '2026-03-01']);
+        Project::factory()->create(['name' => 'Project B', 'start_date' => '2026-06-01', 'end_date' => '2026-08-01']);
+
+        $names = array_map(fn ($p) => $p->name, $this->query->active('2026-01')->items());
+
+        $this->assertSame(['Project A'], $names);
+    }
+
     public function test_active_orders_by_start_date_then_end_date_then_name(): void
     {
         Project::factory()->create(['name' => 'Project C', 'start_date' => '2026-03-01', 'end_date' => '2026-06-01', 'active' => true]);

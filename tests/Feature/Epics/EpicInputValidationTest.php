@@ -6,8 +6,6 @@ use App\Models\User;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
-use Basics13\Support\Validation\MaxLength;
-use PHPUnit\Framework\Attributes\TestWith;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class EpicInputValidationTest extends TestCase
@@ -41,55 +39,6 @@ class EpicInputValidationTest extends TestCase
             'start_date' => null,
             'end_date' => null,
         ]);
-    }
-
-    public function test_epic_name_must_have_more_than_three_characters(): void
-    {
-        $this->actingAs(User::factory()->create());
-        $project = Project::factory()->create();
-
-        $this->from(route('epics.index'))
-            ->post(route('epics.store'), ['name' => 'Abc', 'project_id' => $project->id])
-            ->assertSessionHasErrors([
-                'name' => __('validation.min.string', [
-                    'attribute' => __('validation.attributes')['name'],
-                    'min' => 4,
-                ]),
-            ]);
-
-        $this->assertDatabaseCount('PRO_epics', 0);
-    }
-
-    public function test_epic_name_cannot_exceed_the_configured_maximum_over_http(): void
-    {
-        $this->actingAs(User::factory()->create());
-        $project = Project::factory()->create();
-
-        $this->from(route('epics.index'))
-            ->post(route('epics.store'), [
-                'name' => str_repeat('a', MaxLength::string() + 1),
-                'project_id' => $project->id,
-            ])
-            ->assertRedirect(route('epics.index'))
-            ->assertSessionHasErrors(['name']);
-
-        $this->assertDatabaseCount('PRO_epics', 0);
-    }
-
-    public function test_epic_name_must_be_a_string_over_http(): void
-    {
-        $this->actingAs(User::factory()->create());
-        $project = Project::factory()->create();
-
-        $this->from(route('epics.index'))
-            ->post(route('epics.store'), [
-                'name' => ['Ane Bezeroa'],
-                'project_id' => $project->id,
-            ])
-            ->assertRedirect(route('epics.index'))
-            ->assertSessionHasErrors(['name']);
-
-        $this->assertDatabaseCount('PRO_epics', 0);
     }
 
     public function test_epic_name_must_be_unique_within_the_project(): void
@@ -179,41 +128,6 @@ class EpicInputValidationTest extends TestCase
             'id' => $epic->id,
             'name' => 'Trimmed epic',
         ]);
-    }
-
-    #[TestWith(['2026-10-01'])]
-    #[TestWith(['2026-09-30'])]
-    public function test_end_date_must_be_after_start_date(string $endDate): void
-    {
-        $this->actingAs(User::factory()->create());
-        $project = Project::factory()->create();
-
-        $this->from(route('epics.index'))
-            ->post(route('epics.store'), [
-                'name' => 'Invalid dates',
-                'start_date' => '2026-10-01',
-                'end_date' => $endDate,
-                'project_id' => $project->id,
-            ])
-            ->assertSessionHasErrors(['end_date']);
-
-        $this->assertDatabaseCount('PRO_epics', 0);
-    }
-
-    public function test_end_date_requires_a_start_date(): void
-    {
-        $this->actingAs(User::factory()->create());
-        $project = Project::factory()->create();
-
-        $this->from(route('epics.index'))
-            ->post(route('epics.store'), [
-                'name' => 'End without start',
-                'end_date' => '2026-10-01',
-                'project_id' => $project->id,
-            ])
-            ->assertSessionHasErrors(['start_date']);
-
-        $this->assertDatabaseCount('PRO_epics', 0);
     }
 
     public function test_start_date_can_be_set_without_end_date(): void

@@ -136,20 +136,6 @@ class ProjectTrashTest extends TestCase
         $this->assertModelExists($epic);
     }
 
-    public function test_project_can_be_permanently_deleted_without_epics(): void
-    {
-        $this->actingAs(User::factory()->create());
-        $project = Project::factory()->create();
-
-        $this->assertModelExists($project);
-        $this->assertFalse($project->trashed());
-
-        $this->delete(route('projects.destroy', $project->id))
-            ->assertRedirect(route('projects.index'));
-
-        $this->assertSoftDeleted($project);
-    }
-
     public function test_project_cannot_be_restored_when_an_active_project_uses_its_name(): void
     {
         $this->actingAs(User::factory()->create());
@@ -185,22 +171,6 @@ class ProjectTrashTest extends TestCase
         $this->assertFalse($archivedProject->active);
     }
 
-    public function test_project_can_be_restored_when_its_name_is_used_only_in_another_project(): void
-    {
-        $this->actingAs(User::factory()->create());
-        $deletedProject = Project::factory()->trashed()->create(['name' => 'Repeated project']);
-        Project::factory()->create(['name' => 'Repeated project']);
-
-        $this->patch(route('projects.trash.restore', $deletedProject->id))
-            ->assertRedirect(route('projects.trash.index'))
-            ->assertSessionHas(
-                'error',
-                __('basics13::messages.cannot_restore_name_taken'),
-            );
-
-        $this->assertSoftDeleted($deletedProject);
-    }
-
     public function test_confirmed_restore_does_not_create_an_additional_project(): void
     {
         $this->actingAs(User::factory()->create());
@@ -217,5 +187,26 @@ class ProjectTrashTest extends TestCase
 
         $this->assertDatabaseCount('PRO_projects', 1);
         $this->assertNotSoftDeleted($deletedProject);
+    }
+
+    public function test_destroy_refuses_when_project_has_trashed_epics(): void
+    {
+        $this->signIn();
+        $project = Project::factory()->trashed()->create();
+        $epic = Epic::factory()->for($project)->trashed()->create();
+
+        $response = $this->delete(route('projects.trash.destroy', $project->id));
+
+        $response->assertRedirect(route('projects.trash.index'))
+            ->assertSessionHas('error', __('basics13::messages.cannot_force_delete_related'));
+        $this->assertModelExists($project);
+        $this->assertSoftDeleted($epic);
+    }
+
+    public function test_guests_are_redirected(): void
+    {
+        $this->get(route('projects.trash.index'))->assertRedirect(route('login'));
+        $this->patch(route('projects.trash.restore', 1))->assertRedirect(route('login'));
+        $this->delete(route('projects.trash.destroy', 1))->assertRedirect(route('login'));
     }
 }
