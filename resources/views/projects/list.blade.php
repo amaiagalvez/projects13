@@ -76,7 +76,7 @@
         @elseif ($list['create'] && request()->boolean('create'))
             x-init="createProject(); $nextTick(() => $dispatch('modal-show', { name: 'project-form' }))" @endif
         class="flex flex-col gap-y-2 sm:gap-y-3">
-        <x-basics13::list.page-header :list="$list" prefix="project" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters">
+        <x-basics13::list.page-header :list="$list" prefix="project" :description="__('Projects with their dates and epics.')" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters">
             <x-slot:actions>
                 @if ($list['create'])
                     <x-basics13::list.create-action prefix="project" :label="__('New project')"
