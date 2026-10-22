@@ -6,9 +6,12 @@ use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
 use Basics13\Support\Validation\MaxLength;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ProjectInputValidationTest extends TestCase
 {
+    use RefreshDatabase;
+
     private const START_DATE = '2026-10-01';
 
     protected function setUp(): void

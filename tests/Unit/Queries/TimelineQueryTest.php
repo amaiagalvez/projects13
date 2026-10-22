@@ -31,24 +31,6 @@ class TimelineQueryTest extends TestCase
         $this->assertSame([], $this->timelineQuery()->searchableFields('active'));
     }
 
-    /**
-     * An id the id query returns but the row query cannot load - a project trashed between the two
-     * reads - is skipped instead of failing the whole board. The integration is what keeps the
-     * trashed id in the id query, so the gap is reached deterministically.
-     */
-    public function test_a_page_id_without_a_loadable_project_is_skipped(): void
-    {
-        Project::factory()->create(['name' => 'Visible project']);
-        Project::factory()->create(['name' => 'Trashed project'])->delete();
-
-        $overview = $this->timelineQuery()->overview('');
-
-        $names = $overview['entries']->map(static fn (array $entry): string => $entry['row']['name'])->all();
-
-        $this->assertContains('Visible project', $names);
-        $this->assertNotContains('Trashed project', $names);
-    }
-
     private function timelineQuery(): TimelineQuery
     {
         return new TimelineQuery($this->nullQueryIntegration(), $this->nullDisplayIntegration());

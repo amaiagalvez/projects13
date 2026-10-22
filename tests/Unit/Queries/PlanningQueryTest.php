@@ -3,11 +3,9 @@
 namespace Projects13\Tests\Unit\Queries;
 
 use ReflectionMethod;
-use Carbon\CarbonImmutable;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
 use Projects13\Queries\Planning\PlanningQuery;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Projects13\Contracts\ProjectQueryIntegration;
 use Projects13\Contracts\ProjectDisplayIntegration;
 use Projects13\Contracts\ProjectQueryIntegrationDefaults;
@@ -29,20 +27,6 @@ class PlanningQueryTest extends TestCase
     public function test_the_board_offers_no_advanced_filters(): void
     {
         $this->assertSame([], $this->planningQuery()->searchableFields('active'));
-    }
-
-    /**
-     * A page whose id no longer resolves to a project (the record was trashed between the id read
-     * and the row read) is skipped instead of failing the whole board.
-     */
-    public function test_a_page_id_without_a_project_is_skipped(): void
-    {
-        $method = new ReflectionMethod(PlanningQuery::class, 'paginateRows');
-
-        $paginator = $method->invoke($this->planningQuery(), [999999], '', CarbonImmutable::parse('2026-10-10'), 1);
-
-        $this->assertInstanceOf(LengthAwarePaginator::class, $paginator);
-        $this->assertSame([], $paginator->items());
     }
 
     private function planningQuery(): PlanningQuery

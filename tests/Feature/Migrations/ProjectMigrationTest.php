@@ -5,9 +5,12 @@ namespace Projects13\Tests\Feature\Migrations;
 use Projects13\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ProjectMigrationTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_project_migration_can_be_rolled_back(): void
     {
         $connectionName = 'projects13_migration_test';

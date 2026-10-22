@@ -6,9 +6,12 @@ use Projects13\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class EpicMigrationTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_epic_migration_can_be_rolled_back(): void
     {
         $connectionName = 'projects13_epic_migration_test';

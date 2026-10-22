@@ -1,6 +1,6 @@
 <?php
 
-namespace Projects13\Tests\Unit\Epics;
+namespace Projects13\Tests\Feature\Epics;
 
 use Carbon\CarbonImmutable;
 use Projects13\Models\Epic;

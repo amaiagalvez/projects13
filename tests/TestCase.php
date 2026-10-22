@@ -8,13 +8,12 @@ use Flux\FluxServiceProvider;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Blade;
 use Basics13\Tests\TestCase as Basics13TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Basics13\Support\Testing\ValidatesFormRequests;
 use Projects13\ServiceProvider as Projects13ServiceProvider;
 
 abstract class TestCase extends Basics13TestCase
 {
-    use RefreshDatabase, ValidatesFormRequests;
+    use ValidatesFormRequests;
 
     protected function signIn(): User
     {

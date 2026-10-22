@@ -1,6 +1,6 @@
 <?php
 
-namespace Projects13\Tests\Unit\Database\Factories;
+namespace Projects13\Tests\Feature\Database\Factories;
 
 use App\Models\User;
 use Projects13\Models\Epic;
