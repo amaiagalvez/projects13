@@ -4,6 +4,7 @@ namespace Projects13\Tests\Feature;
 
 use Projects13\Models\Epic;
 use Projects13\Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 use Projects13\Models\EpicComment;
 use Illuminate\Support\Facades\Gate;
 use Projects13\Http\Requests\EpicCommentRequest;
@@ -49,6 +50,36 @@ class EpicCommentControllerTest extends TestCase
         $this->post(route('epics.comments.store', $epic), ['body' => 'Ready for review'])->assertForbidden();
 
         $this->assertDatabaseCount('PRO_epic_comments', 0);
+    }
+
+    public function test_reading_comments_requires_the_permission(): void
+    {
+        $this->signIn();
+        $epic = Epic::factory()->create();
+        Gate::before(static fn (): bool => false);
+
+        $this->getJson(route('epics.comments.index', $epic))->assertForbidden();
+    }
+
+    /**
+     * The epic lock is only worth anything while the comment is written under it: released any
+     * earlier, a delete that finds no comments could trash the epic before the insert.
+     */
+    public function test_the_comment_is_written_inside_the_transaction_that_locks_the_epic(): void
+    {
+        $this->signIn();
+        $epic = Epic::factory()->create();
+        $outside = DB::transactionLevel();
+        $levelWhileSaving = null;
+
+        EpicComment::creating(static function () use (&$levelWhileSaving): void {
+            $levelWhileSaving = DB::transactionLevel();
+        });
+
+        $this->post(route('epics.comments.store', $epic), ['body' => 'Ready for review'])
+            ->assertSessionHas('status', __('Comment added successfully.'));
+
+        $this->assertSame($outside + 1, $levelWhileSaving);
     }
 
     public function test_comment_is_rejected_if_the_epic_was_deleted_after_binding(): void

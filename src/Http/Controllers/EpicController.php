@@ -13,6 +13,7 @@ use Basics13\Http\Controllers\Controller;
 use Projects13\Http\Requests\EpicRequest;
 use Projects13\Queries\Epics\EpicListQuery;
 use Projects13\Http\Requests\EpicListRequest;
+use Illuminate\Validation\ValidationException;
 use Projects13\Transformers\EpicListTransformer;
 use Projects13\Contracts\ProjectDisplayIntegration;
 use Basics13\Support\Database\UniqueConstraintViolation;
@@ -88,7 +89,7 @@ class EpicController extends Controller
         $epic = null;
         try {
             DB::transaction(static function () use ($request, &$epic): void {
-                Project::query()->lockForUpdate()->findOrFail($request->integer('project_id'));
+                self::lockProject($request->integer('project_id'));
                 $epic = Epic::create($request->validated());
             });
         } catch (QueryException $exception) {
@@ -102,11 +103,24 @@ class EpicController extends Controller
         return to_route('epics.index')->with('status', __('basics13::messages.created'));
     }
 
+    /**
+     * Lock the epic's project until the write commits, so it cannot be trashed in between. One
+     * trashed after validation is reported on the field, like any other project that is not there.
+     */
+    private static function lockProject(int $projectId): void
+    {
+        if (Project::query()->lockForUpdate()->find($projectId) === null) {
+            throw ValidationException::withMessages([
+                'project_id' => __('validation.exists', ['attribute' => __('Project')]),
+            ]);
+        }
+    }
+
     public function update(EpicRequest $request, Epic $epic): RedirectResponse|JsonResponse
     {
         try {
             DB::transaction(static function () use ($request, $epic): void {
-                Project::query()->lockForUpdate()->findOrFail($request->integer('project_id'));
+                self::lockProject($request->integer('project_id'));
                 $epic->update($request->validated());
             });
         } catch (QueryException $exception) {

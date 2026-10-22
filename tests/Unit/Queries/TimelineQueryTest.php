@@ -10,6 +10,7 @@ use Projects13\Queries\Timeline\TimelineQuery;
 use Projects13\Contracts\ProjectQueryIntegration;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Projects13\Contracts\ProjectDisplayIntegration;
+use Projects13\Contracts\ProjectQueryIntegrationDefaults;
 use Projects13\Contracts\ProjectDisplayIntegrationDefaults;
 
 /**
@@ -55,6 +56,8 @@ class TimelineQueryTest extends TestCase
     {
         return new class implements ProjectQueryIntegration
         {
+            use ProjectQueryIntegrationDefaults;
+
             public function scope(Builder $query, string $scope, string $alias): void
             {
                 $query->withoutGlobalScope(SoftDeletingScope::class);

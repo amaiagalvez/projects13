@@ -31,4 +31,12 @@ trait ProjectQueryIntegrationDefaults
     {
         return [];
     }
+
+    /**
+     * @return array{}
+     */
+    public function searchableFields(string $scope): array
+    {
+        return [];
+    }
 }

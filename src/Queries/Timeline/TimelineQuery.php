@@ -179,7 +179,7 @@ final class TimelineQuery extends ListQueryBase
     {
         $query = Project::query()->where('PRO_projects.active', true);
 
-        $this->queryIntegration->scope($query, 'timeline', 'timeline_entities');
+        $this->queryIntegration->scope($query, 'timeline', 'timeline_related');
 
         $nameColumns = $this->searchColumns('timeline', ['PRO_projects.name']);
 
@@ -206,7 +206,7 @@ final class TimelineQuery extends ListQueryBase
     {
         $query = Project::query()->where('PRO_projects.active', true);
 
-        $this->queryIntegration->scope($query, 'timeline', 'timeline_entities');
+        $this->queryIntegration->scope($query, 'timeline', 'timeline_related');
 
         // Select only PRO_projects columns to avoid issues with pluck() after joins
         $query->select('PRO_projects.*');
@@ -307,7 +307,7 @@ final class TimelineQuery extends ListQueryBase
                 'kind' => 'epic',
                 'projectId' => $project->id,
                 'controls' => [],
-                'row' => $this->epicRow($epic, $today),
+                'row' => $this->epicRow($epic, $project, $today),
             ];
         }
 
@@ -354,15 +354,16 @@ final class TimelineQuery extends ListQueryBase
     /**
      * @return Row
      */
-    private function epicRow(Epic $epic, CarbonImmutable $today): array
+    private function epicRow(Epic $epic, Project $project, CarbonImmutable $today): array
     {
         return [
             'id' => $epic->id,
             'test' => 'timeline-epic-'.$epic->id,
             'name' => $epic->name,
             // The epic is indented under its project rather than carried by a visible trail, so
-            // the trail only has to be there for assistive technology to place the row.
-            'trail' => [$epic->project->name],
+            // the trail only has to be there for assistive technology to place the row. The project
+            // is the one already loaded with its epics, so no epic queries its own.
+            'trail' => [$project->name],
             'url' => route('epics.index', ['search' => $epic->name]),
             'start' => $epic->start_date,
             'end' => $epic->end_date,

@@ -87,7 +87,7 @@ class ProjectListQueryTest extends TestCase
         (new \ReflectionMethod($query, 'scoped'))->invoke($query, $this->queryWithoutRunningIt());
 
         $this->assertSame(['project'], $integration->scopes);
-        $this->assertSame(['project_entities'], $integration->aliases);
+        $this->assertSame(['project_related'], $integration->aliases);
     }
 
     public function test_the_project_search_asks_the_integration_after_its_own_columns(): void
@@ -108,15 +108,15 @@ class ProjectListQueryTest extends TestCase
      */
     public function test_an_ordering_contributed_by_the_integration_reaches_the_query(): void
     {
-        $integration = new RecordingProjectListQueryIntegration(['project_entities.name']);
+        $integration = new RecordingProjectListQueryIntegration(['project_related.name']);
         $query = new ProjectListQuery($integration);
         $builder = $this->queryWithoutRunningIt();
 
         (new \ReflectionMethod($query, 'applyOrderings'))->invoke($query, $builder);
 
         $this->assertSame(['project'], $integration->orderingScopes);
-        $this->assertSame(['project_entities'], $integration->orderingAliases);
-        $this->assertContains('project_entities.name', array_column($builder->getQuery()->orders ?? [], 'column'));
+        $this->assertSame(['project_related'], $integration->orderingAliases);
+        $this->assertContains('project_related.name', array_column($builder->getQuery()->orders ?? [], 'column'));
     }
 
     /**
@@ -156,6 +156,8 @@ class ProjectListQueryTest extends TestCase
  */
 final class RecordingProjectListQueryIntegration implements ProjectQueryIntegration
 {
+    use ProjectQueryIntegrationDefaults;
+
     /** @var list<string> */
     public array $scopes = [];
 

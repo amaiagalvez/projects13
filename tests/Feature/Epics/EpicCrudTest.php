@@ -7,6 +7,7 @@ use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
 use Projects13\Models\EpicComment;
+use Projects13\Http\Requests\EpicRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class EpicCrudTest extends TestCase
@@ -98,6 +99,23 @@ class EpicCrudTest extends TestCase
             'id' => $epic->id,
             'name' => 'Updated JSON epic',
         ]);
+    }
+
+    public function test_a_project_trashed_after_validation_is_reported_on_the_field(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+
+        // Runs once the request has passed validation, just before the controller locks the project.
+        $this->app->afterResolving(EpicRequest::class, static function () use ($project): void {
+            $project->delete();
+        });
+
+        $this->postJson(route('epics.store'), ['name' => 'Late epic', 'project_id' => $project->id])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('project_id');
+
+        $this->assertDatabaseMissing('PRO_epics', ['name' => 'Late epic']);
     }
 
     public function test_can_update_an_epic(): void

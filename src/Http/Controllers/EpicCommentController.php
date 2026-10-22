@@ -15,6 +15,8 @@ class EpicCommentController extends Controller
 {
     public function show(Epic $epic): JsonResponse
     {
+        $this->authorize('viewAny', Epic::class);
+
         $comments = $epic->comments()
             ->with('user:id,name')
             ->latest()
@@ -38,23 +40,32 @@ class EpicCommentController extends Controller
 
     public function store(EpicCommentRequest $request, Epic $epic): RedirectResponse
     {
-        // Lock the epic to prevent a race where a comment is created after the epic is soft-deleted.
-        $lockedEpic = DB::transaction(static fn (): Epic => Epic::withTrashed()
-            ->whereKey($epic->getKey())
-            ->lockForUpdate()
-            ->firstOrFail());
+        // The epic stays locked until the comment is written, so a delete that checks for comments
+        // either runs first (and the epic is trashed here) or waits and then finds this comment.
+        $commented = DB::transaction(static function () use ($request, $epic): bool {
+            $lockedEpic = Epic::withTrashed()
+                ->whereKey($epic->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        if ($lockedEpic->trashed()) {
+            if ($lockedEpic->trashed()) {
+                return false;
+            }
+
+            $comment = $lockedEpic->comments()->make($request->validated());
+            $comment->user()->associate($request->user());
+            $comment->save();
+
+            return true;
+        });
+
+        if (! $commented) {
             return back(fallback: route('epics.index'))
                 ->with('error', __('Cannot comment on a deleted epic.'));
         }
 
-        $comment = $lockedEpic->comments()->make($request->validated());
-        $comment->user()->associate($request->user());
-        $comment->save();
-
         return back(fallback: route('epics.index'))
             ->with('status', __('Comment added successfully.'))
-            ->with('commented_epic_id', $lockedEpic->id);
+            ->with('commented_epic_id', $epic->id);
     }
 }

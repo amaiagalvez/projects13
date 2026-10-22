@@ -55,7 +55,6 @@ class EpicCommentRequestTest extends TestCase
 
         $reflection = new \ReflectionClass($request);
         $method = $reflection->getMethod('prepareForValidation');
-        $method->setAccessible(true);
         $method->invoke($request);
 
         $this->assertSame('Trimmed body', $request->input('body'));
@@ -70,7 +69,6 @@ class EpicCommentRequestTest extends TestCase
 
         $reflection = new \ReflectionClass($request);
         $method = $reflection->getMethod('prepareForValidation');
-        $method->setAccessible(true);
         $method->invoke($request);
 
         $this->assertSame(['array'], $request->input('body'));
@@ -111,7 +109,6 @@ class EpicCommentRequestTest extends TestCase
         $request = new EpicCommentRequest;
         $reflection = new \ReflectionClass($request);
         $property = $reflection->getProperty('errorBag');
-        $property->setAccessible(true);
         $this->assertSame('comment', $property->getValue($request));
     }
 

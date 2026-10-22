@@ -102,7 +102,7 @@ class EpicListQueryTest extends TestCase
         (new \ReflectionMethod($query, 'scoped'))->invoke($query, $this->queryWithoutRunningIt());
 
         $this->assertSame(['epic'], $integration->scopes);
-        $this->assertSame(['epic_entities'], $integration->aliases);
+        $this->assertSame(['epic_related'], $integration->aliases);
     }
 
     public function test_the_epic_search_asks_the_integration_after_its_own_columns(): void
@@ -123,15 +123,15 @@ class EpicListQueryTest extends TestCase
      */
     public function test_an_ordering_contributed_by_the_integration_reaches_the_query(): void
     {
-        $integration = new RecordingProjectQueryIntegration(['epic_entities.name']);
+        $integration = new RecordingProjectQueryIntegration(['epic_related.name']);
         $query = new EpicListQuery($integration);
         $builder = $this->queryWithoutRunningIt();
 
         (new \ReflectionMethod($query, 'withIntegrationOrderings'))->invoke($query, $builder);
 
         $this->assertSame(['epic'], $integration->orderingScopes);
-        $this->assertSame(['epic_entities'], $integration->orderingAliases);
-        $this->assertContains('epic_entities.name', array_column($builder->getQuery()->orders ?? [], 'column'));
+        $this->assertSame(['epic_related'], $integration->orderingAliases);
+        $this->assertContains('epic_related.name', array_column($builder->getQuery()->orders ?? [], 'column'));
     }
 
     /**
@@ -171,6 +171,8 @@ class EpicListQueryTest extends TestCase
  */
 final class RecordingProjectQueryIntegration implements ProjectQueryIntegration
 {
+    use ProjectQueryIntegrationDefaults;
+
     /** @var list<string> */
     public array $scopes = [];
 

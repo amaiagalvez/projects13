@@ -20,10 +20,10 @@ final class ProjectListQuery extends ListQueryBase
     private const RESOURCE_PROJECT = 'project';
 
     /**
-     * The alias the integration joins its entity table under. Like the scope above, it crosses
+     * The alias the integration joins its related table under. Like the scope above, it crosses
      * the integration on every call, so both live in a named constant.
      */
-    private const ENTITY_ALIAS = 'project_entities';
+    private const RELATED_ALIAS = 'project_related';
 
     public function __construct(private readonly ProjectQueryIntegration $integration) {}
 
@@ -158,10 +158,7 @@ final class ProjectListQuery extends ListQueryBase
             ],
         ];
 
-        /** @var SearchFields $integrationFields */
-        $integrationFields = config('projects13.searchable_fields', []);
-
-        return [...$fields, ...$integrationFields];
+        return [...$fields, ...$this->integration()->searchableFields($scope)];
     }
 
     /**
@@ -194,7 +191,7 @@ final class ProjectListQuery extends ListQueryBase
         // that table's columns overwrite this one's on hydration.
         $query->select('PRO_projects.*');
 
-        $this->integration->scope($query, self::RESOURCE_PROJECT, self::ENTITY_ALIAS);
+        $this->integration->scope($query, self::RESOURCE_PROJECT, self::RELATED_ALIAS);
 
         return $query;
     }
@@ -224,7 +221,7 @@ final class ProjectListQuery extends ListQueryBase
         $query->orderBy('PRO_projects.start_date')
             ->orderBy('PRO_projects.end_date');
 
-        foreach ($this->integration->orderings(self::RESOURCE_PROJECT, self::ENTITY_ALIAS) as $column) {
+        foreach ($this->integration->orderings(self::RESOURCE_PROJECT, self::RELATED_ALIAS) as $column) {
             $query->orderBy($column);
         }
 

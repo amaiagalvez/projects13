@@ -145,7 +145,7 @@ final class PlanningQuery extends ListQueryBase
             // integration's join from adding columns this pluck would then have to step over.
             ->select('PRO_projects.id');
 
-        $this->queryIntegration->scope($query, 'planning', 'planning_entities');
+        $this->queryIntegration->scope($query, 'planning', 'planning_related');
 
         /** @var list<int|string> $ids */
         $ids = $this->whereMatches($query, $search,

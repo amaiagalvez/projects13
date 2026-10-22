@@ -61,7 +61,8 @@ class ServiceProvider extends BaseServiceProvider
                 ->lockForUpdate()
                 ->firstOrFail());
 
-            return ! $locked->comments()->exists();
+            // Trashed comments count too, as trashed children do for every parent guard.
+            return ! $locked->comments()->withTrashed()->exists();
         });
     }
 }

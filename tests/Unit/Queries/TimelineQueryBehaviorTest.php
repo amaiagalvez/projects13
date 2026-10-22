@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 use Projects13\Queries\Timeline\TimelineQuery;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Projects13\Contracts\ProjectQueryIntegration;
@@ -62,6 +63,19 @@ class TimelineQueryBehaviorTest extends TestCase
 
         $this->assertCount(1, $projectEntries);
         $this->assertCount(2, $epicEntries); // only active epics
+    }
+
+    public function test_overview_queries_do_not_grow_with_the_number_of_epics(): void
+    {
+        $query = $this->timelineQuery();
+        $project = Project::factory()->create(['active' => true, 'start_date' => '2026-01-01']);
+        Epic::factory()->for($project)->count(2)->create(['active' => true]);
+
+        $few = $this->countQueries(fn () => $query->overview(''));
+
+        Epic::factory()->for($project)->count(8)->create(['active' => true]);
+
+        $this->assertSame($few, $this->countQueries(fn () => $query->overview('')));
     }
 
     public function test_overview_orders_projects_by_start_date_then_name(): void
@@ -292,5 +306,16 @@ class TimelineQueryBehaviorTest extends TestCase
                 use ProjectDisplayIntegrationDefaults;
             }
         );
+    }
+
+    private function countQueries(callable $callback): int
+    {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $callback();
+        $count = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        return $count;
     }
 }

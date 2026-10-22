@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Query seam: scope joins, search columns, and orderings.
+ * Query seam: scope joins, search columns, orderings and advanced search fields.
+ *
+ * @phpstan-import-type SearchFields from \Basics13\Queries\ListQueryBase
  */
 interface ProjectQueryIntegration
 {
@@ -40,4 +42,14 @@ interface ProjectQueryIntegration
      * @return list<string> Columns to order by, e.g. ['alias.name']
      */
     public function orderings(string $scope, string $alias): array;
+
+    /**
+     * Fields this integration contributes to the advanced search of the project list, appended to
+     * the base ones. They are built on each call rather than kept in the configuration, so their
+     * `options` and `condition` callables never stop `config:cache` from serializing it.
+     *
+     * @param  string  $scope  One of `active`, `archived`, `trashed`.
+     * @return SearchFields
+     */
+    public function searchableFields(string $scope): array;
 }

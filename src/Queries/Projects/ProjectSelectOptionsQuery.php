@@ -29,7 +29,7 @@ final class ProjectSelectOptionsQuery extends ListQueryBase
             // these, and a select applied afterwards would throw them away.
             ->select(['PRO_projects.id', 'PRO_projects.name']);
 
-        $this->queryIntegration->scope($query, 'project', 'project_entities');
+        $this->queryIntegration->scope($query, 'project', 'project_related');
 
         /** @var non-empty-list<literal-string> $columns An integration appends to the base column; it never replaces it. */
         $columns = $this->queryIntegration->searchColumns('project', ['PRO_projects.name']);

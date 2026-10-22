@@ -321,10 +321,7 @@
         <livewire:basics13.advanced-search-modal
             :fields="$searchableFields"
             :filters="$filters"
-            :scope="$scope"
-            :operatorLabels="__('basics13::messages')"
-            :fieldTypeLabels="__('basics13::messages')"
-            :groupLabels="__('basics13::messages')" />
+            :scope="$scope" />
 
         <x-basics13::list.confirm-modal prefix="epic" />
     </div>

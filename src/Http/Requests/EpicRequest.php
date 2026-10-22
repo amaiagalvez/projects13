@@ -67,6 +67,8 @@ class EpicRequest extends FormRequest
             if ($project) {
                 $rules['start_date'][] = 'after_or_equal:'.$project->start_date->format('Y-m-d');
                 if ($project->end_date) {
+                    // Both dates, since an epic may have a start date and no end date.
+                    $rules['start_date'][] = 'before_or_equal:'.$project->end_date->format('Y-m-d');
                     $rules['end_date'][] = 'before_or_equal:'.$project->end_date->format('Y-m-d');
                 }
             }

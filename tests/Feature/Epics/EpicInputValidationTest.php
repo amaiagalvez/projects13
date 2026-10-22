@@ -374,6 +374,20 @@ class EpicInputValidationTest extends TestCase
         $this->assertSoftDeleted($deletedEpic);
     }
 
+    public function test_a_trashed_epic_of_another_project_does_not_raise_the_name_conflict(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create();
+        Epic::factory()->for(Project::factory())->trashed()->create(['name' => 'Shared epic name']);
+
+        $this->post(route('epics.store'), ['name' => 'Shared epic name', 'project_id' => $project->id])
+            ->assertRedirect(route('epics.index'))
+            ->assertSessionMissing('deleted_epic_conflict')
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('PRO_epics', ['name' => 'Shared epic name', 'project_id' => $project->id, 'deleted_at' => null]);
+    }
+
     public function test_epic_start_date_cannot_be_before_project_start_date(): void
     {
         $this->actingAs(User::factory()->create());
@@ -423,6 +437,22 @@ class EpicInputValidationTest extends TestCase
                 'project_id' => $project->id,
             ])
             ->assertSessionHasErrors(['end_date']);
+
+        $this->assertDatabaseCount('PRO_epics', 0);
+    }
+
+    public function test_epic_without_end_date_cannot_start_after_project_end_date(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create(['start_date' => '2026-06-01', 'end_date' => '2026-12-31']);
+
+        $this->from(route('epics.index'))
+            ->post(route('epics.store'), [
+                'name' => 'Epic starting late',
+                'start_date' => '2027-01-15',
+                'project_id' => $project->id,
+            ])
+            ->assertSessionHasErrors(['start_date']);
 
         $this->assertDatabaseCount('PRO_epics', 0);
     }

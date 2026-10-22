@@ -317,6 +317,15 @@ class EpicCommentTest extends TestCase
         $this->assertTrue($commentEpic->is($epic));
     }
 
+    public function test_an_epic_whose_only_comment_is_trashed_still_cannot_be_deleted(): void
+    {
+        $epic = Epic::factory()->create();
+        EpicComment::factory()->for($epic)->create()->delete();
+
+        $this->assertFalse($epic->delete());
+        $this->assertNotSoftDeleted($epic);
+    }
+
     /**
      * Read from the config so the boundary keeps testing the limit the rules actually apply,
      * whatever it is set to.

@@ -4,6 +4,7 @@ namespace Projects13\Queries\Epics;
 
 use Projects13\Models\Epic;
 use Basics13\Queries\ListQueryBase;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Projects13\Contracts\ProjectQueryIntegration;
@@ -23,10 +24,10 @@ final class EpicListQuery extends ListQueryBase
     private const RESOURCE_EPIC = 'epic';
 
     /**
-     * The alias the integration joins its entity table under. Like the scope above, it crosses
+     * The alias the integration joins its related table under. Like the scope above, it crosses
      * the integration on every call, so both live in a named constant.
      */
-    private const ENTITY_ALIAS = 'epic_entities';
+    private const RELATED_ALIAS = 'epic_related';
 
     public function __construct(private readonly ProjectQueryIntegration $integration) {}
 
@@ -115,6 +116,23 @@ final class EpicListQuery extends ListQueryBase
             filters: $filters,
             scope: 'trashed',
         );
+    }
+
+    /**
+     * Epic names are unique inside their project, so the trashed epic a new one would collide with
+     * is looked up inside the same project.
+     *
+     * @return Epic|null
+     */
+    public function findTrashedByName(string $name, ?int $projectId = null): ?Model
+    {
+        $query = $this->trashedQuery();
+
+        if ($projectId !== null) {
+            $query->where('project_id', $projectId);
+        }
+
+        return $this->firstTrashedByName($query, $name);
     }
 
     /**
@@ -215,7 +233,7 @@ final class EpicListQuery extends ListQueryBase
      */
     private function scoped(Builder $query): Builder
     {
-        $this->integration->scope($query, self::RESOURCE_EPIC, self::ENTITY_ALIAS);
+        $this->integration->scope($query, self::RESOURCE_EPIC, self::RELATED_ALIAS);
 
         return $query;
     }
@@ -244,7 +262,7 @@ final class EpicListQuery extends ListQueryBase
      */
     private function withIntegrationOrderings(Builder $query): Builder
     {
-        foreach ($this->integration->orderings(self::RESOURCE_EPIC, self::ENTITY_ALIAS) as $column) {
+        foreach ($this->integration->orderings(self::RESOURCE_EPIC, self::RELATED_ALIAS) as $column) {
             $query->orderBy($column);
         }
 
