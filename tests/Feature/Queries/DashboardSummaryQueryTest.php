@@ -35,13 +35,14 @@ class DashboardSummaryQueryTest extends TestCase
     {
         $later = $this->epic('Later', '2026-11-15');
         $soon = $this->epic('Soon', '2026-10-25');
+        $monthEnd = $this->epic('Month end', '2026-10-31');
         $this->epic('Ended', '2026-10-01');
         $this->epic('Archived', '2026-10-28')->forceFill(['active' => false])->save();
 
         $summary = $this->dashboard()->summary($this->today);
 
-        $this->assertSame(1, $summary['dueThisMonth']);
-        $this->assertSame([$soon->id, $later->id], array_column($summary['deadlines'], 'id'));
+        $this->assertSame(2, $summary['dueThisMonth']);
+        $this->assertSame([$soon->id, $monthEnd->id, $later->id], array_column($summary['deadlines'], 'id'));
         $this->assertSame($this->project->name, $summary['deadlines'][0]['project']);
         $this->assertSame('2026-10-25', $summary['deadlines'][0]['endDate']);
         $this->assertSame(route('epics.index', ['search' => 'Soon']), $summary['deadlines'][0]['url']);
@@ -59,6 +60,21 @@ class DashboardSummaryQueryTest extends TestCase
         $this->assertSame([$recent->id, $old->id], array_column($summary['comments'], 'id'));
         $this->assertSame('Commented', $summary['comments'][0]['epic']);
         $this->assertNotSame('', $summary['comments'][0]['initials']);
+    }
+
+    public function test_buckets_upcoming_deadlines_by_week_starting_this_week(): void
+    {
+        // 2026-10-22 is a Thursday: this week runs from Monday 2026-10-19.
+        $this->epic('This week, already past', '2026-10-20');
+        $this->epic('This week', '2026-10-25');
+        $this->epic('Next week', '2026-10-26');
+        $this->epic('Last bucket', '2026-12-13');
+        $this->epic('Beyond the trend', '2026-12-14');
+
+        $weeklyDue = $this->dashboard()->summary($this->today)['weeklyDue'];
+
+        $this->assertCount(DashboardSummaryQuery::TREND_WEEKS, $weeklyDue);
+        $this->assertSame([2, 1, 0, 0, 0, 0, 0, 1], $weeklyDue);
     }
 
     public function test_reuses_the_planning_counts(): void

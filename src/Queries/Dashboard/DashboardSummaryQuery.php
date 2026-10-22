@@ -22,12 +22,18 @@ final class DashboardSummaryQuery
      */
     public const RECENT_LIMIT = 5;
 
+    /**
+     * Weeks ahead in the trend of upcoming deadlines, this week included.
+     */
+    public const TREND_WEEKS = 8;
+
     public function __construct(private readonly PlanningQuery $planning) {}
 
     /**
      * @return array{
      *     counts: array{projects: int, epics: int, overdue: int},
      *     dueThisMonth: int,
+     *     weeklyDue: list<int>,
      *     commentsThisWeek: int,
      *     deadlines: list<array{id: int, name: string, project: string, endDate: string, url: string}>,
      *     comments: list<array{id: int, author: string, initials: string, epic: string, dateTime: string|null, body: string, url: string}>
@@ -40,8 +46,10 @@ final class DashboardSummaryQuery
         return [
             'counts' => $this->planning->counts($today),
             'dueThisMonth' => $this->upcomingEpics($today)
-                ->where('end_date', '<=', $today->endOfMonth()->toDateString())
+                // Exclusive bound on the next day: the stored value may carry a midnight time.
+                ->where('end_date', '<', $today->startOfMonth()->addMonth()->toDateString())
                 ->count(),
+            'weeklyDue' => $this->weeklyDue($today),
             'commentsThisWeek' => EpicComment::query()
                 ->where('created_at', '>=', $today->startOfWeek())
                 ->count(),
@@ -61,6 +69,30 @@ final class DashboardSummaryQuery
         return Epic::query()
             ->where('active', true)
             ->where('end_date', '>=', $today->toDateString());
+    }
+
+    /**
+     * How many active epics end in each of the coming weeks, this one first. Bucketed here rather
+     * than grouped in SQL, where week functions differ between the database engines in use.
+     *
+     * @return list<int>
+     */
+    private function weeklyDue(CarbonImmutable $today): array
+    {
+        $start = $today->startOfWeek();
+        $weeks = array_fill(0, self::TREND_WEEKS, 0);
+
+        $endDates = Epic::query()
+            ->where('active', true)
+            ->where('end_date', '>=', $start->toDateString())
+            ->where('end_date', '<', $start->addWeeks(self::TREND_WEEKS)->toDateString())
+            ->pluck('end_date');
+
+        foreach ($endDates as $endDate) {
+            $weeks[intdiv((int) $start->diffInDays($endDate), 7)]++;
+        }
+
+        return array_values($weeks);
     }
 
     /**

@@ -22,6 +22,7 @@
     "Edit project": "Modifier le projet",
     "End date": "Date de fin",
     "Epics": "\u00c9pop\u00e9es",
+    "Epics ending in each of the next :weeks weeks: :values.": "Épopées qui se terminent dans chacune des :weeks prochaines semaines : :values.",
     "Epics ending this month": "Épopées qui se terminent ce mois-ci",
     "Epics: :count": "\u00c9pop\u00e9es: :count",
     "Hello, :name": "Bonjour, :name",

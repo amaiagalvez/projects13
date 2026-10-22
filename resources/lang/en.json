@@ -22,6 +22,7 @@
     "Edit project": "Edit project",
     "End date": "End date",
     "Epics": "Epics",
+    "Epics ending in each of the next :weeks weeks: :values.": "Epics ending in each of the next :weeks weeks: :values.",
     "Epics ending this month": "Epics ending this month",
     "Epics: :count": "Epics: :count",
     "Hello, :name": "Hello, :name",

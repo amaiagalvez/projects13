@@ -49,6 +49,9 @@
         class="flex flex-col justify-between gap-6 rounded-2xl bg-linear-to-br from-brand-600 to-brand-800 p-6 text-white shadow-card transition-shadow hover:shadow-raised xl:col-span-4">
         <span class="text-sm font-medium text-white/90">{{ __('Epics ending this month') }}</span>
         <span class="font-display text-5xl font-semibold tabular-nums">{{ $summary['dueThisMonth'] }}</span>
+        <x-basics13::chart sparkline :height="64" class="-mx-2 text-white/80" data-test="dashboard-weekly-due"
+            :series="[['name' => __('Epics'), 'data' => $summary['weeklyDue']]]"
+            :label="__('Epics ending in each of the next :weeks weeks: :values.', ['weeks' => count($summary['weeklyDue']), 'values' => implode(', ', $summary['weeklyDue'])])" />
         <span class="inline-flex items-center gap-1 text-sm font-medium text-white/90">
             {{ __('View planning') }}
             <flux:icon.arrow-right variant="micro" class="rtl:rotate-180" aria-hidden="true" />

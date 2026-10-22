@@ -22,6 +22,7 @@
     "Edit project": "Editatu proiektua",
     "End date": "Amaiera-data",
     "Epics": "Epikak",
+    "Epics ending in each of the next :weeks weeks: :values.": "Hurrengo :weeks asteetako bakoitzean amaitzen diren epikak: :values.",
     "Epics ending this month": "Hilabete honetan amaitzen diren epikak",
     "Epics: :count": "Epikak: :count",
     "Hello, :name": "Kaixo, :name",
