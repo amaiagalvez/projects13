@@ -157,7 +157,7 @@
                             </flux:table.row>
                         @empty
                             <x-basics13::list.empty-state :colspan="6 + (int) config('projects13.views.project_list.count', 0)" :message="$list['emptyMessage']">
-                                @if ($list['create'])
+                                @if ($list['create'] && ! $list['narrowed'])
                                     <div class="flex flex-col items-center gap-4 py-8">
                                         <flux:icon.briefcase size="w-16 h-16 text-zinc-400 dark:text-zinc-500" class="mb-4"/>
                                         <flux:heading size="md" class="text-zinc-700 dark:text-zinc-300 text-center">
@@ -168,7 +168,7 @@
                                         </p>
                                         <flux:modal.trigger name="project-form">
                                             <flux:button variant="primary" icon="plus"
-                                                click="createProject()">
+                                                x-on:click="createProject()" data-test="project-empty-create">
                                                 {{ __('New project') }}
                                             </flux:button>
                                         </flux:modal.trigger>

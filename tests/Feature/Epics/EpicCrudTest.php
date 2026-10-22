@@ -31,6 +31,26 @@ class EpicCrudTest extends TestCase
             ->assertDontSee('projects13::messages.', false);
     }
 
+    public function test_empty_index_offers_a_create_button_that_resets_the_form(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->get(route('epics.index'))
+            ->assertOk()
+            ->assertSee('x-on:click="createEpic()" data-test="epic-empty-create"', false);
+    }
+
+    public function test_a_search_without_results_offers_no_create_shortcut(): void
+    {
+        $this->actingAs(User::factory()->create());
+        Epic::factory()->create(['name' => 'Alpha']);
+
+        $this->get(route('epics.index', ['search' => 'Nothing like it']))
+            ->assertOk()
+            ->assertSee(__('basics13::messages.no_matching_records'))
+            ->assertDontSee('data-test="epic-empty-create"', false);
+    }
+
     public function test_can_create_an_epic(): void
     {
         $this->actingAs(User::factory()->create());

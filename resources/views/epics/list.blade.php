@@ -294,7 +294,7 @@
                             </flux:table.row>
                         @empty
                             <x-basics13::list.empty-state :colspan="6 + (int) config('projects13.views.epic_list.count', 0)" :message="$list['emptyMessage']">
-                                @if ($list['create'])
+                                @if ($list['create'] && ! $list['narrowed'])
                                     <div class="flex flex-col items-center gap-4 py-8">
                                         <flux:icon.rectangle-stack size="w-16 h-16 text-zinc-400 dark:text-zinc-500" class="mb-4"/>
                                         <flux:heading size="md" class="text-zinc-700 dark:text-zinc-300 text-center">
@@ -305,7 +305,7 @@
                                         </p>
                                         <flux:modal.trigger name="epic-form">
                                             <flux:button variant="primary" icon="plus"
-                                                click="createEpic()">
+                                                x-on:click="createEpic()" data-test="epic-empty-create">
                                                 {{ __('New epic') }}
                                             </flux:button>
                                         </flux:modal.trigger>

@@ -36,6 +36,26 @@ class ProjectCrudTest extends TestCase
         $response->assertDontSee('projects13::messages.', false);
     }
 
+    public function test_empty_index_offers_a_create_button_that_resets_the_form(): void
+    {
+        $this->signIn();
+
+        $this->get(route('projects.index'))
+            ->assertOk()
+            ->assertSee('x-on:click="createProject()" data-test="project-empty-create"', false);
+    }
+
+    public function test_a_search_without_results_offers_no_create_shortcut(): void
+    {
+        $this->signIn();
+        Project::factory()->create(['name' => 'Alpha']);
+
+        $this->get(route('projects.index', ['search' => 'Nothing like it']))
+            ->assertOk()
+            ->assertSee(__('basics13::messages.no_matching_records'))
+            ->assertDontSee('data-test="project-empty-create"', false);
+    }
+
     public function test_index_searches_by_name(): void
     {
         $this->signIn();
