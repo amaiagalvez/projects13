@@ -115,7 +115,7 @@ final class PlanningQuery extends ListQueryBase
      *
      * @return array{projects: int, epics: int, overdue: int}
      */
-    private function counts(CarbonImmutable $today): array
+    public function counts(CarbonImmutable $today): array
     {
         // A record is late when it has an end date and that date is behind today. The column is a
         // plain date, so the bound is compared as a string rather than wrapped in whereDate().
