@@ -54,20 +54,15 @@ class ProjectListQueryBehaviorTest extends TestCase
 
     public function test_active_orders_by_start_date_then_end_date_then_name(): void
     {
-        Project::factory()->create(['name' => 'Project C', 'start_date' => '2026-03-01', 'active' => true]);
-        Project::factory()->create(['name' => 'Project A', 'start_date' => '2026-01-01', 'active' => true]);
-        Project::factory()->create(['name' => 'Project B', 'start_date' => '2026-01-01', 'end_date' => '2026-06-01', 'active' => true]);
+        Project::factory()->create(['name' => 'Project C', 'start_date' => '2026-03-01', 'end_date' => '2026-06-01', 'active' => true]);
         Project::factory()->create(['name' => 'Project B2', 'start_date' => '2026-01-01', 'end_date' => '2026-06-01', 'active' => true]);
+        Project::factory()->create(['name' => 'Project B', 'start_date' => '2026-01-01', 'end_date' => '2026-06-01', 'active' => true]);
+        Project::factory()->create(['name' => 'Project A', 'start_date' => '2026-01-01', 'end_date' => '2026-03-01', 'active' => true]);
 
         $result = $this->query->active('');
 
         $names = array_map(fn ($p) => $p->name, $result->items());
-        // Ordering: start_date ASC, end_date ASC, name ASC
-        // In MariaDB/MySQL, NULL end_date sorts FIRST; in SQLite, NULL end_date sorts LAST
-        // Both are valid SQL behaviors, so we check that the relative order is correct
-        $this->assertSame('Project C', $names[3]); // Latest start_date always last
-        $this->assertSame('Project B', $names[0] ?? $names[1]); // B and B2 are tied, order by name
-        $this->assertSame('Project B2', $names[1] ?? $names[2]); // B and B2 are tied, order by name
+        $this->assertSame(['Project A', 'Project B', 'Project B2', 'Project C'], $names);
     }
 
     public function test_active_includes_epics_exists_and_counts(): void
