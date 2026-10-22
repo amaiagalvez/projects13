@@ -23,7 +23,7 @@
             <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <flux:heading id="planning-group-{{ $group['key'] }}" size="sm" level="2"
                     class="font-semibold">{{ $group['label'] }}</flux:heading>
-                <flux:text class="text-xs text-zinc-500 tabular-nums dark:text-zinc-400">
+                <flux:text class="text-xs text-zinc-600 tabular-nums dark:text-zinc-400">
                     {{ __('Total: :count', ['count' => $group['count']]) }}
                 </flux:text>
             </div>
@@ -59,7 +59,7 @@
                                     <div class="flex">
                                         @foreach ($months as $month)
                                             <div
-                                                class="truncate border-s border-zinc-200 px-1 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400"
+                                                class="truncate border-s border-zinc-200 px-1 text-xs text-zinc-600 dark:border-zinc-700 dark:text-zinc-400"
                                                 style="width: {{ $month['width'] }}%">{{ $month['label'] }}</div>
                                         @endforeach
                                     </div>
@@ -76,7 +76,7 @@
                                     <span class="block truncate font-medium text-zinc-900 dark:text-zinc-100"
                                         title="{{ $row['name'] }}">{{ $row['name'] }}</span>
                                     @if ($row['trail'] !== [])
-                                        <span class="block truncate text-xs text-zinc-500 dark:text-zinc-400"
+                                        <span class="block truncate text-xs text-zinc-600 dark:text-zinc-400"
                                             title="{{ implode(' › ', $row['trail']) }}">
                                             @foreach ($row['trail'] as $index => $ancestor)
                                                 @if ($index > 0)
@@ -158,6 +158,6 @@
 
     @if ($paginator && $paginator->hasPages())
         <nav aria-label="{{ __('Pagination') }}" data-test="planning-pagination" class="mt-4">
-            {{ $paginator->links() }}
+            {{ $paginator->links('basics13::vendor.pagination.tailwind') }}
         </nav>
     @endif

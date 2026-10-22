@@ -53,7 +53,7 @@
                         <td class="relative hidden py-2 lg:table-cell" data-test="timeline-axis">
                             <div class="flex">
                                 @foreach ($timeline['months'] as $month)
-                                    <div class="truncate border-s border-zinc-200 px-1 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400"
+                                    <div class="truncate border-s border-zinc-200 px-1 text-xs text-zinc-600 dark:border-zinc-700 dark:text-zinc-400"
                                         style="width: {{ $month['width'] }}%">{{ $month['label'] }}</div>
                                 @endforeach
                             </div>
@@ -67,12 +67,17 @@
                 <tbody>
                     @foreach ($entries as $entry)
                         @php $row = $entry['row']; @endphp
+                        {{-- An epic row is what its project's toggle controls, so it carries the id the
+                             toggle's aria-controls names. --}}
                         <tr data-test="{{ $row['test'] }}"
                             @if ($entry['kind'] === 'epic')
+                                id="{{ $row['test'] }}"
                                 x-show="!collapsed[{{ $entry['projectId'] }}]"
-                                class="bg-zinc-50/50 dark:bg-zinc-800/30"
                             @endif
-                            class="border-b border-zinc-100 last:border-0 hover:bg-zinc-50 dark:border-zinc-800/70 dark:hover:bg-zinc-800/40 transition-opacity duration-150">
+                            @class([
+                                'border-b border-zinc-100 last:border-0 hover:bg-zinc-50 dark:border-zinc-800/70 dark:hover:bg-zinc-800/40 transition-opacity duration-150',
+                                'bg-zinc-50/50 dark:bg-zinc-800/30' => $entry['kind'] === 'epic',
+                            ])>
                             <th scope="row" class="max-w-0 px-3 py-2.5 text-start font-normal lg:min-w-[16rem]">
                                 @if ($entry['kind'] === 'project')
                                     <span class="flex items-start gap-1">
@@ -102,7 +107,7 @@
                                          integration contributed a trail, so the label only appears
                                          when there is one. --}}
                                     @if (($row['trail'][0] ?? null) !== null)
-                                        <span class="mt-0.5 block truncate text-xs text-zinc-500 dark:text-zinc-400"
+                                        <span class="mt-0.5 block truncate text-xs text-zinc-600 dark:text-zinc-400"
                                             title="{{ $row['trail'][0] }}">{{ $row['trail'][0] }}</span>
                                     @endif
                                 @else
@@ -188,6 +193,6 @@
 
 @if ($paginator->hasPages())
     <nav aria-label="{{ __('Pagination') }}" data-test="timeline-pagination" class="mt-4">
-        {{ $paginator->links() }}
+        {{ $paginator->links('basics13::vendor.pagination.tailwind') }}
     </nav>
 @endif

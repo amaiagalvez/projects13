@@ -281,7 +281,10 @@ class TimelineTest extends TestCase
                 'data-test="timeline-toggle-'.$project->id.'"',
                 'aria-expanded="true"',
             ], false)
-            ->assertSee('aria-controls="timeline-epic-'.$first->id.' timeline-epic-'.$second->id.'"', false);
+            ->assertSee('aria-controls="timeline-epic-'.$first->id.' timeline-epic-'.$second->id.'"', false)
+            // The rows it names exist, so the toggle really controls them.
+            ->assertSee('id="timeline-epic-'.$first->id.'"', false)
+            ->assertSee('id="timeline-epic-'.$second->id.'"', false);
     }
 
     public function test_a_project_without_epics_has_no_expander(): void
