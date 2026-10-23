@@ -28,3 +28,9 @@ OK (543 tests, 2675 assertions)
 Classes: 93.33% (42/45)
 Methods: 98.71% (229/232)
 Lines:   99.55% (1335/1341)
+Executed at: 2026-10-23 19:36:02 CEST
+Time: 04:30.448, Memory: 103.00 MB
+OK (552 tests, 2805 assertions)
+Classes: 87.76% (43/49)
+Methods: 96.81% (243/251)
+Lines:   99.09% (1416/1429)
