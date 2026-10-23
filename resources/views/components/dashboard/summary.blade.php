@@ -4,9 +4,8 @@
     and the two "recent" lists. Every figure links to where it can be acted on.
 
     :summary  DashboardSummaryQuery::summary()
-    :name     the user's name, for the greeting
 --}}
-@props(['summary', 'name'])
+@props(['summary'])
 
 @php
     $counts = $summary['counts'];
@@ -25,12 +24,10 @@
         data-test="dashboard-welcome">
         <div class="flex flex-col gap-1">
             <p class="text-sm font-medium text-brand-700 dark:text-brand-300">{{ __('Work overview') }}</p>
-            <h2 id="dashboard-welcome-heading" class="font-display text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
-                {{ __('Hello, :name', ['name' => $name]) }}
-            </h2>
-            <p class="text-zinc-600 dark:text-zinc-400" data-test="dashboard-status">
+            <h2 id="dashboard-welcome-heading" class="font-display text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white"
+                data-test="dashboard-status">
                 {{ trans_choice('{0} Nothing is overdue.|{1} One project or epic is overdue.|[2,*] :count projects and epics are overdue.', $counts['overdue'], ['count' => $counts['overdue']]) }}
-            </p>
+            </h2>
         </div>
         <div class="mt-auto flex flex-wrap gap-2">
             <flux:button variant="primary" icon="plus" :href="route('projects.index', ['create' => 1])" wire:navigate

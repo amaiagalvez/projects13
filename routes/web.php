@@ -5,6 +5,7 @@ use Projects13\Http\Controllers\EpicController;
 use Projects13\Http\Controllers\ProjectController;
 use Projects13\Http\Controllers\PlanningController;
 use Projects13\Http\Controllers\TimelineController;
+use Projects13\Http\Controllers\DashboardController;
 use Projects13\Http\Controllers\EpicTrashController;
 use Projects13\Http\Controllers\EpicCommentController;
 use Projects13\Http\Controllers\EpicArchivedController;
@@ -13,6 +14,7 @@ use Projects13\Http\Controllers\ProjectMemberController;
 use Projects13\Http\Controllers\ProjectArchivedController;
 
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
+    Route::get('work/dashboard', DashboardController::class)->name('work.dashboard');
     Route::get('planning', [PlanningController::class, 'index'])->name('planning');
     Route::get('timeline', [TimelineController::class, 'index'])->name('timeline');
 
