@@ -8,7 +8,10 @@ use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
 use Projects13\Enums\ProjectRole;
 use Projects13\Models\ProjectMember;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Projects13\Http\Requests\ProjectMemberRequest;
+use Projects13\Http\Controllers\ProjectMemberController;
 
 class ProjectMemberControllerTest extends TestCase
 {
@@ -38,6 +41,43 @@ class ProjectMemberControllerTest extends TestCase
                 ['id', 'user_id', 'name', 'email', 'role', 'role_label', 'added_by', 'created_at'],
             ]]);
         $this->assertCount(2, $response->json('members'));
+    }
+
+    public function test_index_names_a_member_whose_account_is_in_the_trash_as_deleted(): void
+    {
+        $owner = $this->holding(['projects.view']);
+        $gone = User::factory()->create();
+        $project = Project::factory()
+            ->hasMember($owner, ProjectRole::Owner)
+            ->hasMember($gone, ProjectRole::Viewer)
+            ->create();
+        $gone->delete();
+
+        $this->actingAs($owner);
+
+        /** @var list<array<string, mixed>> $members */
+        $members = $this->getJson(route('projects.members.index', $project))->assertOk()->json('members');
+        $member = collect($members)->firstWhere('user_id', $gone->id);
+
+        $this->assertSame(__('Deleted user'), $member['name']);
+        $this->assertSame('', $member['email']);
+    }
+
+    public function test_the_drawer_gets_a_422_when_the_last_owner_would_go(): void
+    {
+        $owner = $this->holding(['projects.view']);
+        $project = Project::factory()->hasMember($owner, ProjectRole::Owner)->create();
+        $ownerMember = $project->members()->where('user_id', $owner->id)->sole();
+
+        $this->actingAs($owner);
+
+        $this->patchJson(route('projects.members.update', [$project, $ownerMember]), ['user_id' => $owner->id, 'role' => 'editor'])
+            ->assertUnprocessable()
+            ->assertJson(['message' => __('A project must have at least one owner.')]);
+        $this->deleteJson(route('projects.members.destroy', [$project, $ownerMember]))
+            ->assertUnprocessable()
+            ->assertJson(['message' => __('A project must have at least one owner.')]);
+        $this->assertSame(ProjectRole::Owner, $ownerMember->refresh()->role);
     }
 
     public function test_index_returns_empty_for_project_with_no_members(): void
@@ -191,6 +231,46 @@ class ProjectMemberControllerTest extends TestCase
         ]);
 
         $response->assertNotFound();
+    }
+
+    /**
+     * The request validated before a concurrent one added the same account or trashed the
+     * project: the locked re-check inside the transaction refuses it.
+     *
+     * @return iterable<string, array{bool}>
+     */
+    public static function raceProvider(): iterable
+    {
+        yield 'already a member' => [false];
+        yield 'project trashed' => [true];
+    }
+
+    #[DataProvider('raceProvider')]
+    public function test_store_rechecks_inside_the_transaction(bool $trash): void
+    {
+        $owner = $this->holding(['projects.view']);
+        $candidate = User::factory()->create();
+        $project = Project::factory()->hasMember($owner, ProjectRole::Owner)->create();
+        $this->actingAs($owner);
+
+        $request = ProjectMemberRequest::create(route('projects.members.store', $project), 'POST', [
+            'user_id' => $candidate->id,
+            'role' => 'viewer',
+        ]);
+        $request->setUserResolver(static fn (): User => $owner);
+
+        // What the concurrent request did after this one passed validation.
+        if ($trash) {
+            $project->delete();
+        } else {
+            $project->members()->make(['user_id' => $candidate->id, 'role' => ProjectRole::Editor])->save();
+        }
+
+        $response = app(ProjectMemberController::class)->store($request, $project);
+
+        $this->assertSame(session('error'), __('Cannot add member to a deleted project or user is already a member.'));
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame($trash ? 0 : 1, $project->members()->where('user_id', $candidate->id)->count());
     }
 
     public function test_store_denies_access_to_editor(): void

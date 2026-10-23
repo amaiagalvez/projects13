@@ -37,6 +37,15 @@ class ProjectMemberTest extends TestCase
         $this->assertSame($user->id, $member->user->id);
     }
 
+    public function test_the_user_relation_refuses_a_users_model_that_is_not_eloquent(): void
+    {
+        config(['auth.providers.users.model' => \stdClass::class]);
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new ProjectMember)->user();
+    }
+
     public function test_project_relationship_with_trashed(): void
     {
         $project = Project::factory()->trashed()->create();
