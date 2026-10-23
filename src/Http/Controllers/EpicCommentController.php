@@ -15,7 +15,7 @@ class EpicCommentController extends Controller
 {
     public function show(Epic $epic): JsonResponse
     {
-        $this->authorize('viewAny', Epic::class);
+        $this->authorize('viewComments', $epic);
 
         $comments = $epic->comments()
             ->with('user:id,name')

@@ -184,7 +184,6 @@ final class TimelineQuery extends ListQueryBase
         $nameColumns = $this->searchColumns('timeline', ['PRO_projects.name']);
 
         return $query->where(function (Builder $query) use ($search, $nameColumns): void {
-            /** @phpstan-ignore argument.type */
             $this->whereMatches($query, $search, $nameColumns);
 
             if ($search !== '') {
@@ -212,7 +211,6 @@ final class TimelineQuery extends ListQueryBase
         $query->select('PRO_projects.*');
 
         return $query->where(function (Builder $query) use ($search): void {
-            /** @phpstan-ignore argument.type */
             $this->whereMatches($query, $search, $this->searchColumns('timeline', ['PRO_projects.name']));
         });
     }

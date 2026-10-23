@@ -5,7 +5,9 @@ namespace Projects13\Database\Factories;
 use Carbon\CarbonImmutable;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
+use Projects13\Enums\ProjectRole;
 use Basics13\Database\Factories\HasStates;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -71,5 +73,12 @@ class EpicFactory extends Factory
             'start_date' => null,
             'end_date' => null,
         ]);
+    }
+
+    public function forProjectWithMember(Authenticatable $user, ProjectRole $role = ProjectRole::Editor): static
+    {
+        return $this->for(
+            Project::factory()->hasMember($user, $role)
+        );
     }
 }

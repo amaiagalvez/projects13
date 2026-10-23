@@ -149,7 +149,6 @@ final class PlanningQuery extends ListQueryBase
 
         /** @var list<int|string> $ids */
         $ids = $this->whereMatches($query, $search,
-            /** @phpstan-ignore argument.type */
             $this->searchColumns('planning', ['PRO_projects.name']))
             ->orderBy('PRO_projects.id')
             ->pluck('PRO_projects.id')

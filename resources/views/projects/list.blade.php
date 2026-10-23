@@ -82,6 +82,11 @@
                     <x-basics13::list.create-action prefix="project" :label="__('New project')"
                         click="createProject()" />
                 @endif
+                <x-basics13::list.excel-export
+                    prefix="project"
+                    :route="route('projects.export')"
+                    :scope="$scope"
+                />
             </x-slot:actions>
         </x-basics13::list.page-header>
 

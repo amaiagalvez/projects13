@@ -7,6 +7,7 @@ use Basics13\Models\Role;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Projects13\Tests\TestCase;
+use Projects13\Enums\ProjectRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ProjectAuthorizationTest extends TestCase
@@ -34,8 +35,9 @@ class ProjectAuthorizationTest extends TestCase
 
     public function test_emptying_the_trash_needs_force_delete(): void
     {
-        $project = Project::factory()->trashed()->create();
-        $this->actingAs($this->holding(['projects.view', 'projects.delete']));
+        $user = $this->holding(['projects.view', 'projects.delete']);
+        $project = Project::factory()->trashed()->hasMember($user, ProjectRole::Editor)->create();
+        $this->actingAs($user);
 
         $this->delete(route('projects.trash.destroy', $project->id))->assertForbidden();
 
@@ -51,8 +53,9 @@ class ProjectAuthorizationTest extends TestCase
 
     public function test_commenting_needs_epics_edit(): void
     {
-        $epic = Epic::factory()->create();
-        $this->actingAs($this->holding(['epics.view']));
+        $user = $this->holding(['epics.view']);
+        $epic = Epic::factory()->forProjectWithMember($user, ProjectRole::Editor)->create();
+        $this->actingAs($user);
 
         $this->post(route('epics.comments.store', $epic), ['body' => 'Not allowed'])->assertForbidden();
 
@@ -61,8 +64,9 @@ class ProjectAuthorizationTest extends TestCase
 
     public function test_epics_edit_allows_commenting(): void
     {
-        $epic = Epic::factory()->create();
-        $this->actingAs($this->holding(['epics.view', 'epics.edit']));
+        $user = $this->holding(['epics.view', 'epics.edit']);
+        $epic = Epic::factory()->forProjectWithMember($user, ProjectRole::Editor)->create();
+        $this->actingAs($user);
 
         $this->from(route('epics.index'))
             ->post(route('epics.comments.store', $epic), ['body' => 'Allowed'])

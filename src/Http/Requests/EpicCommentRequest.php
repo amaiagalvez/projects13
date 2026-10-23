@@ -2,6 +2,8 @@
 
 namespace Projects13\Http\Requests;
 
+use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Gate;
 use Basics13\Support\Validation\MaxLength;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -23,9 +25,17 @@ class EpicCommentRequest extends FormRequest
         }
     }
 
-    public function authorize(): bool
+    public function authorize(): bool|Response
     {
-        return $this->user()?->can('comment', $this->route('epic')) ?? false;
+        $user = $this->user();
+
+        if ($user === null) {
+            return false;
+        }
+
+        $response = Gate::forUser($user)->inspect('comment', $this->route('epic'));
+
+        return $response->allowed() ?: $response;
     }
 
     /**

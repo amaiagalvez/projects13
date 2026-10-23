@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Flux\FluxServiceProvider;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Blade;
+use Maatwebsite\Excel\ExcelServiceProvider;
 use Basics13\Tests\TestCase as Basics13TestCase;
 use Basics13\Support\Testing\ValidatesFormRequests;
 use Projects13\ServiceProvider as Projects13ServiceProvider;
@@ -39,6 +40,7 @@ abstract class TestCase extends Basics13TestCase
         return [
             ...parent::getPackageProviders($app),
             FluxServiceProvider::class,
+            ExcelServiceProvider::class,
             Projects13ServiceProvider::class,
         ];
     }

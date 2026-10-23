@@ -51,7 +51,6 @@ final class EpicListQuery extends ListQueryBase
                     ->orderBy('PRO_epics.id'),
             ),
             $search,
-            /** @phpstan-ignore argument.type */
             searchColumns: $this->searchColumns(self::RESOURCE_EPIC, [
                 'PRO_epics.name',
                 'epic_projects.name',
@@ -81,7 +80,6 @@ final class EpicListQuery extends ListQueryBase
                     ->orderBy('PRO_epics.id'),
             ),
             $search,
-            /** @phpstan-ignore argument.type */
             searchColumns: $this->searchColumns(self::RESOURCE_EPIC, [
                 'PRO_epics.name',
                 'epic_projects.name',
@@ -105,7 +103,6 @@ final class EpicListQuery extends ListQueryBase
                 ->latest('PRO_epics.deleted_at')
                 ->orderBy('PRO_epics.id'),
             $search,
-            /** @phpstan-ignore argument.type */
             searchColumns: $this->searchColumns(self::RESOURCE_EPIC, [
                 'PRO_epics.name',
                 'epic_projects.name',

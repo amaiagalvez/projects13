@@ -9,6 +9,7 @@ use Projects13\Http\Controllers\EpicTrashController;
 use Projects13\Http\Controllers\EpicCommentController;
 use Projects13\Http\Controllers\EpicArchivedController;
 use Projects13\Http\Controllers\ProjectTrashController;
+use Projects13\Http\Controllers\ProjectMemberController;
 use Projects13\Http\Controllers\ProjectArchivedController;
 
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
@@ -30,7 +31,23 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         ->whereNumber('project')
         ->name('projects.trash.destroy');
     Route::get('projects/options', [ProjectController::class, 'selectOptions'])->name('projects.options');
+    Route::get('projects/export', [ProjectController::class, 'export'])->name('projects.export');
     Route::resource('projects', ProjectController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    Route::get('projects/{project}/members', [ProjectMemberController::class, 'index'])
+        ->whereNumber('project')
+        ->name('projects.members.index');
+    Route::post('projects/{project}/members', [ProjectMemberController::class, 'store'])
+        ->whereNumber('project')
+        ->name('projects.members.store');
+    Route::patch('projects/{project}/members/{member}', [ProjectMemberController::class, 'update'])
+        ->whereNumber('project')
+        ->whereNumber('member')
+        ->name('projects.members.update');
+    Route::delete('projects/{project}/members/{member}', [ProjectMemberController::class, 'destroy'])
+        ->whereNumber('project')
+        ->whereNumber('member')
+        ->name('projects.members.destroy');
 
     Route::get('epics/archived', [EpicArchivedController::class, 'index'])->name('epics.archived.index');
     Route::patch('epics/archived/{epic}', [EpicArchivedController::class, 'activate'])

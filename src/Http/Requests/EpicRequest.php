@@ -5,6 +5,8 @@ namespace Projects13\Http\Requests;
 use Projects13\Models\Epic;
 use Projects13\Models\Project;
 use Illuminate\Validation\Rule;
+use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\Exists;
 use Illuminate\Validation\Rules\Unique;
 use Basics13\Support\Validation\MaxLength;
@@ -27,13 +29,22 @@ class EpicRequest extends FormRequest
         }
     }
 
-    public function authorize(): bool
+    /**
+     * An epic of a project the user is not a member of answers "not found", which a plain boolean
+     * would turn into a 403, so the policy's response is handed back as it is.
+     */
+    public function authorize(): bool|Response
     {
         $epic = $this->route('epic');
+        $user = $this->user();
 
-        return $epic
-            ? ($this->user()?->can('update', $epic) ?? false)
-            : ($this->user()?->can('create', Epic::class) ?? false);
+        if ($user === null) {
+            return false;
+        }
+
+        $response = Gate::forUser($user)->inspect($epic ? 'update' : 'create', $epic ?: Epic::class);
+
+        return $response->allowed() ?: $response;
     }
 
     /**

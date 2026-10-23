@@ -4,6 +4,8 @@ namespace Projects13\Http\Requests;
 
 use Projects13\Models\Project;
 use Illuminate\Validation\Rule;
+use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Gate;
 use Basics13\Support\Validation\MaxLength;
 use Illuminate\Foundation\Http\FormRequest;
 use Projects13\Contracts\ProjectValidationIntegration;
@@ -46,13 +48,22 @@ class ProjectRequest extends FormRequest
         }
     }
 
-    public function authorize(): bool
+    /**
+     * A project the user is not a member of answers "not found", which a plain boolean would turn
+     * into a 403, so the policy's response is handed back as it is.
+     */
+    public function authorize(): bool|Response
     {
         $project = $this->route('project');
+        $user = $this->user();
 
-        return $project
-            ? ($this->user()?->can('update', $project) ?? false)
-            : ($this->user()?->can('create', Project::class) ?? false);
+        if ($user === null) {
+            return false;
+        }
+
+        $response = Gate::forUser($user)->inspect($project ? 'update' : 'create', $project ?: Project::class);
+
+        return $response->allowed() ?: $response;
     }
 
     /**

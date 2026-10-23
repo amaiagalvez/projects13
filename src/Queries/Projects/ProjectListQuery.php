@@ -19,6 +19,12 @@ final class ProjectListQuery extends ListQueryBase
 {
     private const RESOURCE_PROJECT = 'project';
 
+    private const SCOPE_ACTIVE = 'active';
+
+    private const SCOPE_ARCHIVED = 'archived';
+
+    private const SCOPE_TRASHED = 'trashed';
+
     /**
      * The alias the integration joins its related table under. Like the scope above, it crosses
      * the integration on every call, so both live in a named constant.
@@ -33,18 +39,12 @@ final class ProjectListQuery extends ListQueryBase
      */
     public function active(string $search, array $filters = []): LengthAwarePaginator
     {
-        $query = $this->scoped(Project::query()->where('PRO_projects.active', true))
-            ->withExists(['epics' => fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)]);
-
-        $this->applyOrderings($query);
-
         return $this->paginate(
-            $this->withActiveCounts($query),
+            $this->withActiveCounts($this->baseQuery(self::SCOPE_ACTIVE)),
             $search,
-            /** @phpstan-ignore argument.type */
-            searchColumns: $this->searchColumns(self::RESOURCE_PROJECT, ['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date']),
+            searchColumns: $this->searchColumnsFor(self::SCOPE_ACTIVE),
             filters: $filters,
-            scope: 'active',
+            scope: self::SCOPE_ACTIVE,
         );
     }
 
@@ -54,22 +54,12 @@ final class ProjectListQuery extends ListQueryBase
      */
     public function archived(string $search, array $filters = []): LengthAwarePaginator
     {
-        $query = $this->scoped(Project::query()->where('PRO_projects.active', false));
-
-        $this->applyOrderings($query);
-
         return $this->paginate(
-            $this->withActiveCounts($query),
+            $this->withActiveCounts($this->baseQuery(self::SCOPE_ARCHIVED)),
             $search,
-            /** @phpstan-ignore argument.type */
-            searchColumns: $this->searchColumns(self::RESOURCE_PROJECT, [
-                'PRO_projects.name',
-                'PRO_projects.start_date',
-                'PRO_projects.end_date',
-                'PRO_projects.updated_at',
-            ]),
+            searchColumns: $this->searchColumnsFor(self::SCOPE_ARCHIVED),
             filters: $filters,
-            scope: 'archived',
+            scope: self::SCOPE_ARCHIVED,
         );
     }
 
@@ -80,19 +70,11 @@ final class ProjectListQuery extends ListQueryBase
     public function trashed(string $search, array $filters = []): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->withActiveCounts($this->scoped(Project::onlyTrashed()))
-                ->latest('PRO_projects.deleted_at')
-                ->orderBy('PRO_projects.id'),
+            $this->withActiveCounts($this->baseQuery(self::SCOPE_TRASHED)),
             $search,
-            /** @phpstan-ignore argument.type */
-            searchColumns: $this->searchColumns(self::RESOURCE_PROJECT, [
-                'PRO_projects.name',
-                'PRO_projects.start_date',
-                'PRO_projects.end_date',
-                'PRO_projects.deleted_at',
-            ]),
+            searchColumns: $this->searchColumnsFor(self::SCOPE_TRASHED),
             filters: $filters,
-            scope: 'trashed',
+            scope: self::SCOPE_TRASHED,
         );
     }
 
@@ -229,5 +211,56 @@ final class ProjectListQuery extends ListQueryBase
 
         $query->orderBy('PRO_projects.name')
             ->orderBy('PRO_projects.id');
+    }
+
+    /**
+     * Build the base query for a list scope: joins, status and ordering, without the counts the
+     * listing displays. The export skips counts it does not show.
+     *
+     * @return Builder<Project>
+     */
+    private function baseQuery(string $scope): Builder
+    {
+        $query = match ($scope) {
+            self::SCOPE_ARCHIVED => $this->scoped(Project::query()->where('PRO_projects.active', false)),
+            self::SCOPE_TRASHED => $this->scoped(Project::onlyTrashed())
+                ->latest('PRO_projects.deleted_at')
+                ->orderBy('PRO_projects.id'),
+            default => $this->scoped(Project::query()->where('PRO_projects.active', true))
+                ->withExists(['epics' => fn (Builder $q) => $q->withoutGlobalScope(SoftDeletingScope::class)]),
+        };
+
+        // The trash orders by deletion date, not by the project columns.
+        if ($scope !== self::SCOPE_TRASHED) {
+            $this->applyOrderings($query);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Search columns for a list scope, with whatever the integration contributes appended.
+     *
+     * @return non-empty-list<literal-string>
+     */
+    private function searchColumnsFor(string $scope): array
+    {
+        return $this->searchColumns($scope, match ($scope) {
+            self::SCOPE_ARCHIVED => ['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date', 'PRO_projects.updated_at'],
+            self::SCOPE_TRASHED => ['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date', 'PRO_projects.deleted_at'],
+            default => ['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date'],
+        });
+    }
+
+    /**
+     * The list query without pagination, for the Excel export: the same scope, search and filters
+     * the page is showing.
+     *
+     * @param  SearchFilters  $filters
+     * @return Builder<Project>
+     */
+    public function filteredQuery(string $search, array $filters = [], string $scope = self::SCOPE_ACTIVE): Builder
+    {
+        return $this->filtered($this->baseQuery($scope), $search, $this->searchColumnsFor($scope), $filters, $scope);
     }
 }

@@ -5,17 +5,20 @@ namespace Projects13\Http\Controllers;
 use Illuminate\View\View;
 use Projects13\Models\Project;
 use Illuminate\Http\JsonResponse;
+use Projects13\Enums\ProjectRole;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Database\QueryException;
 use Basics13\Http\Controllers\Controller;
 use Projects13\Http\Requests\ProjectRequest;
+use Basics13\Support\Excel\ExcelExportService;
 use Projects13\Http\Requests\ProjectListRequest;
 use Projects13\Queries\Projects\ProjectListQuery;
 use Projects13\Contracts\ProjectDisplayIntegration;
 use Projects13\Transformers\ProjectListTransformer;
 use Projects13\Contracts\ProjectValidationIntegration;
 use Basics13\Support\Database\UniqueConstraintViolation;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Projects13\Http\Requests\ProjectSelectOptionsRequest;
 use Projects13\Queries\Projects\ProjectSelectOptionsQuery;
 
@@ -44,6 +47,34 @@ class ProjectController extends Controller
             'filters' => $filters,
             'scope' => 'active',
         ]);
+    }
+
+    public function export(
+        ProjectListRequest $request,
+        ProjectListQuery $query,
+    ): BinaryFileResponse {
+        $search = $request->search();
+        $filters = $request->filters() ?? [];
+        $scope = $request->scope();
+
+        $queryBuilder = $query->filteredQuery($search, $filters, $scope);
+
+        $columnDefinitions = [
+            ['key' => 'id', 'label' => __('ID')],
+            ['key' => 'name', 'label' => __('Name')],
+            ['key' => 'notes', 'label' => __('Notes')],
+            ['key' => 'start_date', 'label' => __('Start date')],
+            ['key' => 'end_date', 'label' => __('End date')],
+            ['key' => 'active', 'label' => __('Status'), 'transformer' => fn ($p) => $p->active ? __('basics13::messages.active_label') : __('basics13::messages.inactive_label')],
+            ['key' => 'created_at', 'label' => __('Created at')],
+        ];
+
+        return (new ExcelExportService(
+            query: $queryBuilder,
+            title: 'Projects Export',
+            columnDefinitions: $columnDefinitions,
+            maxRows: 50000,
+        ))->download(ExcelExportService::fileName(__('Projects'), $scope));
     }
 
     public function selectOptions(
@@ -75,6 +106,14 @@ class ProjectController extends Controller
                 $project = new Project($request->validated());
                 $project->forceFill($integration->saving($request, null));
                 $project->save();
+
+                // Whoever creates the project owns it, so it does not vanish from their own lists.
+                $authorId = (int) $request->user()?->getAuthIdentifier();
+                $project->members()->forceCreate([
+                    'user_id' => $authorId,
+                    'role' => ProjectRole::Owner,
+                    'added_by' => $authorId,
+                ]);
             });
         } catch (QueryException $exception) {
             UniqueConstraintViolation::rethrowAsValidationError($exception);

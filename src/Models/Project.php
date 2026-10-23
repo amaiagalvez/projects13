@@ -71,6 +71,17 @@ class Project extends Model
     }
 
     /**
+     * The users the project is shared with, each one with a role. Without `projects.manage` a user
+     * only sees the projects they are a member of.
+     *
+     * @return HasMany<ProjectMember, $this>
+     */
+    public function members(): HasMany
+    {
+        return $this->hasMany(ProjectMember::class);
+    }
+
+    /**
      * Comments written on the epics of this project; trashed epics are excluded.
      *
      * @return HasManyThrough<EpicComment, Epic, $this>
