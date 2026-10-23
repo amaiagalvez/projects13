@@ -5,6 +5,7 @@ namespace Projects13\Queries\Projects;
 use Projects13\Models\Project;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Builder;
+use Projects13\Queries\ProjectVisibility;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Projects13\Contracts\ProjectQueryIntegration;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -177,7 +178,26 @@ final class ProjectListQuery extends ListQueryBase
 
         $this->integration->scope($query, self::RESOURCE_PROJECT, self::RELATED_ALIAS);
 
-        return $query;
+        return (new ProjectVisibility)->restrict($query, 'PRO_projects.id');
+    }
+
+    /**
+     * The tab badges count only the projects the user reaches, like the lists under them.
+     *
+     * @return array{active: int, archived: int, trashed: int}
+     */
+    public function stateCounts(
+        ?int $activeTotal = null,
+        ?int $archivedTotal = null,
+        ?int $trashedTotal = null,
+    ): array {
+        $visible = static fn (Builder $query): Builder => (new ProjectVisibility)->restrict($query, 'PRO_projects.id');
+
+        return [
+            'active' => $activeTotal ?? $visible(Project::query()->where('active', true))->count(),
+            'archived' => $archivedTotal ?? $visible(Project::query()->where('active', false))->count(),
+            'trashed' => $trashedTotal ?? $visible(Project::onlyTrashed())->count(),
+        ];
     }
 
     /**
@@ -226,7 +246,10 @@ final class ProjectListQuery extends ListQueryBase
             self::SCOPE_TRASHED => $this->scoped(Project::onlyTrashed())
                 ->latest('PRO_projects.deleted_at')
                 ->orderBy('PRO_projects.id'),
+            // The members come along so each row can tell, without a query of its own, whether the
+            // user may manage them from the drawer.
             default => $this->scoped(Project::query()->where('PRO_projects.active', true))
+                ->with('members')
                 ->withExists(['epics' => fn (Builder $q) => $q->withoutGlobalScope(SoftDeletingScope::class)]),
         };
 

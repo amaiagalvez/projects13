@@ -37,7 +37,7 @@ class ProjectMemberRequestTest extends TestCase
                 'user_id' => User::factory()->create()->id,
                 'role' => 'editor',
             ])
-            ->assertRedirect();
+            ->assertOk();
     }
 
     public function test_authorize_returns_true_for_project_owner(): void
@@ -51,7 +51,7 @@ class ProjectMemberRequestTest extends TestCase
                 'user_id' => $newMember->id,
                 'role' => 'editor',
             ])
-            ->assertRedirect();
+            ->assertOk();
     }
 
     public function test_authorize_returns_false_for_editor(): void
@@ -170,7 +170,7 @@ class ProjectMemberRequestTest extends TestCase
                 'user_id' => $member->user_id,
                 'role' => 'editor',
             ])
-            ->assertRedirect();
+            ->assertOk();
     }
 
     public function test_attributes_returns_translated_names(): void

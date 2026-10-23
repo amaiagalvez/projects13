@@ -96,5 +96,22 @@
     "epics.restore": "Restore epics from the trash",
     "epics.force_delete": "Delete epics permanently",
     "epics.manage": "Manage epics (full access)",
-    "Created at": "Created at"
+    "Created at": "Created at",
+    "A project must have at least one owner.": "A project must have at least one owner.",
+    "Add a member": "Add a member",
+    "Add member": "Add member",
+    "Cannot add member to a deleted project or user is already a member.": "Cannot add member to a deleted project or user is already a member.",
+    "Editor": "Editor",
+    "Member added successfully.": "Member added successfully.",
+    "Member removed successfully.": "Member removed successfully.",
+    "Member role updated successfully.": "Member role updated successfully.",
+    "Members": "Members",
+    "Owner": "Owner",
+    "Remove": "Remove",
+    "Remove from the project": "Remove from the project",
+    "Search people by name": "Search people by name",
+    "The change could not be saved.": "The change could not be saved.",
+    "This user is already a member of the project.": "This user is already a member of the project.",
+    "Viewer": "Viewer",
+    "Who can see this project. Owners also manage its members.": "Who can see this project. Owners also manage its members."
 }

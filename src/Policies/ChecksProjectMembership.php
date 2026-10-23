@@ -25,14 +25,9 @@ trait ChecksProjectMembership
      */
     private function decideOn(User $user, Project $project, string $permission, Closure $roleAllows): bool|Response
     {
-        // projects.manage grants access to everything project-related (including epics)
+        // projects.manage reaches every project, and everything under them. A module's own manage
+        // (epics.manage) grants its actions but not projects the user is not a member of.
         if ($this->permits($user, 'projects.manage')) {
-            return true;
-        }
-
-        // Module-specific manage permission (e.g., epics.manage) grants access within the module
-        $module = explode('.', $permission, 2)[0];
-        if ($this->permits($user, $module.'.manage')) {
             return true;
         }
 

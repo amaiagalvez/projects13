@@ -9,8 +9,10 @@ use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\Exists;
 use Illuminate\Validation\Rules\Unique;
+use Projects13\Queries\ProjectVisibility;
 use Basics13\Support\Validation\MaxLength;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 class EpicRequest extends FormRequest
 {
@@ -119,8 +121,14 @@ class EpicRequest extends FormRequest
             return Rule::exists(Project::class, 'id')->whereNull('deleted_at');
         }
 
+        // Moving an epic, or creating one, is only allowed into a project the user owns or edits.
+        $editable = (new ProjectVisibility)->editableProjectIds();
+
         return Rule::exists(Project::class, 'id')
             ->whereNull('deleted_at')
-            ->where('active', true);
+            ->where('active', true)
+            ->when($editable !== null, static fn (Exists $rule): Exists => $rule->where(
+                static fn (QueryBuilder $query) => $query->whereIn('id', $editable),
+            ));
     }
 }

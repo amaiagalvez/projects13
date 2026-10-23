@@ -10,8 +10,12 @@ use Illuminate\Support\Facades\DB;
 use Projects13\Models\ProjectMember;
 use Illuminate\Http\RedirectResponse;
 use Basics13\Http\Controllers\Controller;
+use Illuminate\Foundation\Http\FormRequest;
 use Projects13\Http\Requests\ProjectMemberRequest;
+use Projects13\Queries\Members\MemberCandidateQuery;
 use Projects13\Http\Requests\ProjectMemberListRequest;
+use Projects13\Http\Requests\ProjectMemberDestroyRequest;
+use Projects13\Http\Requests\ProjectMemberCandidatesRequest;
 
 class ProjectMemberController extends Controller
 {
@@ -44,7 +48,15 @@ class ProjectMemberController extends Controller
         return response()->json(['members' => $data]);
     }
 
-    public function store(ProjectMemberRequest $request, Project $project): RedirectResponse
+    public function candidates(
+        ProjectMemberCandidatesRequest $request,
+        Project $project,
+        MemberCandidateQuery $query,
+    ): JsonResponse {
+        return response()->json(['results' => $query->search($project, $request->search())]);
+    }
+
+    public function store(ProjectMemberRequest $request, Project $project): RedirectResponse|JsonResponse
     {
         $this->authorize('manageMembers', $project);
 
@@ -74,60 +86,70 @@ class ProjectMemberController extends Controller
         });
 
         if (! $added) {
-            return back(fallback: route('projects.index'))
-                ->with('error', __('Cannot add member to a deleted project or user is already a member.'));
+            return $this->outcome($request, false, __('Cannot add member to a deleted project or user is already a member.'));
         }
 
-        return back(fallback: route('projects.index'))
-            ->with('status', __('Member added successfully.'));
+        return $this->outcome($request, true, __('Member added successfully.'));
     }
 
-    public function update(ProjectMemberRequest $request, Project $project, ProjectMember $member): RedirectResponse
+    public function update(ProjectMemberRequest $request, Project $project, ProjectMember $member): RedirectResponse|JsonResponse
     {
         $this->authorize('manageMembers', $project);
+        abort_unless($member->project_id === $project->getKey(), 404);
 
-        // Ensure the member belongs to this project
-        if ($member->project_id !== $project->getKey()) {
-            abort(404);
+        $role = $request->enum('role', ProjectRole::class);
+        $updated = DB::transaction(fn (): bool => $this->keepsAnOwner($project, $member, $role) && $member->update(['role' => $role]));
+
+        if (! $updated) {
+            return $this->outcome($request, false, __('A project must have at least one owner.'));
         }
 
-        // Prevent changing the owner's role if they're the only owner
-        if ($member->role === ProjectRole::Owner && $request->enum('role', ProjectRole::class) !== ProjectRole::Owner) {
-            $ownerCount = $project->members()->where('role', ProjectRole::Owner)->count();
-            if ($ownerCount <= 1) {
-                return back(fallback: route('projects.index'))
-                    ->with('error', __('A project must have at least one owner.'));
-            }
-        }
-
-        $member->role = $request->enum('role', ProjectRole::class);
-        $member->save();
-
-        return back(fallback: route('projects.index'))
-            ->with('status', __('Member role updated successfully.'));
+        return $this->outcome($request, true, __('Member role updated successfully.'));
     }
 
-    public function destroy(Project $project, ProjectMember $member): RedirectResponse
+    public function destroy(ProjectMemberDestroyRequest $request, Project $project, ProjectMember $member): RedirectResponse|JsonResponse
     {
         $this->authorize('manageMembers', $project);
+        abort_unless($member->project_id === $project->getKey(), 404);
 
-        // Ensure the member belongs to this project
-        if ($member->project_id !== $project->getKey()) {
-            abort(404);
+        $removed = DB::transaction(fn (): bool => $this->keepsAnOwner($project, $member, null) && $member->delete() !== false);
+
+        if (! $removed) {
+            return $this->outcome($request, false, __('A project must have at least one owner.'));
         }
 
-        // Prevent removing the last owner
-        if ($member->role === ProjectRole::Owner) {
-            $ownerCount = $project->members()->where('role', ProjectRole::Owner)->count();
-            if ($ownerCount <= 1) {
-                return back(fallback: route('projects.index'))
-                    ->with('error', __('A project must have at least one owner.'));
-            }
+        return $this->outcome($request, true, __('Member removed successfully.'));
+    }
+
+    /**
+     * The drawer manages the members without leaving the page, so it gets JSON; a plain form post
+     * goes back where it came from with the flash message.
+     */
+    private function outcome(FormRequest $request, bool $succeeded, string $message): RedirectResponse|JsonResponse
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message], $succeeded ? 200 : 422);
         }
 
-        $member->delete();
+        return back(fallback: route('projects.index'))->with($succeeded ? 'status' : 'error', $message);
+    }
 
-        return back(fallback: route('projects.index'))
-            ->with('status', __('Member removed successfully.'));
+    /**
+     * Whether the project still has an owner once this member takes the new role, or leaves when it
+     * is null. The project row is locked first, so two requests demoting the last two owners at once
+     * cannot both see the other one still there. Callers run it inside their transaction.
+     */
+    private function keepsAnOwner(Project $project, ProjectMember $member, ?ProjectRole $role): bool
+    {
+        Project::withTrashed()->whereKey($project->getKey())->lockForUpdate()->firstOrFail();
+
+        if ($member->role !== ProjectRole::Owner || $role === ProjectRole::Owner) {
+            return true;
+        }
+
+        return $project->members()
+            ->where('role', ProjectRole::Owner)
+            ->whereKeyNot($member->getKey())
+            ->exists();
     }
 }

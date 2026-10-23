@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Projects13\Models\Epic;
 use Projects13\Models\EpicComment;
 use Illuminate\Database\Eloquent\Builder;
+use Projects13\Queries\ProjectVisibility;
 use Projects13\Queries\Planning\PlanningQuery;
 
 /**
@@ -50,7 +51,7 @@ final class DashboardSummaryQuery
                 ->where('end_date', '<', $today->startOfMonth()->addMonth()->toDateString())
                 ->count(),
             'weeklyDue' => $this->weeklyDue($today),
-            'commentsThisWeek' => EpicComment::query()
+            'commentsThisWeek' => $this->visibleComments()
                 ->where('created_at', '>=', $today->startOfWeek())
                 ->count(),
             'deadlines' => $this->deadlines($today),
@@ -66,7 +67,7 @@ final class DashboardSummaryQuery
      */
     private function upcomingEpics(CarbonImmutable $today): Builder
     {
-        return Epic::query()
+        return (new ProjectVisibility)->restrict(Epic::query(), 'project_id')
             ->where('active', true)
             ->where('end_date', '>=', $today->toDateString());
     }
@@ -82,7 +83,7 @@ final class DashboardSummaryQuery
         $start = $today->startOfWeek();
         $weeks = array_fill(0, self::TREND_WEEKS, 0);
 
-        $endDates = Epic::query()
+        $endDates = (new ProjectVisibility)->restrict(Epic::query(), 'project_id')
             ->where('active', true)
             ->where('end_date', '>=', $start->toDateString())
             ->where('end_date', '<', $start->addWeeks(self::TREND_WEEKS)->toDateString())
@@ -121,7 +122,7 @@ final class DashboardSummaryQuery
      */
     private function comments(): array
     {
-        $comments = EpicComment::query()
+        $comments = $this->visibleComments()
             ->with(['user:id,name', 'epic:id,name'])
             ->latest()
             ->latest('id')
@@ -146,5 +147,18 @@ final class DashboardSummaryQuery
         }
 
         return $rows;
+    }
+
+    /**
+     * The comments written on epics of the projects the user reaches.
+     *
+     * @return Builder<EpicComment>
+     */
+    private function visibleComments(): Builder
+    {
+        return EpicComment::query()->whereIn(
+            'epic_id',
+            (new ProjectVisibility)->restrict(Epic::withTrashed(), 'project_id')->select('id'),
+        );
     }
 }

@@ -120,7 +120,7 @@ class ProjectMemberControllerTest extends TestCase
         $newMember = User::factory()->create();
         $project = Project::factory()->hasMember($owner, ProjectRole::Owner)->create();
 
-        $response = $this->postJson(route('projects.members.store', $project), [
+        $response = $this->from(route('projects.index'))->post(route('projects.members.store', $project), [
             'user_id' => $newMember->id,
             'role' => 'editor',
         ]);
@@ -148,8 +148,7 @@ class ProjectMemberControllerTest extends TestCase
             'role' => 'viewer',
         ]);
 
-        $response->assertRedirect(route('projects.index'))
-            ->assertSessionHas('status', __('Member added successfully.'));
+        $response->assertOk()->assertExactJson(['message' => __('Member added successfully.')]);
 
         $this->assertDatabaseHas('PRO_project_members', [
             'project_id' => $project->id,

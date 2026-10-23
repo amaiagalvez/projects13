@@ -96,5 +96,22 @@
     "epics.restore": "Restaurar épicas de la papelera",
     "epics.force_delete": "Eliminar épicas definitivamente",
     "epics.manage": "Gestionar épicas (acceso total)",
-    "Created at": "Fecha de creación"
+    "Created at": "Fecha de creación",
+    "A project must have at least one owner.": "Un proyecto debe tener al menos un propietario.",
+    "Add a member": "Añadir un miembro",
+    "Add member": "Añadir miembro",
+    "Cannot add member to a deleted project or user is already a member.": "No se puede añadir el miembro: el proyecto está eliminado o el usuario ya es miembro.",
+    "Editor": "Editor",
+    "Member added successfully.": "Miembro añadido.",
+    "Member removed successfully.": "Miembro quitado.",
+    "Member role updated successfully.": "Rol del miembro actualizado.",
+    "Members": "Miembros",
+    "Owner": "Propietario",
+    "Remove": "Quitar",
+    "Remove from the project": "Quitar del proyecto",
+    "Search people by name": "Buscar personas por nombre",
+    "The change could not be saved.": "No se ha podido guardar el cambio.",
+    "This user is already a member of the project.": "Este usuario ya es miembro del proyecto.",
+    "Viewer": "Lector",
+    "Who can see this project. Owners also manage its members.": "Quién puede ver este proyecto. Los propietarios también gestionan sus miembros."
 }

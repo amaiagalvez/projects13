@@ -7,10 +7,14 @@ use Illuminate\Validation\Rule;
 use Projects13\Enums\ProjectRole;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\Gate;
+use Projects13\Models\ProjectMember;
+use Basics13\Concerns\ResolvesUserModel;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ProjectMemberRequest extends FormRequest
 {
+    use ResolvesUserModel;
+
     /**
      * Keep member errors apart from the project form errors shown in the same drawer.
      *
@@ -33,6 +37,10 @@ class ProjectMemberRequest extends FormRequest
     }
 
     /**
+     * Adding needs an active account outside the trash that is not a member yet, and never the
+     * super-admin, which nobody else may see. Changing a role keeps the member it was: the user can
+     * be sent back but not swapped for another one.
+     *
      * @return array<string, array<int, mixed>>
      */
     public function rules(): array
@@ -40,27 +48,36 @@ class ProjectMemberRequest extends FormRequest
         $project = $this->route('project');
         $member = $this->route('member');
 
-        /** @var Project|null $project */
-        $project = $project instanceof Project ? $project : null;
+        if ($member instanceof ProjectMember) {
+            return [
+                'user_id' => ['sometimes', 'integer', Rule::in([$member->user_id])],
+                'role' => ['required', 'string', Rule::enum(ProjectRole::class)],
+            ];
+        }
 
-        $rules = [
+        return [
             'user_id' => [
                 'required',
                 'integer',
-                Rule::exists('users', 'id'),
-                // On store, ensure user is not already a member
-                function (string $attribute, mixed $value, \Closure $fail) use ($project, $member) {
-                    if ($project && ! $member) {
-                        if ($project->members()->where('user_id', $value)->exists()) {
-                            $fail(__('This user is already a member of the project.'));
-                        }
-                    }
-                },
+                Rule::exists($this->userModelClass(), 'id')
+                    ->whereNull('deleted_at')
+                    ->where('active', true)
+                    ->where('is_super_admin', false),
+                Rule::unique(ProjectMember::class, 'user_id')
+                    ->where('project_id', $project instanceof Project ? $project->getKey() : 0),
             ],
             'role' => ['required', 'string', Rule::enum(ProjectRole::class)],
         ];
+    }
 
-        return $rules;
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'user_id.unique' => __('This user is already a member of the project.'),
+        ];
     }
 
     /**

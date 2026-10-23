@@ -8,6 +8,7 @@ use Projects13\Models\Project;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Database\Eloquent\Builder;
+use Projects13\Queries\ProjectVisibility;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Projects13\Contracts\ProjectQueryIntegration;
 use Projects13\Contracts\ProjectDisplayIntegration;
@@ -123,10 +124,14 @@ final class PlanningQuery extends ListQueryBase
             ->where('active', true)
             ->where('end_date', '<', $today->toDateString());
 
+        $visibility = new ProjectVisibility;
+        $projects = static fn (): Builder => $visibility->restrict(Project::query(), 'id');
+        $epics = static fn (): Builder => $visibility->restrict(Epic::query(), 'project_id');
+
         return [
-            'projects' => Project::query()->where('active', true)->count(),
-            'epics' => Epic::query()->where('active', true)->count(),
-            'overdue' => $late(Project::query())->count() + $late(Epic::query())->count(),
+            'projects' => $projects()->where('active', true)->count(),
+            'epics' => $epics()->where('active', true)->count(),
+            'overdue' => $late($projects())->count() + $late($epics())->count(),
         ];
     }
 
@@ -146,6 +151,7 @@ final class PlanningQuery extends ListQueryBase
             ->select('PRO_projects.id');
 
         $this->queryIntegration->scope($query, 'planning', 'planning_related');
+        (new ProjectVisibility)->restrict($query, 'PRO_projects.id');
 
         /** @var list<int|string> $ids */
         $ids = $this->whereMatches($query, $search,

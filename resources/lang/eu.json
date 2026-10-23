@@ -96,5 +96,22 @@
     "epics.restore": "Leheneratu epikak zakarrontzitik",
     "epics.force_delete": "Ezabatu epikak betiko",
     "epics.manage": "Kudeatu epikak (sarbide osoa)",
-    "Created at": "Sortze-data"
+    "Created at": "Sortze-data",
+    "A project must have at least one owner.": "Proiektu batek jabe bat izan behar du gutxienez.",
+    "Add a member": "Gehitu kide bat",
+    "Add member": "Gehitu kidea",
+    "Cannot add member to a deleted project or user is already a member.": "Ezin da kidea gehitu: proiektua ezabatuta dago edo erabiltzailea kidea da dagoeneko.",
+    "Editor": "Editorea",
+    "Member added successfully.": "Kidea gehitu da.",
+    "Member removed successfully.": "Kidea kendu da.",
+    "Member role updated successfully.": "Kidearen rola eguneratu da.",
+    "Members": "Kideak",
+    "Owner": "Jabea",
+    "Remove": "Kendu",
+    "Remove from the project": "Kendu proiektutik",
+    "Search people by name": "Bilatu pertsonak izenez",
+    "The change could not be saved.": "Ezin izan da aldaketa gorde.",
+    "This user is already a member of the project.": "Erabiltzaile hau proiektuko kidea da dagoeneko.",
+    "Viewer": "Irakurlea",
+    "Who can see this project. Owners also manage its members.": "Nork ikus dezakeen proiektu hau. Jabeek kideak ere kudeatzen dituzte."
 }

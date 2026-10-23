@@ -75,15 +75,22 @@ class EpicPolicyTest extends TestCase
 
         $this->assertTrue($policy->{$ability}($manager, $epicManager));
 
-        // epics.manage should also grant access
+        // epics.manage grants every epic action, but the role on the project still limits it: a
+        // viewer only reads, and a non-member does not even find the epic.
         $epicManager = PermissionsActor::holding(['epics.manage']);
-        $memberEpicManager = new ProjectMember(['user_id' => $epicManager->getAuthIdentifier(), 'role' => ProjectRole::Viewer]);
-        $projectEpicManager = new Project(['id' => 1]);
-        $projectEpicManager->setRelation('members', collect([$memberEpicManager]));
-        $epicEpicManager = new Epic(['project_id' => 1]);
-        $epicEpicManager->setRelation('project', $projectEpicManager);
+        $viewerProject = new Project(['id' => 1]);
+        $viewerProject->setRelation('members', collect([new ProjectMember(['user_id' => $epicManager->getAuthIdentifier(), 'role' => ProjectRole::Viewer])]));
+        $viewerEpic = new Epic(['project_id' => 1]);
+        $viewerEpic->setRelation('project', $viewerProject);
 
-        $this->assertTrue($policy->{$ability}($epicManager, $epicEpicManager));
+        $this->assertFalse($policy->{$ability}($epicManager, $viewerEpic));
+
+        $strangerProject = new Project(['id' => 1]);
+        $strangerProject->setRelation('members', collect());
+        $strangerEpic = new Epic(['project_id' => 1]);
+        $strangerEpic->setRelation('project', $strangerProject);
+
+        $this->assertSame(404, $policy->{$ability}($epicManager, $strangerEpic)->status());
     }
 
     public function test_non_member_gets_not_found(): void

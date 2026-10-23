@@ -5,6 +5,7 @@ namespace Projects13\Queries\Projects;
 use Projects13\Models\Project;
 use Illuminate\Support\Collection;
 use Basics13\Queries\ListQueryBase;
+use Projects13\Queries\ProjectVisibility;
 use Projects13\Contracts\ProjectQueryIntegration;
 use Projects13\Contracts\ProjectDisplayIntegration;
 
@@ -30,6 +31,8 @@ final class ProjectSelectOptionsQuery extends ListQueryBase
             ->select(['PRO_projects.id', 'PRO_projects.name']);
 
         $this->queryIntegration->scope($query, 'project', 'project_related');
+        // The selector is where an epic gets its project, so it offers the projects the user edits.
+        (new ProjectVisibility)->restrictToEditable($query, 'PRO_projects.id');
 
         /** @var non-empty-list<literal-string> $columns An integration appends to the base column; it never replaces it. */
         $columns = $this->queryIntegration->searchColumns('project', ['PRO_projects.name']);

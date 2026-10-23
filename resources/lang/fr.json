@@ -96,5 +96,22 @@
     "epics.restore": "Restaurer des épopées de la corbeille",
     "epics.force_delete": "Supprimer définitivement des épopées",
     "epics.manage": "Gérer les épopées (accès complet)",
-    "Created at": "Date de création"
+    "Created at": "Date de création",
+    "A project must have at least one owner.": "Un projet doit avoir au moins un propriétaire.",
+    "Add a member": "Ajouter un membre",
+    "Add member": "Ajouter le membre",
+    "Cannot add member to a deleted project or user is already a member.": "Impossible d'ajouter le membre : le projet est supprimé ou l'utilisateur est déjà membre.",
+    "Editor": "Éditeur",
+    "Member added successfully.": "Membre ajouté.",
+    "Member removed successfully.": "Membre retiré.",
+    "Member role updated successfully.": "Rôle du membre mis à jour.",
+    "Members": "Membres",
+    "Owner": "Propriétaire",
+    "Remove": "Retirer",
+    "Remove from the project": "Retirer du projet",
+    "Search people by name": "Rechercher des personnes par nom",
+    "The change could not be saved.": "La modification n'a pas pu être enregistrée.",
+    "This user is already a member of the project.": "Cet utilisateur est déjà membre du projet.",
+    "Viewer": "Lecteur",
+    "Who can see this project. Owners also manage its members.": "Qui peut voir ce projet. Les propriétaires gèrent aussi ses membres."
 }

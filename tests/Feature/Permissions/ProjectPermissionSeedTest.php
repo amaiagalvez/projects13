@@ -25,11 +25,11 @@ class ProjectPermissionSeedTest extends TestCase
 
     public function test_running_it_again_duplicates_nothing(): void
     {
-        $counts = [DB::table('permissions')->count(), DB::table('permission_role')->count()];
+        $counts = [DB::table('BAS_permissions')->count(), DB::table('BAS_permission_role')->count()];
 
         $migration = require dirname(__DIR__, 3).'/database/migrations/2026_10_23_000000_seed_project_permissions.php';
         $migration->up();
 
-        $this->assertSame($counts, [DB::table('permissions')->count(), DB::table('permission_role')->count()]);
+        $this->assertSame($counts, [DB::table('BAS_permissions')->count(), DB::table('BAS_permission_role')->count()]);
     }
 }

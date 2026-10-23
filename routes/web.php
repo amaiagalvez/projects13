@@ -37,6 +37,9 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::get('projects/{project}/members', [ProjectMemberController::class, 'index'])
         ->whereNumber('project')
         ->name('projects.members.index');
+    Route::get('projects/{project}/members/candidates', [ProjectMemberController::class, 'candidates'])
+        ->whereNumber('project')
+        ->name('projects.members.candidates');
     Route::post('projects/{project}/members', [ProjectMemberController::class, 'store'])
         ->whereNumber('project')
         ->name('projects.members.store');

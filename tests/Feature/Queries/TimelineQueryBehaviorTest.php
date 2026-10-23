@@ -69,6 +69,9 @@ class TimelineQueryBehaviorTest extends TestCase
         $query = $this->timelineQuery();
         $project = Project::factory()->create(['active' => true, 'start_date' => '2026-01-01']);
         Epic::factory()->for($project)->count(2)->create(['active' => true]);
+        // The signed-in user keeps its permission slugs once loaded: a first call loads them, so both
+        // measured calls start from the same state.
+        $query->overview('');
 
         $few = $this->countQueries(fn () => $query->overview(''));
 

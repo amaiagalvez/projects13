@@ -8,6 +8,7 @@ use Projects13\Models\Project;
 use Illuminate\Support\Collection;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Builder;
+use Projects13\Queries\ProjectVisibility;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Projects13\Contracts\ProjectQueryIntegration;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -180,6 +181,7 @@ final class TimelineQuery extends ListQueryBase
         $query = Project::query()->where('PRO_projects.active', true);
 
         $this->queryIntegration->scope($query, 'timeline', 'timeline_related');
+        (new ProjectVisibility)->restrict($query, 'PRO_projects.id');
 
         $nameColumns = $this->searchColumns('timeline', ['PRO_projects.name']);
 
@@ -206,6 +208,7 @@ final class TimelineQuery extends ListQueryBase
         $query = Project::query()->where('PRO_projects.active', true);
 
         $this->queryIntegration->scope($query, 'timeline', 'timeline_related');
+        (new ProjectVisibility)->restrict($query, 'PRO_projects.id');
 
         // Select only PRO_projects columns to avoid issues with pluck() after joins
         $query->select('PRO_projects.*');

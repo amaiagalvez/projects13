@@ -3,6 +3,7 @@
 namespace Projects13\Transformers;
 
 use Projects13\Models\Project;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Transformers\ListTransformer;
 use Projects13\Contracts\ProjectDisplayIntegration;
@@ -75,7 +76,28 @@ class ProjectListTransformer extends ListTransformer
             'notes' => $record->notes,
             'start_date' => $record->start_date->toDateString(),
             'end_date' => $record->end_date?->toDateString() ?? '',
+            'members' => $this->memberUrls($record),
             ...$extra,
+        ];
+    }
+
+    /**
+     * Where the drawer reads and changes the members, or null when the user may not manage them,
+     * which hides that part of the drawer.
+     *
+     * @param  Project  $record
+     * @return array{index: string, candidates: string, store: string}|null
+     */
+    private function memberUrls(Model $record): ?array
+    {
+        if (! Gate::allows('manageMembers', $record)) {
+            return null;
+        }
+
+        return [
+            'index' => route('projects.members.index', $record),
+            'candidates' => route('projects.members.candidates', $record),
+            'store' => route('projects.members.store', $record),
         ];
     }
 

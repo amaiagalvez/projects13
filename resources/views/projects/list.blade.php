@@ -51,6 +51,7 @@
                 notes: '',
                 start_date: '',
                 end_date: '',
+                members: null,
                 ...@js($integrationFreshState),
                 context: 'create',
                 method: 'POST',

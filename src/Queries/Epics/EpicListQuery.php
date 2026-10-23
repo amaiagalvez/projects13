@@ -6,6 +6,7 @@ use Projects13\Models\Epic;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Projects13\Queries\ProjectVisibility;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Projects13\Contracts\ProjectQueryIntegration;
 
@@ -255,7 +256,26 @@ final class EpicListQuery extends ListQueryBase
     {
         $this->integration->scope($query, self::RESOURCE_EPIC, self::RELATED_ALIAS);
 
-        return $query;
+        return (new ProjectVisibility)->restrict($query, 'PRO_epics.project_id');
+    }
+
+    /**
+     * The tab badges count only the epics of the projects the user reaches, like the lists.
+     *
+     * @return array{active: int, archived: int, trashed: int}
+     */
+    public function stateCounts(
+        ?int $activeTotal = null,
+        ?int $archivedTotal = null,
+        ?int $trashedTotal = null,
+    ): array {
+        $visible = static fn (Builder $query): Builder => (new ProjectVisibility)->restrict($query, 'project_id');
+
+        return [
+            'active' => $activeTotal ?? $visible(Epic::query()->where('active', true))->count(),
+            'archived' => $archivedTotal ?? $visible(Epic::query()->where('active', false))->count(),
+            'trashed' => $trashedTotal ?? $visible(Epic::onlyTrashed())->count(),
+        ];
     }
 
     /**
