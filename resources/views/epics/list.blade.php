@@ -206,8 +206,13 @@
     @elseif ($deletedEpicConflict)
         x-init="$nextTick(() => $dispatch('modal-show', { name: 'epic-name-conflict' }))" @endif
         class="flex flex-col gap-y-2 sm:gap-y-3">
-        <x-basics13::list.page-header :list="$list" prefix="epic" :description="__('Pieces of work within each project.')" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters">
+        <x-basics13::list.page-header :list="$list" prefix="epic" :description="__('Pieces of work within each project.')">
             <x-slot:actions>
+                <x-basics13::list.excel-export
+                    prefix="epic"
+                    :route="route('epics.export')"
+                    :scope="$scope"
+                />
                 @if ($list['create'])
                     <x-basics13::list.create-action prefix="epic" :label="__('New epic')" click="createEpic()" />
                 @endif
@@ -231,9 +236,11 @@
 
         @fragment('list-results')
             <x-basics13::list.searchable-results :search="$list['search']" :total="$epics->total()" :scope="$scope" :filters="$filters">
-                <x-basics13::list.search :search="$list['search']" prefix="epic" />
-
                 <x-basics13::list.table prefix="epic" :paginator="$epics">
+                    <x-slot:toolbar>
+                        <x-basics13::list.search :search="$list['search']" prefix="epic" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters" />
+                    </x-slot:toolbar>
+
                     <flux:table.columns>
                         <flux:table.column scope="col">{{ __('Name') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Project') }}</flux:table.column>

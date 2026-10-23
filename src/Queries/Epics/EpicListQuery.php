@@ -23,6 +23,12 @@ final class EpicListQuery extends ListQueryBase
 
     private const RESOURCE_EPIC = 'epic';
 
+    private const SCOPE_ACTIVE = 'active';
+
+    private const SCOPE_ARCHIVED = 'archived';
+
+    private const SCOPE_TRASHED = 'trashed';
+
     /**
      * The alias the integration joins its related table under. Like the scope above, it crosses
      * the integration on every call, so both live in a named constant.
@@ -32,33 +38,17 @@ final class EpicListQuery extends ListQueryBase
     public function __construct(private readonly ProjectQueryIntegration $integration) {}
 
     /**
-     * Epics without dates are listed after dated ones.
-     *
      * @param  SearchFilters  $filters
      * @return LengthAwarePaginator<int, Epic>
      */
     public function active(string $search, array $filters = []): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->withIntegrationOrderings(
-                $this->scoped($this->withProject(Epic::query()->where('PRO_epics.active', true)))
-                    ->orderByRaw('PRO_epics.start_date IS NULL')
-                    ->orderBy('PRO_epics.start_date')
-                    ->orderByRaw('PRO_epics.end_date IS NULL')
-                    ->orderBy('PRO_epics.end_date')
-                    ->orderBy('epic_projects.name')
-                    ->orderBy('PRO_epics.name')
-                    ->orderBy('PRO_epics.id'),
-            ),
+            $this->baseQuery(self::SCOPE_ACTIVE),
             $search,
-            searchColumns: $this->searchColumns(self::RESOURCE_EPIC, [
-                'PRO_epics.name',
-                'epic_projects.name',
-                'PRO_epics.start_date',
-                'PRO_epics.end_date',
-            ]),
+            searchColumns: $this->searchColumnsFor(self::SCOPE_ACTIVE),
             filters: $filters,
-            scope: 'active',
+            scope: self::SCOPE_ACTIVE,
         );
     }
 
@@ -69,26 +59,11 @@ final class EpicListQuery extends ListQueryBase
     public function archived(string $search, array $filters = []): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->withIntegrationOrderings(
-                $this->scoped($this->withProject(Epic::query()->where('PRO_epics.active', false)))
-                    ->orderByRaw('PRO_epics.start_date IS NULL')
-                    ->orderBy('PRO_epics.start_date')
-                    ->orderByRaw('PRO_epics.end_date IS NULL')
-                    ->orderBy('PRO_epics.end_date')
-                    ->orderBy('epic_projects.name')
-                    ->orderBy('PRO_epics.name')
-                    ->orderBy('PRO_epics.id'),
-            ),
+            $this->baseQuery(self::SCOPE_ARCHIVED),
             $search,
-            searchColumns: $this->searchColumns(self::RESOURCE_EPIC, [
-                'PRO_epics.name',
-                'epic_projects.name',
-                'PRO_epics.start_date',
-                'PRO_epics.end_date',
-                'PRO_epics.updated_at',
-            ]),
+            searchColumns: $this->searchColumnsFor(self::SCOPE_ARCHIVED),
             filters: $filters,
-            scope: 'archived',
+            scope: self::SCOPE_ARCHIVED,
         );
     }
 
@@ -99,20 +74,24 @@ final class EpicListQuery extends ListQueryBase
     public function trashed(string $search, array $filters = []): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->scoped($this->withProject(Epic::onlyTrashed()))
-                ->latest('PRO_epics.deleted_at')
-                ->orderBy('PRO_epics.id'),
+            $this->baseQuery(self::SCOPE_TRASHED),
             $search,
-            searchColumns: $this->searchColumns(self::RESOURCE_EPIC, [
-                'PRO_epics.name',
-                'epic_projects.name',
-                'PRO_epics.start_date',
-                'PRO_epics.end_date',
-                'PRO_epics.deleted_at',
-            ]),
+            searchColumns: $this->searchColumnsFor(self::SCOPE_TRASHED),
             filters: $filters,
-            scope: 'trashed',
+            scope: self::SCOPE_TRASHED,
         );
+    }
+
+    /**
+     * The list query without pagination, for the Excel export: the same scope, search and filters
+     * the page is showing.
+     *
+     * @param  SearchFilters  $filters
+     * @return Builder<Epic>
+     */
+    public function filteredQuery(string $search, array $filters = [], string $scope = self::SCOPE_ACTIVE): Builder
+    {
+        return $this->filtered($this->baseQuery($scope), $search, $this->searchColumnsFor($scope), $filters, $scope);
     }
 
     /**
@@ -217,6 +196,48 @@ final class EpicListQuery extends ListQueryBase
     protected function integration(): ProjectQueryIntegration
     {
         return $this->integration;
+    }
+
+    /**
+     * The scoped query of a list, ordered as the page shows it. Epics without dates are listed after
+     * dated ones; the trash orders by deletion date instead.
+     *
+     * @return Builder<Epic>
+     */
+    private function baseQuery(string $scope): Builder
+    {
+        if ($scope === self::SCOPE_TRASHED) {
+            return $this->scoped($this->withProject(Epic::onlyTrashed()))
+                ->latest('PRO_epics.deleted_at')
+                ->orderBy('PRO_epics.id');
+        }
+
+        return $this->withIntegrationOrderings(
+            $this->scoped($this->withProject(Epic::query()->where('PRO_epics.active', $scope !== self::SCOPE_ARCHIVED)))
+                ->orderByRaw('PRO_epics.start_date IS NULL')
+                ->orderBy('PRO_epics.start_date')
+                ->orderByRaw('PRO_epics.end_date IS NULL')
+                ->orderBy('PRO_epics.end_date')
+                ->orderBy('epic_projects.name')
+                ->orderBy('PRO_epics.name')
+                ->orderBy('PRO_epics.id'),
+        );
+    }
+
+    /**
+     * Search columns for a list scope, with whatever the integration contributes appended.
+     *
+     * @return non-empty-list<literal-string>
+     */
+    private function searchColumnsFor(string $scope): array
+    {
+        $columns = ['PRO_epics.name', 'epic_projects.name', 'PRO_epics.start_date', 'PRO_epics.end_date'];
+
+        return $this->searchColumns(self::RESOURCE_EPIC, match ($scope) {
+            self::SCOPE_ARCHIVED => [...$columns, 'PRO_epics.updated_at'],
+            self::SCOPE_TRASHED => [...$columns, 'PRO_epics.deleted_at'],
+            default => $columns,
+        });
     }
 
     /**

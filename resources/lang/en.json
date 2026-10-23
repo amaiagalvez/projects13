@@ -95,5 +95,6 @@
     "epics.archive": "Archive and activate epics",
     "epics.restore": "Restore epics from the trash",
     "epics.force_delete": "Delete epics permanently",
-    "epics.manage": "Manage epics (full access)"
+    "epics.manage": "Manage epics (full access)",
+    "Created at": "Created at"
 }

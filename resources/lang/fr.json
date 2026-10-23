@@ -95,5 +95,6 @@
     "epics.archive": "Archiver et activer des épopées",
     "epics.restore": "Restaurer des épopées de la corbeille",
     "epics.force_delete": "Supprimer définitivement des épopées",
-    "epics.manage": "Gérer les épopées (accès complet)"
+    "epics.manage": "Gérer les épopées (accès complet)",
+    "Created at": "Date de création"
 }

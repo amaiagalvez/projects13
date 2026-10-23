@@ -69,5 +69,6 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::post('epics/{epic}/comments', [EpicCommentController::class, 'store'])
         ->whereNumber('epic')
         ->name('epics.comments.store');
+    Route::get('epics/export', [EpicController::class, 'export'])->name('epics.export');
     Route::resource('epics', EpicController::class)->only(['index', 'store', 'update', 'destroy']);
 });

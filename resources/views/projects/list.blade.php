@@ -76,17 +76,17 @@
         @elseif ($list['create'] && request()->boolean('create'))
             x-init="createProject(); $nextTick(() => $dispatch('modal-show', { name: 'project-form' }))" @endif
         class="flex flex-col gap-y-2 sm:gap-y-3">
-        <x-basics13::list.page-header :list="$list" prefix="project" :description="__('Projects with their dates and epics.')" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters">
+        <x-basics13::list.page-header :list="$list" prefix="project" :description="__('Projects with their dates and epics.')">
             <x-slot:actions>
-                @if ($list['create'])
-                    <x-basics13::list.create-action prefix="project" :label="__('New project')"
-                        click="createProject()" />
-                @endif
                 <x-basics13::list.excel-export
                     prefix="project"
                     :route="route('projects.export')"
                     :scope="$scope"
                 />
+                @if ($list['create'])
+                    <x-basics13::list.create-action prefix="project" :label="__('New project')"
+                        click="createProject()" />
+                @endif
             </x-slot:actions>
         </x-basics13::list.page-header>
 
@@ -108,9 +108,11 @@
 
         @fragment('list-results')
             <x-basics13::list.searchable-results :search="$list['search']" :total="$projects->total()" :scope="$scope" :filters="$filters">
-                <x-basics13::list.search :search="$list['search']" prefix="project" />
-
                 <x-basics13::list.table prefix="project" :paginator="$projects">
+                    <x-slot:toolbar>
+                        <x-basics13::list.search :search="$list['search']" prefix="project" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters" />
+                    </x-slot:toolbar>
+
                     <flux:table.columns>
                         <flux:table.column scope="col">{{ __('Name') }}</flux:table.column>
                         @includeIf(config('projects13.views.project_list.columns'))

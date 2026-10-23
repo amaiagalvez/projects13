@@ -95,5 +95,6 @@
     "epics.archive": "Archivar y activar épicas",
     "epics.restore": "Restaurar épicas de la papelera",
     "epics.force_delete": "Eliminar épicas definitivamente",
-    "epics.manage": "Gestionar épicas (acceso total)"
+    "epics.manage": "Gestionar épicas (acceso total)",
+    "Created at": "Fecha de creación"
 }

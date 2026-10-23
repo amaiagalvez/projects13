@@ -95,5 +95,6 @@
     "epics.archive": "Artxibatu eta aktibatu epikak",
     "epics.restore": "Leheneratu epikak zakarrontzitik",
     "epics.force_delete": "Ezabatu epikak betiko",
-    "epics.manage": "Kudeatu epikak (sarbide osoa)"
+    "epics.manage": "Kudeatu epikak (sarbide osoa)",
+    "Created at": "Sortze-data"
 }

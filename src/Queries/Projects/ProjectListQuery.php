@@ -245,7 +245,7 @@ final class ProjectListQuery extends ListQueryBase
      */
     private function searchColumnsFor(string $scope): array
     {
-        return $this->searchColumns($scope, match ($scope) {
+        return $this->searchColumns(self::RESOURCE_PROJECT, match ($scope) {
             self::SCOPE_ARCHIVED => ['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date', 'PRO_projects.updated_at'],
             self::SCOPE_TRASHED => ['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date', 'PRO_projects.deleted_at'],
             default => ['PRO_projects.name', 'PRO_projects.start_date', 'PRO_projects.end_date'],

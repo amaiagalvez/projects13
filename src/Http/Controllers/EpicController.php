@@ -13,10 +13,12 @@ use Basics13\Http\Controllers\Controller;
 use Projects13\Http\Requests\EpicRequest;
 use Projects13\Queries\Epics\EpicListQuery;
 use Projects13\Http\Requests\EpicListRequest;
+use Basics13\Support\Excel\ExcelExportService;
 use Illuminate\Validation\ValidationException;
 use Projects13\Transformers\EpicListTransformer;
 use Projects13\Contracts\ProjectDisplayIntegration;
 use Basics13\Support\Database\UniqueConstraintViolation;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class EpicController extends Controller
 {
@@ -52,6 +54,36 @@ class EpicController extends Controller
             'filters' => $filters,
             'scope' => 'active',
         ]);
+    }
+
+    public function export(
+        EpicListRequest $request,
+        EpicListQuery $query,
+    ): BinaryFileResponse {
+        $search = $request->search();
+        $filters = $request->filters() ?? [];
+        $scope = $request->scope();
+
+        $queryBuilder = $query->filteredQuery($search, $filters, $scope);
+
+        $columnDefinitions = [
+            ['key' => 'id', 'label' => __('ID')],
+            ['key' => 'name', 'label' => __('Name')],
+            ['key' => 'project', 'label' => __('Project'), 'transformer' => fn ($e) => $e->project?->name],
+            ['key' => 'notes', 'label' => __('Notes')],
+            ['key' => 'start_date', 'label' => __('Start date')],
+            ['key' => 'end_date', 'label' => __('End date')],
+            ['key' => 'comments_count', 'label' => __('Comments')],
+            ['key' => 'active', 'label' => __('Status'), 'transformer' => fn ($e) => $e->active ? __('basics13::messages.active_label') : __('basics13::messages.inactive_label')],
+            ['key' => 'created_at', 'label' => __('Created at')],
+        ];
+
+        return (new ExcelExportService(
+            query: $queryBuilder,
+            title: 'Epics Export',
+            columnDefinitions: $columnDefinitions,
+            maxRows: 50000,
+        ))->download(ExcelExportService::fileName(__('Epics'), $scope));
     }
 
     /**
