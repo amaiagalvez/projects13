@@ -44,7 +44,7 @@ class EpicBehaviorTest extends TestCase
 
         $this->assertCount(3, $comments);
         foreach ($comments as $comment) {
-            $this->assertNull($comment->deleted_at);
+            $this->assertFalse($comment->trashed());
         }
     }
 

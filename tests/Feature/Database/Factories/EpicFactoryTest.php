@@ -59,7 +59,7 @@ class EpicFactoryTest extends TestCase
 
         $project->refresh();
 
-        $this->assertEquals('2026-01-01', $project->start_date?->toDateString());
+        $this->assertEquals('2026-01-01', $project->start_date->toDateString());
         $this->assertEquals('2026-12-31', $project->end_date?->toDateString());
 
         $epic = Epic::factory()->for($project)->createOne();

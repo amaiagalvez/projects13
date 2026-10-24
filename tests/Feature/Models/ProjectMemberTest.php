@@ -34,7 +34,7 @@ class ProjectMemberTest extends TestCase
         $user = User::factory()->create();
         $member = ProjectMember::factory()->state(['user_id' => $user->id])->create();
 
-        $this->assertSame($user->id, $member->user->id);
+        $this->assertSame($user->getKey(), $member->user->getKey());
     }
 
     public function test_the_user_relation_refuses_a_users_model_that_is_not_eloquent(): void

@@ -244,7 +244,7 @@ class EpicCommentTest extends TestCase
             self::fail('The comment must still exist after its author is deleted.');
         }
 
-        $this->assertSame($commentAuthor->id, $freshComment->user_id);
+        $this->assertSame($commentAuthor->getKey(), $freshComment->user_id);
         $this->assertNull($freshComment->user);
     }
 
