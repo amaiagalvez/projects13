@@ -31,15 +31,26 @@ class WorkMenuSeedTest extends TestCase
 
         $this->assertNotNull($work);
         $this->assertSame(
-            ['work-dashboard', 'projects', 'planning', 'timeline'],
+            ['work-dashboard', 'projects', 'planning', 'timeline', 'calendar'],
             array_column($work['children'], 'key'),
         );
     }
 
-    public function test_without_permissions_only_the_work_dashboard_shows(): void
+    public function test_the_calendar_seed_runs_again_without_duplicates_or_permissions(): void
+    {
+        $count = DB::table('BAS_menus')->count();
+
+        $migration = require dirname(__DIR__, 3).'/database/migrations/2026_10_24_000011_seed_calendar_menu.php';
+        $migration->up();
+
+        $this->assertSame($count, DB::table('BAS_menus')->count());
+        $this->assertSame([], Menu::query()->where('key', 'calendar')->firstOrFail()->permissions()->pluck('slug')->all());
+    }
+
+    public function test_without_permissions_only_the_work_dashboard_and_the_calendar_show(): void
     {
         $work = collect(NavigationMenu::for(User::factory()->create()))->firstWhere('item.key', 'work');
 
-        $this->assertSame(['work-dashboard'], array_column($work['children'] ?? [], 'key'));
+        $this->assertSame(['work-dashboard', 'calendar'], array_column($work['children'] ?? [], 'key'));
     }
 }

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Projects13\Http\Controllers\EpicController;
 use Projects13\Http\Controllers\ProjectController;
+use Projects13\Http\Controllers\CalendarController;
 use Projects13\Http\Controllers\PlanningController;
 use Projects13\Http\Controllers\TimelineController;
 use Projects13\Http\Controllers\DashboardController;
@@ -17,6 +18,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::get('work/dashboard', DashboardController::class)->name('work.dashboard');
     Route::get('planning', [PlanningController::class, 'index'])->name('planning');
     Route::get('timeline', [TimelineController::class, 'index'])->name('timeline');
+    Route::get('calendar', [CalendarController::class, 'index'])->name('calendar');
 
     Route::get('projects/archived', [ProjectArchivedController::class, 'index'])->name('projects.archived.index');
     Route::patch('projects/archived/{project}', [ProjectArchivedController::class, 'activate'])
