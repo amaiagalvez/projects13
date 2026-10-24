@@ -123,7 +123,7 @@ class ProjectController extends Controller
             return response()->json($project->only(['id', 'name']), 201);
         }
 
-        return to_route('projects.index')->with('status', __('basics13::messages.created'));
+        return $this->backToList('projects.index')->with('status', __('basics13::messages.created'));
     }
 
     public function update(
@@ -145,7 +145,7 @@ class ProjectController extends Controller
             return response()->json($project->only(['id', 'name']));
         }
 
-        return to_route('projects.index')->with('status', __('basics13::messages.updated'));
+        return $this->backToList('projects.index')->with('status', __('basics13::messages.updated'));
     }
 
     public function destroy(Project $project): RedirectResponse
@@ -157,10 +157,10 @@ class ProjectController extends Controller
         $deleted = DB::transaction(static fn (): bool => $project->delete() !== false);
 
         if (! $deleted) {
-            return to_route('projects.index')
+            return $this->backToList('projects.index')
                 ->with('error', __('Cannot be deleted while it has related records.'));
         }
 
-        return to_route('projects.index')->with('status', __('basics13::messages.moved_to_trash'));
+        return $this->backToList('projects.index')->with('status', __('basics13::messages.moved_to_trash'));
     }
 }

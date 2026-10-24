@@ -132,7 +132,7 @@ class EpicController extends Controller
             return response()->json($epic->only(['id', 'name']), 201);
         }
 
-        return to_route('epics.index')->with('status', __('basics13::messages.created'));
+        return $this->backToList('epics.index')->with('status', __('basics13::messages.created'));
     }
 
     /**
@@ -163,7 +163,7 @@ class EpicController extends Controller
             return response()->json($epic->only(['id', 'name']));
         }
 
-        return to_route('epics.index')->with('status', __('basics13::messages.updated'));
+        return $this->backToList('epics.index')->with('status', __('basics13::messages.updated'));
     }
 
     public function destroy(Epic $epic): RedirectResponse
@@ -174,10 +174,10 @@ class EpicController extends Controller
         $deleted = DB::transaction(static fn (): bool => $epic->delete() !== false);
 
         if (! $deleted) {
-            return to_route('epics.index')
+            return $this->backToList('epics.index')
                 ->with('error', __('Cannot be deleted while it has related records.'));
         }
 
-        return to_route('epics.index')->with('status', __('basics13::messages.moved_to_trash'));
+        return $this->backToList('epics.index')->with('status', __('basics13::messages.moved_to_trash'));
     }
 }
