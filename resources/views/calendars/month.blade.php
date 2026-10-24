@@ -14,7 +14,7 @@
 <div class="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-700" data-test="calendar-month">
     <div class="grid min-w-[42rem] grid-cols-7">
         @foreach (range(0, 6) as $weekday)
-            <div class="border-b border-zinc-200 bg-zinc-50 py-2 text-center text-xs font-medium tracking-wide text-zinc-600 uppercase dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400">
+            <div class="border-b border-zinc-200 bg-zinc-50 py-2 text-center text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400">
                 {{ $first->startOfWeek()->addDays($weekday)->isoFormat('ddd') }}
             </div>
         @endforeach

@@ -9,7 +9,7 @@
             aria-label="{{ $cell['date']->isoFormat('dddd, LL') }}">
             <a href="{{ $dayUrl($cell['date']) }}" wire:navigate class="mb-1 flex items-baseline gap-2"
                 @if ($isToday) aria-current="date" @endif>
-                <span class="text-xs font-medium tracking-wide text-zinc-600 uppercase dark:text-zinc-400">{{ $cell['date']->isoFormat('ddd') }}</span>
+                <span class="text-xs font-medium text-zinc-600 dark:text-zinc-400">{{ $cell['date']->isoFormat('ddd') }}</span>
                 <span @class([
                     'inline-flex size-7 items-center justify-center rounded-full text-sm tabular-nums',
                     'bg-brand-700 font-semibold text-white dark:bg-brand-400 dark:text-zinc-950' => $isToday,

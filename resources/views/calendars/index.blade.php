@@ -60,7 +60,7 @@
 
                 {{-- Each calendar is a link that hides or shows it, so the choice stays in the URL. --}}
                 <nav aria-labelledby="calendar-toggles-heading" class="border-t border-zinc-200 pt-4 dark:border-zinc-700" data-test="calendar-toggles">
-                    <h2 id="calendar-toggles-heading" class="mb-2 text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">{{ __('Calendars') }}</h2>
+                    <h2 id="calendar-toggles-heading" class="mb-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ __('Calendars') }}</h2>
                     <ul class="flex flex-col gap-1">
                         @foreach ($toggles as $toggle)
                             @php($dot = ['projects' => 'bg-emerald-600', 'epics' => 'bg-violet-500', 'personal' => 'bg-sky-500'][$toggle['calendar']])
