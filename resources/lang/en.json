@@ -133,5 +133,6 @@
     "Delete event": "Delete event",
     "No events.": "No events.",
     "No events on this day.": "No events on this day.",
-    "+:count more": "+:count more"
+    "+:count more": "+:count more",
+    "Delete this event? It cannot be undone.": "Delete this event? It cannot be undone."
 }

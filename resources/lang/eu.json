@@ -133,5 +133,6 @@
     "Delete event": "Ezabatu gertaera",
     "No events.": "Gertaerarik ez.",
     "No events on this day.": "Egun honetan ez dago gertaerarik.",
-    "+:count more": "+:count gehiago"
+    "+:count more": "+:count gehiago",
+    "Delete this event? It cannot be undone.": "Gertaera hau ezabatu? Ezin da desegin."
 }

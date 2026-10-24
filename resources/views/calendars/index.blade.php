@@ -16,9 +16,10 @@
     <div class="flex flex-col gap-6" data-calendar-root
         x-data="{
             form: @js($blankEvent),
+            confirmingDelete: false,
             updateUrl: @js(route('personal-events.update', ['personal_event' => '__ID__'])),
-            create() { this.form = @js($blankEvent); this.$flux.modal('personal-event').show() },
-            edit(event) { this.form = { ...event }; this.$flux.modal('personal-event').show() },
+            create() { this.confirmingDelete = false; this.form = @js($blankEvent); this.$flux.modal('personal-event').show() },
+            edit(event) { this.confirmingDelete = false; this.form = { ...event }; this.$flux.modal('personal-event').show() },
             action() { return this.form.id ? this.updateUrl.replace('__ID__', this.form.id) : @js(route('personal-events.store')) },
         }"
         @if ($returning !== null) x-init="$nextTick(() => edit(@js($returning)))" @endif>
@@ -169,9 +170,19 @@
                 data-test="personal-event-delete-form">
                 @csrf
                 @method('DELETE')
-                <flux:button type="submit" variant="danger" icon="trash" data-test="personal-event-delete">
+                <flux:button type="button" variant="danger" icon="trash" x-show="!confirmingDelete"
+                    x-on:click="confirmingDelete = true" data-test="personal-event-delete">
                     {{ __('Delete event') }}
                 </flux:button>
+                <div x-show="confirmingDelete" x-cloak role="alertdialog" aria-labelledby="personal-event-delete-question"
+                    class="flex flex-wrap items-center justify-between gap-3" data-test="personal-event-delete-confirmation">
+                    <flux:text id="personal-event-delete-question" class="font-medium">{{ __('Delete this event? It cannot be undone.') }}</flux:text>
+                    <div class="flex gap-2">
+                        <flux:button type="button" variant="ghost" x-on:click="confirmingDelete = false"
+                            data-test="personal-event-delete-cancel">{{ __('Cancel') }}</flux:button>
+                        <flux:button type="submit" variant="danger" data-test="personal-event-delete-confirm">{{ __('Delete event') }}</flux:button>
+                    </div>
+                </div>
             </form>
         </flux:modal>
     </div>

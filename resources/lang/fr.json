@@ -133,5 +133,6 @@
     "Delete event": "Supprimer l’événement",
     "No events.": "Aucun événement.",
     "No events on this day.": "Aucun événement ce jour-là.",
-    "+:count more": "+:count de plus"
+    "+:count more": "+:count de plus",
+    "Delete this event? It cannot be undone.": "Supprimer cet événement ? Cette action est irréversible."
 }

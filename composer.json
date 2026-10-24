@@ -10,6 +10,7 @@
     "require-dev": {
         "amaia/basics13": "^1.0",
         "larastan/larastan": "^3.9",
+        "laravel/dusk": "^8.7",
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
         "orchestra/testbench": "^11.3",

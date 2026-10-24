@@ -133,5 +133,6 @@
     "Delete event": "Eliminar evento",
     "No events.": "Sin eventos.",
     "No events on this day.": "No hay eventos este día.",
-    "+:count more": "+:count más"
+    "+:count more": "+:count más",
+    "Delete this event? It cannot be undone.": "¿Eliminar este evento? No se puede deshacer."
 }
