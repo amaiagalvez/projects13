@@ -215,6 +215,18 @@ class CalendarTest extends TestCase
         }
     }
 
+    public function test_a_full_month_of_the_year_links_the_rest_to_the_month(): void
+    {
+        $user = User::factory()->create();
+        PersonalEvent::factory()->count(7)->on('2026-06-12')->create(['user_id' => $user->id]);
+        $this->actingAs($user);
+
+        $this->get(route('calendar', ['view' => 'year', 'date' => '2026-06-12']))
+            ->assertSee('data-test="calendar-month-2026-06-more"', false)
+            ->assertSee(__('+:count more', ['count' => 2]))
+            ->assertSee('href="'.e(route('calendar', ['date' => '2026-06-01'])).'"', false);
+    }
+
     public function test_the_side_panel_counts_every_calendar_even_a_hidden_one(): void
     {
         $user = User::factory()->admin()->create();
