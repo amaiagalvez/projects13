@@ -114,5 +114,6 @@
     "The change could not be saved.": "No se ha podido guardar el cambio.",
     "This user is already a member of the project.": "Este usuario ya es miembro del proyecto.",
     "Viewer": "Lector",
-    "Who can see this project. Owners also manage its members.": "Quién puede ver este proyecto. Los propietarios también gestionan sus miembros."
+    "Who can see this project. Owners also manage its members.": "Quién puede ver este proyecto. Los propietarios también gestionan sus miembros.",
+    "Work": "Trabajo"
 }
