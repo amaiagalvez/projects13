@@ -69,18 +69,16 @@ class CalendarTest extends TestCase
             ->assertDontSee('data-test="calendar-event-epic-'.$milestone->id.'"', false);
     }
 
-    public function test_the_domain_calendars_follow_their_list_policies_and_the_personal_one_is_always_there(): void
+    public function test_an_account_without_a_role_cannot_open_the_calendar(): void
     {
         $project = Project::factory()->create(['start_date' => '2026-06-01', 'end_date' => '2026-06-20']);
         $epic = Epic::factory()->for($project)->create(['start_date' => '2026-06-05', 'end_date' => '2026-06-06']);
         $user = User::factory()->create();
         $own = PersonalEvent::factory()->on('2026-06-12')->create(['user_id' => $user->id]);
-        $foreign = PersonalEvent::factory()->on('2026-06-12')->create(['user_id' => User::factory()->create()->id]);
 
         $this->actingAs($user)->get(route('calendar'))
-            ->assertOk()
-            ->assertSee('data-test="calendar-event-personal-'.$own->id.'"', false)
-            ->assertDontSee('data-test="calendar-event-personal-'.$foreign->id.'"', false)
+            ->assertForbidden()
+            ->assertDontSee('data-test="calendar-event-personal-'.$own->id.'"', false)
             ->assertDontSee('data-test="calendar-event-project-'.$project->id.'"', false)
             ->assertDontSee('data-test="calendar-event-epic-'.$epic->id.'"', false);
     }
@@ -145,7 +143,7 @@ class CalendarTest extends TestCase
     #[DataProvider('views')]
     public function test_every_view_draws_the_event_of_its_period_and_nothing_outside(string $view, string $inside, string $outside): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->admin()->create();
         $event = PersonalEvent::factory()->on('2026-06-12')->create(['user_id' => $user->id]);
         $this->actingAs($user);
 
@@ -157,7 +155,7 @@ class CalendarTest extends TestCase
 
     public function test_an_event_across_two_weeks_shows_in_both(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->admin()->create();
         $event = PersonalEvent::factory()->on('2026-06-13', '2026-06-16')->create(['user_id' => $user->id]);
         $this->actingAs($user);
 
@@ -169,7 +167,7 @@ class CalendarTest extends TestCase
 
     public function test_personal_events_are_written_from_the_calendar_and_domain_ones_are_not(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->admin()->create();
         $project = Project::factory()->create(['start_date' => '2026-06-01', 'end_date' => '2026-06-20']);
         $this->actingAs($user)->from(route('calendar'));
 
@@ -178,7 +176,7 @@ class CalendarTest extends TestCase
         $event = PersonalEvent::query()->sole();
         $this->get(route('calendar'))->assertSee('data-test="calendar-event-personal-'.$event->id.'"', false);
 
-        $foreign = PersonalEvent::factory()->on('2026-06-12')->create(['user_id' => User::factory()->create()->id]);
+        $foreign = PersonalEvent::factory()->on('2026-06-12')->create(['user_id' => User::factory()->admin()->create()->id]);
         $this->put(route('personal-events.update', $foreign), ['title' => 'X', 'start_date' => '2026-06-12'])->assertForbidden();
         $this->delete(route('personal-events.destroy', $foreign))->assertForbidden();
 
@@ -189,7 +187,7 @@ class CalendarTest extends TestCase
 
     public function test_a_rejected_form_comes_back_open_with_what_was_typed(): void
     {
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->admin()->create())
             ->from(route('calendar'))
             ->followingRedirects()
             ->post(route('personal-events.store'), ['_personal_event_form' => 1, 'title' => 'Viaje', 'start_date' => '2026-06-12', 'end_date' => '2026-06-01'])
@@ -200,7 +198,7 @@ class CalendarTest extends TestCase
 
     public function test_a_full_day_cell_shows_the_first_events_and_links_the_rest_to_the_day(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->admin()->create();
         $events = PersonalEvent::factory()->count(5)->on('2026-06-12')->create(['user_id' => $user->id]);
         $this->actingAs($user);
 
@@ -217,7 +215,7 @@ class CalendarTest extends TestCase
 
     public function test_a_full_month_of_the_year_links_the_rest_to_the_month(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->admin()->create();
         PersonalEvent::factory()->count(7)->on('2026-06-12')->create(['user_id' => $user->id]);
         $this->actingAs($user);
 

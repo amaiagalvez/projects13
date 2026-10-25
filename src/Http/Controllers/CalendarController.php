@@ -4,6 +4,7 @@ namespace Projects13\Http\Controllers;
 
 use Illuminate\View\View;
 use Carbon\CarbonImmutable;
+use Projects13\Models\Project;
 use Basics13\Http\Controllers\Controller;
 use Projects13\Http\Requests\CalendarRequest;
 use Projects13\Queries\Calendar\CalendarQuery;
@@ -27,6 +28,8 @@ class CalendarController extends Controller
      */
     public function index(CalendarRequest $request, CalendarQuery $query): View
     {
+        $this->authorize('viewAny', Project::class);
+
         $view = $request->view();
         $day = $request->day();
         $calendars = $request->calendars();

@@ -2,10 +2,9 @@
 
 namespace Projects13\Tests\Unit\Validation;
 
-use App\Models\User;
 use Projects13\Tests\TestCase;
 use Illuminate\Routing\Redirector;
-use Illuminate\Support\Facades\Gate;
+use Basics13\Support\Testing\PermissionsActor;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Projects13\Http\Requests\PlanningListRequest;
@@ -32,11 +31,10 @@ class PlanningListRequestTest extends TestCase
     #[DataProvider('layouts')]
     public function test_layout_is_normalized_before_validation(array $input, string $expected): void
     {
-        Gate::before(static fn (): bool => true);
         $request = PlanningListRequest::create('/', 'GET', $input);
         $request->setContainer(app());
         $request->setRedirector(app(Redirector::class));
-        $request->setUserResolver(static fn (): User => new User);
+        $request->setUserResolver(static fn (): PermissionsActor => PermissionsActor::holding(['projects.view']));
 
         $request->validateResolved();
 
@@ -53,11 +51,10 @@ class PlanningListRequestTest extends TestCase
 
     public function test_invalid_search_is_rejected(): void
     {
-        Gate::before(static fn (): bool => true);
         $request = PlanningListRequest::create('/', 'GET', ['search' => ['invalid']]);
         $request->setContainer(app());
         $request->setRedirector(app(Redirector::class));
-        $request->setUserResolver(static fn (): User => new User);
+        $request->setUserResolver(static fn (): PermissionsActor => PermissionsActor::holding(['projects.view']));
 
         $this->expectException(ValidationException::class);
 
