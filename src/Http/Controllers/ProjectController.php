@@ -33,11 +33,13 @@ class ProjectController extends Controller
         $search = $request->search();
         $filters = $request->filters() ?? [];
         $projects = $query->active($search, $filters);
+        $hasRelated = $integration->hasActiveRelated();
 
         return $this->listView($request, 'projects13::projects.list', [
             'projects' => $projects,
-            'hasRelated' => $integration->hasActiveRelated(),
-            'noRelatedBanner' => $integration->noRelatedBanner(),
+            'hasRelated' => $hasRelated,
+            // The banner only explains an empty choice, so it is not asked for again when one exists.
+            'noRelatedBanner' => $hasRelated ? null : $integration->noRelatedBanner(),
             'list' => $transformer->active(
                 $projects,
                 $search,
