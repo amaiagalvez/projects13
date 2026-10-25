@@ -13,7 +13,7 @@
             "dist": {
                 "type": "path",
                 "url": "../packages/basics13",
-                "reference": "377b24bcfa10869a382f7836b3a873373488c0a6"
+                "reference": "d6405767b28cd48982ff49929bab7d875ab501ff"
             },
             "require": {
                 "laravel/fortify": "^1.37.2",
