@@ -17,6 +17,9 @@ abstract class TestCase extends Basics13TestCase
 {
     use ValidatesFormRequests;
 
+    /** @var class-string */
+    protected string $seeder = AccessSeeder::class;
+
     protected function signIn(): User
     {
         $user = User::query()->create([
