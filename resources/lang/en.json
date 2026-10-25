@@ -1,4 +1,5 @@
 {
+    "Projects package": "Projects",
     "Actions": "Actions",
     "Active epics": "Active epics",
     "Active projects": "Active projects",
@@ -115,7 +116,6 @@
     "This user is already a member of the project.": "This user is already a member of the project.",
     "Viewer": "Viewer",
     "Who can see this project. Owners also manage its members.": "Who can see this project. Owners also manage its members.",
-    "Work": "Work",
     "Calendar": "Calendar",
     "Calendars": "Calendars",
     "Month": "Month",

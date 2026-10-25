@@ -1,4 +1,5 @@
 {
+    "Projects package": "Projets",
     "Actions": "Actions",
     "Active epics": "Épopées actives",
     "Active projects": "Projets actifs",
@@ -115,7 +116,6 @@
     "This user is already a member of the project.": "Cet utilisateur est déjà membre du projet.",
     "Viewer": "Lecteur",
     "Who can see this project. Owners also manage its members.": "Qui peut voir ce projet. Les propriétaires gèrent aussi ses membres.",
-    "Work": "Travail",
     "Calendar": "Calendrier",
     "Calendars": "Calendriers",
     "Month": "Mois",
