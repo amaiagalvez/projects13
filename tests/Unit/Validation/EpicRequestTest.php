@@ -83,13 +83,23 @@ class EpicRequestTest extends TestCase
         $this->assertRequestValidationFails($request, static fn (): array => $request->rules(), 'end_date');
     }
 
-    #[TestWith(['2026-10-01'])]
-    #[TestWith(['2026-09-30'])]
-    public function test_end_date_must_be_after_start_date(string $endDate): void
+    public function test_end_date_may_equal_start_date(): void
     {
         $request = EpicRequest::create('/', 'POST', [
             'start_date' => '2026-10-01',
-            'end_date' => $endDate,
+            'end_date' => '2026-10-01',
+        ]);
+
+        $validator = $this->validatorForRequest($request, static fn (): array => $request->rules());
+
+        $this->assertArrayNotHasKey('end_date', $validator->errors()->toArray());
+    }
+
+    public function test_end_date_must_not_be_before_start_date(): void
+    {
+        $request = EpicRequest::create('/', 'POST', [
+            'start_date' => '2026-10-01',
+            'end_date' => '2026-09-30',
         ]);
 
         $this->assertRequestValidationFails($request, static fn (): array => $request->rules(), 'end_date');
@@ -195,14 +205,14 @@ class EpicRequestTest extends TestCase
         $this->assertContains('date_format:Y-m-d', $rules['start_date']);
     }
 
-    public function test_end_date_rule_contains_nullable_date_format_after(): void
+    public function test_end_date_rule_contains_nullable_date_format_after_or_equal(): void
     {
         $request = new EpicRequest;
         $rules = $request->rules();
 
         $this->assertContains('nullable', $rules['end_date']);
         $this->assertContains('date_format:Y-m-d', $rules['end_date']);
-        $this->assertContains('after:start_date', $rules['end_date']);
+        $this->assertContains('after_or_equal:start_date', $rules['end_date']);
     }
 
     public function test_project_id_rule_contains_required_integer_exists(): void

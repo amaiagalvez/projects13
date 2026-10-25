@@ -63,7 +63,7 @@ class EpicRequest extends FormRequest
                 $this->uniqueNamePerProject(),
             ],
             'start_date' => ['nullable', 'required_with:end_date', 'date_format:Y-m-d'],
-            'end_date' => ['nullable', 'date_format:Y-m-d', 'after:start_date'],
+            'end_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start_date'],
             'project_id' => [
                 'required',
                 'integer',
