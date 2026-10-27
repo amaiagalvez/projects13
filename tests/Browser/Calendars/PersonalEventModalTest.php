@@ -18,7 +18,7 @@ class PersonalEventModalTest extends DuskTestCase
 
     public function test_an_event_is_created_edited_and_deleted_from_the_modal(): void
     {
-        $user = $this->user();
+        $user = $this->admin();
         $title = 'Dusk event '.Str::uuid()->toString();
         $renamed = $title.' (2)';
         $day = now()->startOfMonth()->addDays(9)->toDateString();
@@ -63,7 +63,7 @@ class PersonalEventModalTest extends DuskTestCase
 
     public function test_a_rejected_form_reopens_with_what_was_typed(): void
     {
-        $user = $this->user();
+        $user = $this->admin();
         $day = now()->startOfMonth()->addDays(9);
 
         $this->browse(function (Browser $browser) use ($user, $day): void {
