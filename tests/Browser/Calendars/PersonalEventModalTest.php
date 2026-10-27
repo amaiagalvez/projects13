@@ -5,7 +5,7 @@ namespace Projects13\Tests\Browser\Calendars;
 use Laravel\Dusk\Browser;
 use Illuminate\Support\Str;
 use Basics13\Models\PersonalEvent;
-use Basics13\Support\Testing\DuskTestCase;
+use Projects13\Tests\DuskTestCase;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 
 /**
